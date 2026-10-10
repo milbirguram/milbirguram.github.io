@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A collection of Milbir Guram’s favourite poems.">
+    <meta name="theme-color" content="#faf9f6">
+    <title>Favourite poems — Milbir Guram</title>
+    <link rel="icon" href="favicon.ico">
+    <style>
+      :root {
+        color-scheme: light;
+        color: #292b26;
+        background: #faf9f6;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; }
+      main { width: min(100% - 64px, 1040px); margin: 84px auto 48px; }
+      header { display: flex; justify-content: center; align-items: baseline; gap: 14px; margin-bottom: 64px; }
+      h1, .home { margin: 0; font-size: 17px; line-height: 1.5; letter-spacing: .06em; text-transform: uppercase; }
+      h1 { font-weight: 600; }
+      .separator { color: #b3b3aa; }
+      .home { color: #77796f; text-decoration: none; }
+      .home:hover { color: #292b26; }
+      .poems { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+      .poems li { min-width: 0; }
+      .poem {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        aspect-ratio: 1;
+        padding: 32px;
+        border: 1px solid #dedfd7;
+        background: #f5f4ef;
+        color: inherit;
+        text-align: center;
+        text-decoration: none;
+        transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+      }
+      .title { max-width: 100%; font-family: Georgia, "Times New Roman", serif; font-size: 28px; font-weight: 400; line-height: 1.25; }
+      .poet { color: #707369; font-size: 13px; line-height: 1.5; }
+      .poem:hover { background: #2e322c; border-color: #2e322c; color: #faf9f6; }
+      .poem:hover .poet { color: #d0d4c9; }
+      a:focus-visible { outline: 2px solid #58705a; outline-offset: 5px; }
+      footer { margin-top: 32px; text-align: center; color: #73776c; font-size: 12px; line-height: 1.6; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+      @media (max-width: 800px) {
+        main { width: min(100% - 48px, 640px); margin-top: 56px; }
+        header { margin-bottom: 40px; }
+        .poems { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .title { font-size: 25px; }
+      }
+      @media (max-width: 480px) {
+        main { width: calc(100% - 32px); margin-top: 36px; }
+        header { gap: 10px; margin-bottom: 32px; }
+        h1, .home { font-size: 14px; }
+        .poems { gap: 12px; }
+        .poem { padding: 20px 12px; gap: 12px; min-height: 190px; }
+        .title { font-size: 21px; }
+        .poet { font-size: 12px; }
+      }
+      @media (prefers-reduced-motion: reduce) { .poem { transition: none; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Poems</h1>
+        <span class="separator" aria-hidden="true">/</span>
+        <a class="home" href="./">Milbir Guram</a>
+      </header>
+      <p class="sr-only" id="reading-note">Each poem opens on its source website in a new tab.</p>
+      <ul class="poems" aria-label="Favourite poems">
+        <li><a class="poem" href="https://voetica.com/poem/16064" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">Change</span><span class="poet">Kathleen Raine</span></a></li>
+        <li><a class="poem" href="https://thedewdrop.org/2021/03/24/issa-this-dewdrop-world/" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">This Dewdrop World</span><span class="poet">Kobayashi Issa</span></a></li>
+        <li><a class="poem" href="https://www.scottishpoetrylibrary.org.uk/poem/guest-house/" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">The Guest House</span><span class="poet">Rumi</span></a></li>
+        <li><a class="poem" href="https://voetica.com/poem/2151" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">Little Gidding</span><span class="poet">T. S. Eliot</span></a></li>
+        <li><a class="poem" href="https://poets.org/poem/ulysses" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">Ulysses</span><span class="poet">Alfred, Lord Tennyson</span></a></li>
+        <li><a class="poem" href="https://www.poetryfoundation.org/poems/43291/sailing-to-byzantium" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">Sailing to Byzantium</span><span class="poet">W. B. Yeats</span></a></li>
+        <li><a class="poem" href="https://onbeing.org/poetry/go-to-the-limits-of-your-longing/" title="Go to the Limits of Your Longing — Book of Hours, I 59" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">No Feeling Is Final</span><span class="poet">Rainer Maria Rilke</span></a></li>
+        <li><a class="poem" href="https://www.thezengateway.com/culture/poetry/hanshans-poem-with-commentary-by-michael-haggiag" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">Peach Blossom</span><span class="poet">Han-shan</span></a></li>
+        <li><a class="poem" href="https://onbeing.org/poetry/the-peace-of-wild-things/" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">The Peace of Wild Things</span><span class="poet">Wendell Berry</span></a></li>
+        <li><a class="poem" href="https://poets.org/poem/joy-and-sorrow" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">On Joy and Sorrow</span><span class="poet">Kahlil Gibran</span></a></li>
+        <li><a class="poem" href="https://web.cs.dal.ca/~johnston/poetry/eternity.html" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">Eternity</span><span class="poet">William Blake</span></a></li>
+        <li><a class="poem" href="https://en.wikisource.org/wiki/The_Gardener_(Tagore)/61" target="_blank" rel="noopener noreferrer" aria-describedby="reading-note"><span class="title">Peace, My Heart</span><span class="poet">Rabindranath Tagore</span></a></li>
+      </ul>
+      <footer>Poems open in a new tab.</footer>
+    </main>
+  </body>
+</html>
