@@ -302,6 +302,24 @@ and a person for work that is real.`,
     sourceName: "Poetry Foundation",
     edition: ""
   },
+  "widening-circles": {
+    title: "Widening Circles",
+    author: "Rainer Maria Rilke",
+    translation: "Translated by Joanna Macy and Anita Barrows",
+    textOrigin: "user-provided",
+    text: `I live my life in widening circles
+that reach out across the world.
+I may not complete this last one
+but I give myself to it.
+
+I circle around God, around the primordial tower.
+I’ve been circling for thousands of years
+and I still don’t know: am I a falcon,
+a storm, or a great song?`,
+    source: "https://onbeing.org/poetry/widening-circles/",
+    sourceName: "On Being",
+    edition: "From Rilke’s Book of Hours: Love Poems to God."
+  },
 };
 
 function renderPoem() {
