@@ -46,16 +46,6 @@ Says the night to the stars.`,
     sourceName: "Voetica",
     edition: ""
   },
-  "this-dewdrop-world": {
-    title: "This Dewdrop World",
-    author: "Kobayashi Issa",
-    translation: "Translated by Lewis Mackenzie",
-    textOrigin: "user-provided",
-    text: "This dewdrop world—\nIs a dewdrop world,\nAnd yet, and yet . . .",
-    source: "https://thedewdrop.org/2021/03/24/issa-this-dewdrop-world/",
-    sourceName: "The Dewdrop",
-    edition: "From The Autumn Wind."
-  },
   "the-guest-house": {
     title: "The Guest House",
     author: "Rumi",
@@ -231,30 +221,6 @@ I rest in the grace of the world, and am free.`,
     sourceName: "On Being",
     edition: "From The Selected Poems of Wendell Berry."
   },
-  "on-joy-and-sorrow": {
-    title: "On Joy and Sorrow",
-    author: "Kahlil Gibran",
-    text: `Then a woman said, Speak to us of Joy and Sorrow.
-And he answered:
-Your joy is your sorrow unmasked.
-And the selfsame well from which your laughter rises was oftentimes filled with your tears.
-And how else can it be?
-The deeper that sorrow carves into your being, the more joy you can contain.
-Is not the cup that holds your wine the very cup that was burned in the potter’s oven?
-And is not the lute that soothes your spirit, the very wood that was hollowed with knives?
-When you are joyous, look deep into your heart and you shall find it is only that which has given you sorrow that is giving you joy.
-When you are sorrowful look again in your heart, and you shall see that in truth you are weeping for that which has been your delight.
-Some of you say, “Joy is greater than sorrow,” and others say, “Nay, sorrow is the greater.”
-But I say unto you, they are inseparable.
-Together they come, and when one sits alone with you at your board, remember that the other is asleep upon your bed.
-
-Verily you are suspended like scales between your sorrow and your joy.
-Only when you are empty are you at standstill and balanced.
-When the treasure-keeper lifts you to weigh his gold and his silver, needs must your joy or your sorrow rise or fall.`,
-    source: "https://poets.org/poem/joy-and-sorrow",
-    sourceName: "Academy of American Poets",
-    edition: "From The Prophet (1923). Public-domain text."
-  },
   "eternity": {
     title: "Eternity",
     author: "William Blake",
@@ -263,21 +229,6 @@ When the treasure-keeper lifts you to weigh his gold and his silver, needs must 
     sourceName: "Academy of American Poets",
     edition: "Public-domain text."
   },
-  "peace-my-heart": {
-    title: "Peace, My Heart",
-    author: "Rabindranath Tagore",
-    translation: "Translated from Bengali by the author",
-    text: `PEACE, my heart, let the time for the parting be sweet.
-Let it not be a death but completeness.
-Let love melt into memory and pain into songs.
-Let the flight through the sky end in the folding of the wings over the nest.
-Let the last touch of your hands be gentle like the flower of the night.
-Stand still, O Beautiful End, for a moment, and say your last words in silence.
-I bow to you and hold up my lamp to light you on your way.`,
-    source: "https://en.wikisource.org/wiki/The_Gardener_(Tagore)/61",
-    sourceName: "Wikisource",
-    edition: "The Gardener, no. 61 (1913). Public-domain text."
-  }
 };
 
 function renderPoem() {
