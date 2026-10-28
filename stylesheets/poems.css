@@ -35,8 +35,6 @@ a:focus-visible { outline: 2px solid #58705a; outline-offset: 5px; }
 .poem-text { margin-bottom: 36px; }
 .stanza { margin-bottom: 24px; }
 .verse-line { display: block; white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 1.5em; text-indent: -1.5em; }
-.poem-note { margin-bottom: 28px; }
-.poem-note h2 { margin: 0 0 8px; font-size: 16px; font-weight: 500; line-height: 1.75; }
 .source { padding-top: 24px; border-top: 1px solid #dedfd7; }
 .source p { margin-bottom: 8px; }
 .source .edition { margin-top: 8px; }

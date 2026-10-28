@@ -8,7 +8,6 @@ const poems = {
     author: "Kathleen Raine",
     excerpt: true,
     text: "Change\nSaid the sun to the moon,\nYou cannot stay.",
-    note: "The changing natural world becomes an invitation to loosen our hold on what we know. Beauty emerges through transformation, even when that transformation asks something difficult of us.",
     source: "https://voetica.com/poem/16064",
     sourceName: "Voetica",
     edition: "Excerpt from “Change” by Kathleen Raine."
@@ -19,7 +18,6 @@ const poems = {
     translation: "Translated by Lewis Mackenzie",
     excerpt: true,
     text: "This dewdrop world—",
-    note: "An understanding of impermanence meets the stubborn tenderness of grief. This small poem leaves room for the feelings that a spiritual explanation cannot make disappear.",
     source: "https://thedewdrop.org/2021/03/24/issa-this-dewdrop-world/",
     sourceName: "The Dewdrop",
     edition: "Opening line of the translation in The Autumn Wind."
@@ -30,7 +28,6 @@ const poems = {
     translation: "English version by Coleman Barks",
     excerpt: true,
     text: "This being human is a guest house.\nEvery morning a new arrival.",
-    note: "Inner peace begins with hospitality toward our changing emotional lives. Even difficult feelings can be met with attention and generosity, allowing acceptance to become an active practice.",
     source: "https://www.scottishpoetrylibrary.org.uk/poem/guest-house/",
     sourceName: "Scottish Poetry Library",
     edition: "From Rumi: Selected Poems (Penguin, 2004), credited to Coleman Barks with John Moynce, A. J. Arberry, and Reynold Nicholson."
@@ -40,7 +37,6 @@ const poems = {
     author: "T. S. Eliot",
     excerpt: true,
     text: "We shall not cease from exploration\nAnd the end of all our exploring",
-    note: "Prayer, memory, and the difficult work of reconciliation gradually lead toward a simpler form of love. The poem’s peace is reached through a sustained encounter with suffering and history.",
     source: "https://voetica.com/poem/2151",
     sourceName: "Voetica",
     edition: "Excerpt from section V of Little Gidding, the fourth of Eliot’s Four Quartets."
@@ -172,7 +168,6 @@ Of what is past, or passing, or to come.`,
     translation: "Translated by Joanna Macy and Anita Barrows",
     excerpt: true,
     text: "Let everything happen to you: beauty and terror.\nJust keep going. No feeling is final.",
-    note: "A voice of divine companionship calls us into the whole of life. Beauty and uncertainty belong to the same journey, and courage grows from remaining open to both.",
     source: "https://onbeing.org/poetry/go-to-the-limits-of-your-longing/",
     sourceName: "On Being",
     edition: "Book of Hours, I 59. From Rilke’s Book of Hours: Love Poems to God."
@@ -183,7 +178,6 @@ Of what is past, or passing, or to come.`,
     translation: "Translated by A. S. Kline",
     excerpt: true,
     text: "The peach petals would like to stay,\nBut moon and wind blow them on.",
-    note: "Falling blossoms open onto the passing of lives, dynasties, and landscapes. The poem asks us to see beauty clearly while recognising that nothing we love can remain unchanged.",
     source: "https://www.thezengateway.com/culture/poetry/hanshans-poem-with-commentary-by-michael-haggiag",
     sourceName: "The Zen Gateway",
     edition: "Excerpt from A. S. Kline’s English translation."
@@ -193,7 +187,6 @@ Of what is past, or passing, or to come.`,
     author: "Wendell Berry",
     excerpt: true,
     text: "I come into the peace of wild things",
-    note: "An anxious mind finds a brief freedom in the life around it. Still water, birds, and stars restore a sense of belonging without requiring the world’s troubles to disappear.",
     source: "https://onbeing.org/poetry/the-peace-of-wild-things/",
     sourceName: "On Being",
     edition: "Excerpt from The Selected Poems of Wendell Berry."
@@ -285,11 +278,6 @@ function renderPoem() {
   }
 
   if (poem.excerpt) document.getElementById("excerpt-label").hidden = false;
-  if (poem.note) {
-    const note = document.getElementById("poem-note");
-    note.textContent = poem.note;
-    document.getElementById("poem-note-section").hidden = false;
-  }
 
   const source = document.getElementById("poem-source");
   source.href = poem.source;
