@@ -501,6 +501,18 @@ sail through this to that`,
     sourceName: "Poetry Foundation",
     edition: ""
   },
+  "temple-bells-die-out": {
+    title: "Temple Bells Die Out",
+    author: "Matsuo Bashō",
+    translation: "Translated by Daniel C. Buchanan",
+    textOrigin: "user-provided",
+    text: `Temple bells die out
+The fragrant blossoms remain
+A perfect evening.`,
+    source: "https://www.encyclopedia.com/arts/educational-magazines/temple-bells-die-out",
+    sourceName: "Encyclopedia.com",
+    edition: ""
+  },
 };
 
 function renderPoem() {
