@@ -513,6 +513,61 @@ A perfect evening.`,
     sourceName: "Encyclopedia.com",
     edition: ""
   },
+  "from-march-1979": {
+    title: "From March 1979",
+    author: "Tomas Tranströmer",
+    translation: "Translated by Robin Robertson",
+    textOrigin: "user-provided",
+    text: `Sick of those who come with words, words but no language,
+I make my way to the snow-covered island.
+
+Wilderness has no words. The unwritten pages
+stretch out in all directions.
+
+I come across this line of deer-slots in the snow: a language,
+language without words.`,
+    source: "https://fsgworkinprogress.com/2015/04/07/from-march-1979/",
+    sourceName: "Farrar, Straus and Giroux",
+    edition: ""
+  },
+  "a-note": {
+    title: "A Note",
+    author: "Wisława Szymborska",
+    translation: "Translated by Stanisław Barańczak and Clare Cavanagh",
+    textOrigin: "user-provided",
+    text: `Life is the only way
+to get covered in leaves,
+catch your breath on the sand,
+rise on wings;
+
+to be a dog,
+or stroke its warm fur;
+
+to tell pain
+from everything it’s not;
+
+to squeeze inside events,
+dawdle in views,
+to seek the least of all possible mistakes.
+
+An extraordinary chance
+to remember for a moment
+a conversation held
+with the lamp switched off;
+
+and if only once
+to stumble on a stone,
+end up drenched in one downpour or another,
+
+mislay your keys in the grass;
+and to follow a spark on the wind with your eyes;
+
+and to keep on not knowing
+something important.`,
+    source: "https://www.newyorker.com/magazine/2005/11/28/a-note-2",
+    sourceName: "The New Yorker",
+    edition: ""
+  },
 };
 
 function renderPoem() {
