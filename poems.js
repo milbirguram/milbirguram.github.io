@@ -568,6 +568,105 @@ something important.`,
     sourceName: "The New Yorker",
     edition: ""
   },
+  "love-after-love": {
+    title: "Love After Love",
+    author: "Derek Walcott",
+    textOrigin: "user-provided",
+    text: `The time will come
+when, with elation,
+you will greet yourself arriving
+at your own door, in your own mirror,
+and each will smile at the other’s welcome,
+
+and say, sit here. Eat.
+You will love again the stranger who was your self.
+Give wine. Give bread. Give back your heart
+to itself, to the stranger who has loved you
+
+all your life, whom you ignored
+for another, who knows you by heart.
+Take down the love letters from the bookshelf,
+
+the photographs, the desperate notes,
+peel your own image from the mirror.
+Sit. Feast on your life.`,
+    source: "https://poets.org/poem/love-after-love",
+    sourceName: "Academy of American Poets",
+    edition: ""
+  },
+  "wind-water-stone": {
+    title: "Wind, Water, Stone",
+    author: "Octavio Paz",
+    translation: "Translated by Eliot Weinberger",
+    textOrigin: "user-provided",
+    text: `Water hollows stone,
+wind scatters water,
+stone stops the wind.
+Water, wind, stone.
+
+Wind carves stone,
+stone's a cup of water,
+water escapes and is wind.
+Stone, wind, water.
+
+Wind sings in its whirling,
+water murmurs going by,
+unmoving stone keeps still.
+Wind, water, stone.
+
+Each is another and no other:
+crossing and vanishing
+through their empty names:
+water, stone, wind.`,
+    source: "https://www.poetryfoundation.org/poems/58334/wind-water-stone",
+    sourceName: "Poetry Foundation",
+    edition: ""
+  },
+  "the-more-loving-one": {
+    title: "The More Loving One",
+    author: "W. H. Auden",
+    textOrigin: "user-provided",
+    text: `Looking up at the stars, I know quite well
+That, for all they care, I can go to hell,
+But on earth indifference is the least
+We have to dread from man or beast.
+
+How should we like it were stars to burn
+With a passion for us we could not return?
+If equal affection cannot be,
+Let the more loving one be me.
+
+Admirer as I think I am
+Of stars that do not give a damn,
+I cannot, now I see them, say
+I missed one terribly all day.
+
+Were all stars to disappear or die,
+I should learn to look at an empty sky
+And feel its total dark sublime,
+Though this might take me a little time.`,
+    source: "https://poets.org/poem/more-loving-one",
+    sourceName: "Academy of American Poets",
+    edition: ""
+  },
+  "the-good-life": {
+    title: "The Good Life",
+    author: "Tracy K. Smith",
+    textOrigin: "user-provided",
+    text: `When some people talk about money
+They speak as if it were a mysterious lover
+Who went out to buy milk and never
+Came back, and it makes me nostalgic
+For the years I lived on coffee and bread,
+Hungry all the time, walking to work on payday
+Like a woman journeying for water
+From a village without a well, then living
+One or two nights like everyone else
+On roast chicken and red wine.`,
+    source: "https://www.poetryfoundation.org/poems/56376/the-good-life",
+    sourceName: "Poetry Foundation",
+    edition: ""
+  },
 };
 
 function renderPoem() {
