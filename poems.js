@@ -1,7 +1,7 @@
 "use strict";
 
 // Keep modern poems and translations as short excerpts with links to their sources.
-// Five complete texts are public-domain editions; Change and This Dewdrop World were supplied by the site owner.
+// Complete texts are public-domain editions or texts supplied by the site owner.
 const poems = {
   "change": {
     title: "Change",
@@ -61,20 +61,32 @@ Says the night to the stars.`,
     title: "The Guest House",
     author: "Rumi",
     translation: "English version by Coleman Barks",
-    excerpt: true,
-    text: "This being human is a guest house.\nEvery morning a new arrival.",
+    textOrigin: "user-provided",
+    text: `This being human is a guest house.
+Every morning a new arrival.
+
+A joy, a depression, a meanness,
+some momentary awareness comes
+as an unexpected visitor.
+
+Welcome and entertain them all!
+Even if they’re a crowd of sorrows,
+who violently sweep your house
+empty of its furniture,
+still, treat each guest honorably.
+He may be clearing you out
+for some new delight.
+
+The dark thought, the shame, the malice,
+meet them at the door laughing,
+and invite them in.
+
+Be grateful for whoever comes,
+because each has been sent
+as a guide from beyond.`,
     source: "https://www.scottishpoetrylibrary.org.uk/poem/guest-house/",
     sourceName: "Scottish Poetry Library",
     edition: "From Rumi: Selected Poems (Penguin, 2004), credited to Coleman Barks with John Moynce, A. J. Arberry, and Reynold Nicholson."
-  },
-  "little-gidding": {
-    title: "Little Gidding",
-    author: "T. S. Eliot",
-    excerpt: true,
-    text: "We shall not cease from exploration\nAnd the end of all our exploring",
-    source: "https://voetica.com/poem/2151",
-    sourceName: "Voetica",
-    edition: "Excerpt from section V of Little Gidding, the fourth of Eliot’s Four Quartets."
   },
   "ulysses": {
     title: "Ulysses",
@@ -152,48 +164,6 @@ One equal temper of heroic hearts,
 Made weak by time and fate, but strong in will
 To strive, to seek, to find, and not to yield.`,
     source: "https://poets.org/poem/ulysses",
-    sourceName: "Academy of American Poets",
-    edition: "Public-domain text."
-  },
-  "sailing-to-byzantium": {
-    title: "Sailing to Byzantium",
-    author: "W. B. Yeats",
-    text: `That is no country for old men. The young
-In one another’s arms, birds in the trees
-—Those dying generations—at their song,
-The salmon-falls, the mackerel-crowded seas,
-Fish, flesh, or fowl, commend all summer long
-Whatever is begotten, born, and dies.
-Caught in that sensual music all neglect
-Monuments of unageing intellect.
-
-An aged man is but a paltry thing,
-A tattered coat upon a stick, unless
-Soul clap its hands and sing, and louder sing
-For every tatter in its mortal dress,
-Nor is there singing school but studying
-Monuments of its own magnificence;
-And therefore I have sailed the seas and come
-To the holy city of Byzantium.
-
-O sages standing in God’s holy fire
-As in the gold mosaic of a wall,
-Come from the holy fire, perne in a gyre,
-And be the singing-masters of my soul.
-Consume my heart away; sick with desire
-And fastened to a dying animal
-It knows not what it is; and gather me
-Into the artifice of eternity.
-
-Once out of nature I shall never take
-My bodily form from any natural thing,
-But such a form as Grecian goldsmiths make
-Of hammered gold and gold enamelling
-To keep a drowsy Emperor awake;
-Or set upon a golden bough to sing
-To lords and ladies of Byzantium
-Of what is past, or passing, or to come.`,
-    source: "https://poets.org/poem/sailing-byzantium",
     sourceName: "Academy of American Poets",
     edition: "Public-domain text."
   },
