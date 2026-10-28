@@ -171,8 +171,27 @@ To strive, to seek, to find, and not to yield.`,
     title: "Go to the Limits of Your Longing",
     author: "Rainer Maria Rilke",
     translation: "Translated by Joanna Macy and Anita Barrows",
-    excerpt: true,
-    text: "Let everything happen to you: beauty and terror.\nJust keep going. No feeling is final.",
+    textOrigin: "user-provided",
+    text: `God speaks to each of us as he makes us,
+then walks with us silently out of the night.
+
+These are the words we dimly hear:
+
+You, sent out beyond your recall,
+go to the limits of your longing.
+Embody me.
+
+Flare up like flame
+and make big shadows I can move in.
+
+Let everything happen to you: beauty and terror.
+Just keep going. No feeling is final.
+Don't let yourself lose me.
+
+Nearby is the country they call life.
+You will know it by its seriousness.
+
+Give me your hand.`,
     source: "https://onbeing.org/poetry/go-to-the-limits-of-your-longing/",
     sourceName: "On Being",
     edition: "Book of Hours, I 59. From Rilke’s Book of Hours: Love Poems to God."
@@ -181,11 +200,18 @@ To strive, to seek, to find, and not to yield.`,
     title: "The Peach Petals",
     author: "Hanshan",
     translation: "Translated by A. S. Kline",
-    excerpt: true,
-    text: "The peach petals would like to stay,\nBut moon and wind blow them on.",
+    textOrigin: "user-provided",
+    text: `The peach petals would like to stay,
+But moon and wind blow them on.
+You won’t find those ancient men,
+Those dynasties are dead and gone.
+Day by day the blossoms fall,
+Year by year the people go.
+Where the dust blows through these heights,
+There once shone a silent sea.`,
     source: "https://www.thezengateway.com/culture/poetry/hanshans-poem-with-commentary-by-michael-haggiag",
     sourceName: "The Zen Gateway",
-    edition: "Excerpt from A. S. Kline’s English translation."
+    edition: "A. S. Kline’s English translation."
   },
   "the-peace-of-wild-things": {
     title: "The Peace of Wild Things",
