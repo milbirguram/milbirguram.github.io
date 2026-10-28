@@ -320,6 +320,116 @@ a storm, or a great song?`,
     sourceName: "On Being",
     edition: "From Rilke’s Book of Hours: Love Poems to God."
   },
+  "the-way-it-is": {
+    title: "The Way It Is",
+    author: "William Stafford",
+    textOrigin: "user-provided",
+    text: `There’s a thread you follow. It goes among
+things that change. But it doesn’t change.
+People wonder about what you are pursuing.
+You have to explain about the thread.
+But it is hard for others to see.
+While you hold it you can’t get lost.
+Tragedies happen; people get hurt
+or die; and you suffer and get old.
+Nothing you do can stop time’s unfolding.
+You don’t ever let go of the thread.`,
+    source: "https://ptgmedia.pearsoncmg.com/images/9780132498289/samplepages/0132498286.pdf#page=14",
+    sourceName: "Pearson (PDF, page 14)",
+    edition: "Publisher excerpt credits permission to Graywolf Press."
+  },
+  "working-together": {
+    title: "Working Together",
+    author: "David Whyte",
+    textOrigin: "user-provided",
+    text: `We shape our self
+to fit this world
+and by the world
+are shaped again.
+
+The visible
+and the invisible
+working together
+in common cause,
+to produce
+the miraculous.
+
+I am thinking of the way
+the intangible air
+traveled at speed
+round a shaped wing
+easily
+holds our weight.
+
+So may we, in this life
+trust
+to those elements
+we have yet to see
+or imagine,
+and look for the true
+shape of our own self,
+by forming it well
+to the great
+intangibles about us.`,
+    source: "https://onbeing.org/poetry/working-together/",
+    sourceName: "On Being",
+    edition: ""
+  },
+  "the-door": {
+    title: "The Door",
+    author: "Miroslav Holub",
+    translation: "Translated by Ian Milner",
+    textOrigin: "user-provided",
+    text: `Go and open the door.
+Maybe outside there’s
+a tree, or a wood,
+a garden,
+or a magic city.
+
+Go and open the door.
+Maybe a dog’s rummaging.
+Maybe you’ll see a face,
+or an eye,
+or the picture
+of a picture.
+
+Go and open the door.
+If there’s a fog
+it will clear.
+
+Go and open the door.
+Even if there’s only
+the darkness ticking,
+even if there’s only
+the hollow wind,
+even if
+nothing
+is there,
+go and open the door.
+
+At least
+there’ll be
+a draught.`,
+    source: "https://www.scottishpoetrylibrary.org.uk/poem/door/",
+    sourceName: "Scottish Poetry Library",
+    edition: ""
+  },
+  "aedh-wishes-for-the-cloths-of-heaven": {
+    title: "Aedh Wishes for the Cloths of Heaven",
+    author: "W. B. Yeats",
+    textOrigin: "user-provided",
+    text: `Had I the heavens’ embroidered cloths,
+Enwrought with golden and silver light,
+The blue and the dim and the dark cloths
+Of night and light and the half light,
+I would spread the cloths under your feet:
+But I, being poor, have only my dreams;
+I have spread my dreams under your feet;
+Tread softly because you tread on my dreams.`,
+    source: "https://poets.org/poem/aedh-wishes-cloths-heaven",
+    sourceName: "Academy of American Poets",
+    edition: ""
+  },
 };
 
 function renderPoem() {
