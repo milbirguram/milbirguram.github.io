@@ -229,6 +229,42 @@ I rest in the grace of the world, and am free.`,
     sourceName: "Academy of American Poets",
     edition: "Public-domain text."
   },
+  "traveler-your-footprints": {
+    title: "Traveler, your footprints",
+    author: "Antonio Machado",
+    translation: "Translated by Mary G. Berg and Dennis Maloney",
+    textOrigin: "user-provided",
+    text: `Traveler, your footprints
+are the only road, nothing else.
+Traveler, there is no road;
+you make your own path as you walk.
+As you walk, you make your own road,
+and when you look back
+you see the path
+you will never travel again.
+Traveler, there is no road;
+only a ship's wake on the sea.`,
+    source: "https://www.poetryfoundation.org/poems/58815/traveler-your-footprints",
+    sourceName: "Poetry Foundation",
+    edition: "From There Is No Road (White Pine Press, 2003)."
+  },
+  "dust-of-snow": {
+    title: "Dust of Snow",
+    author: "Robert Frost",
+    textOrigin: "user-provided",
+    text: `The way a crow
+Shook down on me
+The dust of snow
+From a hemlock tree
+
+Has given my heart
+A change of mood
+And saved some part
+Of a day I had rued.`,
+    source: "https://poets.org/poem/dust-snow/print",
+    sourceName: "Academy of American Poets",
+    edition: "From New Hampshire (1923). Public-domain text."
+  },
 };
 
 function renderPoem() {
