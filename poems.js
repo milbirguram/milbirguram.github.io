@@ -1,26 +1,61 @@
 "use strict";
 
 // Keep modern poems and translations as short excerpts with links to their sources.
-// The five complete texts below are public-domain editions verified at the linked sources.
+// Five complete texts are public-domain editions; Change and This Dewdrop World were supplied by the site owner.
 const poems = {
   "change": {
     title: "Change",
     author: "Kathleen Raine",
-    excerpt: true,
-    text: "Change\nSaid the sun to the moon,\nYou cannot stay.",
+    textOrigin: "user-provided",
+    text: `Change
+Said the sun to the moon,
+You cannot stay.
+
+Change
+Says the moon to the waters,
+All is flowing.
+
+Change
+Says the fields to the grass,
+Seed-time and harvest,
+Chaff and grain.
+
+You must change said,
+Said the worm to the bud,
+Though not to a rose,
+
+Petals fade
+That wings may rise
+Borne on the wind.
+
+You are changing
+said death to the maiden, your wan face
+To memory, to beauty.
+
+Are you ready to change?
+Says the thought to the heart, to let her pass
+All your life long
+
+For the unknown, the unborn
+In the alchemy
+Of the world's dream?
+
+You will change,
+says the stars to the sun,
+Says the night to the stars.`,
     source: "https://voetica.com/poem/16064",
     sourceName: "Voetica",
-    edition: "Excerpt from “Change” by Kathleen Raine."
+    edition: ""
   },
   "this-dewdrop-world": {
     title: "This Dewdrop World",
     author: "Kobayashi Issa",
     translation: "Translated by Lewis Mackenzie",
-    excerpt: true,
-    text: "This dewdrop world—",
+    textOrigin: "user-provided",
+    text: "This dewdrop world—\nIs a dewdrop world,\nAnd yet, and yet . . .",
     source: "https://thedewdrop.org/2021/03/24/issa-this-dewdrop-world/",
     sourceName: "The Dewdrop",
-    edition: "Opening line of the translation in The Autumn Wind."
+    edition: "From The Autumn Wind."
   },
   "the-guest-house": {
     title: "The Guest House",
