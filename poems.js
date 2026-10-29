@@ -667,6 +667,139 @@ On roast chicken and red wine.`,
     sourceName: "Poetry Foundation",
     edition: ""
   },
+  "evening-tea": {
+    title: "Evening Tea",
+    author: "Euphrase Kezilahabi",
+    translation: "Translated by Katriina Ranne with The Poetry Translation Workshop",
+    textOrigin: "user-provided",
+    text: `While we're drinking tea on the verandah
+watching our children
+as they swing joyfully
+we ought to know our rope
+has frayed and worn thin:
+a few more strands and we will fall.
+
+Once, you used to push me
+up higher than half a circle;
+once, I used to catch you
+as you almost fell.
+Once, we used to take it in turns:
+one of us standing to push the other on the swing.
+Even though we swooped up high both forwards and backwards,
+we too laughed at our high hopes -
+and then we went in to make dinner.
+It was our early afternoon.
+
+Now we wait for dreams that can no longer be realised.
+Let's drink our evening tea down to the dregs -
+not spitting them out, but smiling.
+Let us lick the sweetness from our lips
+as we remember that very first day
+when we met one evening under the mango tree
+looking for a good stout branch
+to bear our swing
+while Simba the dog waited for you.
+
+But before we leave so silently
+to complete the half circle that remains,
+let us make sure our cups are clean.`,
+    source: "https://www.poetrytranslation.org/poem/evening-tea/",
+    sourceName: "Poetry Translation Centre",
+    edition: ""
+  },
+  "ive-been-asked-to-write-a-poem-about-home-but-im-not-a-poet": {
+    title: "I’ve been asked to write a poem about home but I’m not a poet",
+    author: "Hiền Trang",
+    translation: "Translated by Phương Anh with Vietnamese Community Workshops",
+    textOrigin: "user-provided",
+    text: `What is a homeland? What is a poem?
+Does comparing the moonlight to sand transform slippery words into poetry?
+Does a folk song of drifting water lettuce transform a place into a home?
+Yet now clouds hide the moon like a royal robe draped over a dream,
+no sound but the karaoke wheeze of a gecko with a pulmonary infection.
+How to write poetry, let alone about the motherland?
+The love of one’s country is the love of the most mundane things:
+Loving the tree in front of your house, the small street that leads to the river…
+There’s no tree in front of my house, and the river is a muddy nightmare.
+Do I love this place like one loves one’s homeland?
+I don’t know. I don’t know if it has enough poetry in it to make a poem.
+It might not even be a poem.
+But I know it’s home.`,
+    source: "https://www.poetrytranslation.org/poem/ive-been-asked-to-write-a-poem-about-home-but-im-not-a-poet/",
+    sourceName: "Poetry Translation Centre",
+    edition: ""
+  },
+  "this-day-our-daily-dog": {
+    title: "This Day Our Daily Dog",
+    author: "Giselle Caputo",
+    translation: "Translated by Shook with The Poetry Translation Workshop",
+    textOrigin: "user-provided",
+    text: `It’s as if the plastic bags
+had become the sofa’s latest outfit
+because why remember the dead
+and gather dust in the house
+
+The cobwebs emigrate
+and the ants carry on
+taking the last crumb from
+a home, sweet home
+
+Mamá cooks, sweeps, and eyes me
+with that constant complaint,
+and when she wanders round the garden
+it’s to search for empty nests
+
+When the gate clicks again,
+she smiles, the dog comes in and asks
+if today we have a little left
+of our absurd daily bread`,
+    source: "https://www.poetrytranslation.org/poem/this-day-our-daily-dog/",
+    sourceName: "Poetry Translation Centre",
+    edition: ""
+  },
+  "october-landscape": {
+    title: "October Landscape",
+    author: "Hiren Bhattacharjya",
+    translation: "Translated by Uddipana Goswami with The Poetry Translation Workshop",
+    textOrigin: "user-provided",
+    text: `I
+
+The frenzy of a brutal sky
+Has ended.
+Green waves ripple
+Through the restive fields.
+
+II
+
+White flowers of the sugarcane
+Pierce the inky sky
+As autumn whispers —
+Every poem has its season.
+
+III
+
+With every shaft of light —
+Amazement.
+With passion —
+Words awaken.`,
+    source: "https://www.poetrytranslation.org/poem/october-landscape/",
+    sourceName: "Poetry Translation Centre",
+    edition: ""
+  },
+  "the-sudden-movement-of-objects": {
+    title: "the sudden movement of objects",
+    author: "Iraj Ziayi",
+    translation: "Translated by Alireza Abiz with The Poetry Translation Workshop",
+    textOrigin: "user-provided",
+    text: `when you think the objects have become silent
+the sound of your overcoat’s button falling
+brings the cherry trees to blossom
+you empty the trinkets from your waistcoat pockets
+and know summer is a chance to look for the lost button`,
+    source: "https://www.poetrytranslation.org/poem/the-sudden-movement-of-objects/",
+    sourceName: "Poetry Translation Centre",
+    edition: ""
+  },
 };
 
 function renderPoem() {
