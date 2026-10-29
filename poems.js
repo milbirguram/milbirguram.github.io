@@ -800,6 +800,34 @@ and know summer is a chance to look for the lost button`,
     sourceName: "Poetry Translation Centre",
     edition: ""
   },
+  "blandeur": {
+    title: "Blandeur",
+    author: "Kay Ryan",
+    textOrigin: "user-provided",
+    text: `If it please God,
+let less happen.
+Even out Earth's
+rondure, flatten
+Eiger, blanden
+the Grand Canyon.
+Make valleys
+slightly higher,
+widen fissures
+to arable land,
+remand your
+terrible glaciers
+and silence
+their calving,
+halving or doubling
+all geographical features
+toward the mean.
+Unlean against our hearts.
+Withdraw your grandeur
+from these parts.`,
+    source: "https://www.poetryfoundation.org/poems/43501/blandeur",
+    sourceName: "Poetry Foundation",
+    edition: ""
+  },
 };
 
 function renderPoem() {
