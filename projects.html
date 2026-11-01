@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Small interactive projects by Milbir Guram about purpose and how we know things.">
+    <meta name="theme-color" content="#faf9f6">
+    <title>Other projects — Milbir Guram</title>
+    <link rel="canonical" href="https://milbirguram.github.io/projects.html">
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="stylesheets/poems.css?v=2">
+    <style>
+.projects { list-style: none; padding: 0; margin: 32px 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.project { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid #dedfd7; border-radius: 6px; overflow: hidden; }
+.project:hover { background: #f3f3ed; border-color: #b5bdaf; }
+.project:focus-within { outline: 2px solid #58705a; outline-offset: 3px; }
+.project-preview { position: relative; aspect-ratio: 16 / 10; background: #f3f3ed; border-bottom: 1px solid #dedfd7; }
+.project-preview iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
+.project-body { padding: 18px 20px 20px; }
+.project-title { margin: 0; font-size: 16px; font-weight: 500; line-height: 1.75; }
+.project-title a { text-decoration: none; }
+.project-title a::after { content: ""; position: absolute; inset: 0; }
+.project-title a:focus-visible { outline: none; }
+.project-note { margin: 4px 0 0; color: #686d62; font-size: 15px; line-height: 1.6; }
+@media (max-width: 440px) {
+  .projects { grid-template-columns: 1fr; gap: 12px; }
+}
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav aria-label="Back to home"><a class="back" href="./">← Milbir Guram</a></nav>
+      <h1>Other projects</h1>
+      <ul class="projects" aria-label="Other projects">
+        <li class="project">
+          <div class="project-preview"><iframe data-src="projects/blastema/?preview" title="Blastema preview" tabindex="-1" aria-hidden="true"></iframe></div>
+          <div class="project-body">
+            <h2 class="project-title"><a href="projects/blastema/">Blastema</a></h2>
+            <p class="project-note">Cut a living shape and watch it rebuild itself from rules each cell follows.</p>
+          </div>
+        </li>
+        <li class="project">
+          <div class="project-preview"><iframe data-src="projects/animus/?preview" title="Animus preview" tabindex="-1" aria-hidden="true"></iframe></div>
+          <div class="project-body">
+            <h2 class="project-title"><a href="projects/animus/">Animus</a></h2>
+            <p class="project-note">Wire two sensors to two wheels and a machine seems to want things. Then guess the wiring from behaviour alone.</p>
+          </div>
+        </li>
+        <li class="project">
+          <div class="project-preview"><iframe data-src="projects/mirage/?preview" title="Mirage preview" tabindex="-1" aria-hidden="true"></iframe></div>
+          <div class="project-body">
+            <h2 class="project-title"><a href="projects/mirage/">Mirage</a></h2>
+            <p class="project-note">Pure noise, a few reasonable choices, and a significant result. A walk through the garden of forking paths.</p>
+          </div>
+        </li>
+        <li class="project">
+          <div class="project-preview"><iframe data-src="projects/facade/?preview" title="Facade preview" tabindex="-1" aria-hidden="true"></iframe></div>
+          <div class="project-body">
+            <h2 class="project-title"><a href="projects/facade/">Facade</a></h2>
+            <p class="project-note">A game that scores you for knowing, not for being right.</p>
+          </div>
+        </li>
+        <li class="project">
+          <div class="project-preview"><iframe data-src="projects/bromide/?preview" title="Bromide preview" tabindex="-1" aria-hidden="true"></iframe></div>
+          <div class="project-body">
+            <h2 class="project-title"><a href="projects/bromide/">Bromide</a></h2>
+            <p class="project-note">Type a sentence and see which of your words were predictable.</p>
+          </div>
+        </li>
+        <li class="project">
+          <div class="project-preview"><iframe data-src="projects/echo/?preview" title="Echo preview" tabindex="-1" aria-hidden="true"></iframe></div>
+          <div class="project-body">
+            <h2 class="project-title"><a href="projects/echo/">Echo</a></h2>
+            <p class="project-note">Checks whether a Wikipedia claim’s source was published after the claim, a sign the source may have copied Wikipedia.</p>
+          </div>
+        </li>
+      </ul>
+    </main>
+    <script>
+(function () {
+  var frames = Array.prototype.slice.call(document.querySelectorAll('.project-preview iframe'));
+  var visible = new Map();
+
+  function send(frame) {
+    if (!frame.contentWindow || !frame.getAttribute('src')) return;
+    frame.contentWindow.postMessage({ kit: visible.get(frame) ? 'play' : 'pause' }, location.origin);
+  }
+
+  frames.forEach(function (frame) {
+    frame.addEventListener('load', function () { send(frame); });
+  });
+
+  if (!('IntersectionObserver' in window)) {
+    frames.forEach(function (frame) { visible.set(frame, true); frame.src = frame.dataset.src; });
+    return;
+  }
+
+  // Load a preview shortly before it scrolls into view; play it only while it is on screen.
+  var loader = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      entry.target.src = entry.target.dataset.src;
+      loader.unobserve(entry.target);
+    });
+  }, { rootMargin: '300px 0px' });
+
+  var player = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      visible.set(entry.target, entry.isIntersecting);
+      send(entry.target);
+    });
+  }, { threshold: 0.35 });
+
+  frames.forEach(function (frame) { loader.observe(frame); player.observe(frame); });
+})();
+    </script>
+  </body>
+</html>

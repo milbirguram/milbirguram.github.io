@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://milbirguram.github.io/</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-11-01</lastmod>
   </url>
   <url>
     <loc>https://milbirguram.github.io/poems.html</loc>
@@ -11,5 +11,33 @@
   <url>
     <loc>https://milbirguram.github.io/essays.html</loc>
     <lastmod>2026-10-28</lastmod>
+  </url>
+  <url>
+    <loc>https://milbirguram.github.io/projects.html</loc>
+    <lastmod>2026-11-01</lastmod>
+  </url>
+  <url>
+    <loc>https://milbirguram.github.io/projects/blastema/</loc>
+    <lastmod>2026-11-01</lastmod>
+  </url>
+  <url>
+    <loc>https://milbirguram.github.io/projects/animus/</loc>
+    <lastmod>2026-11-01</lastmod>
+  </url>
+  <url>
+    <loc>https://milbirguram.github.io/projects/mirage/</loc>
+    <lastmod>2026-11-01</lastmod>
+  </url>
+  <url>
+    <loc>https://milbirguram.github.io/projects/facade/</loc>
+    <lastmod>2026-11-01</lastmod>
+  </url>
+  <url>
+    <loc>https://milbirguram.github.io/projects/bromide/</loc>
+    <lastmod>2026-11-01</lastmod>
+  </url>
+  <url>
+    <loc>https://milbirguram.github.io/projects/echo/</loc>
+    <lastmod>2026-11-01</lastmod>
   </url>
 </urlset>
