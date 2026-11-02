@@ -7,6 +7,8 @@
   background: var(--bg);
 }
 
+.intro { margin: 0 0 20px; max-width: 660px; font-size: 15px; line-height: 1.6; color: var(--muted); }
+
 .walk {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
@@ -95,11 +97,11 @@
 .meter-scale span:nth-child(4) { right: 0; transform: none; }
 .meter-hidden { margin: 22px 0 0; font-size: 14px; color: var(--muted); }
 
-.peek-note { color: var(--muted); font-size: 15px; }
+.peek-note { margin: 14px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
 
 /* ---------- garden ---------- */
 
-.garden { margin-top: 48px; }
+.garden, .studies { margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line); }
 .garden-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 32px; align-items: start; }
 .garden-figure { position: relative; }
 #garden-canvas { display: block; width: 100%; aspect-ratio: 1 / 1; border-radius: 6px; touch-action: manipulation; cursor: crosshair; }
@@ -135,8 +137,8 @@
 
 /* ---------- studies ---------- */
 
-.studies { margin-top: 56px; }
 .studies-text { max-width: 660px; }
+.studies h2 { margin-top: 0; font-size: 22px; }
 .run-status { margin-left: 10px; font-size: 14px; color: var(--muted); font-family: var(--mono); }
 .tallies { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 8px; }
 .tally h3 { margin: 0; font-size: 15px; font-weight: 500; color: var(--ink-strong); }
@@ -171,5 +173,5 @@
 /* ---------- preview (card on projects.html) ---------- */
 
 html.kit-preview .mirage-stage { padding: 0; border: 0; border-radius: 0; }
-html.kit-preview .walk { display: none; }
+html.kit-preview .walk, html.kit-preview .intro { display: none; }
 .preview-canvas { display: block; width: 100%; height: 100%; }

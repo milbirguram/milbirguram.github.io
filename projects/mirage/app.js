@@ -666,10 +666,10 @@
     else if (isSig(youP)) {
       lead = 'Your path, at ' + pText(youP) + ', is one of them.';
       var guided = state.peeked.length >= NF && state.peeked.slice(0, NF).every(Boolean);
-      if (guided) lead += ' You did not have to know where they were: at each fork the p-values on screen pointed the way, one sensible step at a time.';
+      if (guided) lead += ' At each fork the p-values on screen pointed the way.';
     }
     else lead = 'Your path, at ' + pText(youP) + ', is not one of them. These are.';
-    $('garden-noise').innerHTML = esc(lead) + ' <b>The data were pure noise.</b> Every number was drawn at random, and the group labels were dealt afterwards by a separate shuffle. Nothing about walking touched anyone’s mood, because there was no walk and no mood. A single analysis can still look like a discovery. Other noise studies give other counts, from none to more than a hundred; the run below counts how often at least one path works.';
+    $('garden-noise').innerHTML = esc(lead) + ' <b>The data were pure noise.</b> Every number was random, and the group labels were dealt afterwards by a separate shuffle.';
     $('garden-hint').hidden = false;
     var keyYou = document.querySelector('.key-you');
     if (keyYou) keyYou.parentNode.hidden = garden.you == null;
@@ -688,9 +688,9 @@
     }).join('');
     // The file drawer.
     var t = state.show.tries;
-    $('drawer').innerHTML = '<b>One more fork, and it was mine.</b> To be sure a path existed for you, the page drew noise studies until the plain analysis found nothing while an analyst choosing by p would find the hoped-for effect, but only after four or more decisions, with no single change to the plain analysis enough on its own. ' +
-      (t === 1 ? 'This study was the first draw.' : 'This study was draw ' + t + '; the ' + (t - 1 === 1 ? 'one before it was' : (t - 1) + ' before it were') + ' set aside.') +
-      ' Journals see studies that went through a similar filter: the ones where nothing worked tend to stay in the drawer.';
+    $('drawer').innerHTML = '<b>One more fork was mine.</b> The page drew noise studies until one let a p-guided walk succeed, but only after four or more decisions. ' +
+      (t === 1 ? 'This was the first draw.' : 'This was draw ' + t + '; ' + (t - 1) + ' ' + (t - 1 === 1 ? 'was' : 'were') + ' set aside.') +
+      ' Published studies pass a similar filter.';
   }
 
   // ---------- specification curve ----------
@@ -762,9 +762,8 @@
     if (garden.pre !== garden.you) mark(garden.pre, 'pre-registered', true, C.muted);
     var up = 0, down = 0;
     for (i = 0; i < N; i++) if (isSig(g.p[i])) { if (g.sign[i] > 0) up++; else down++; }
-    var cap = 'Every path, sorted by its answer and drawn as a signed z-score (the normal value matching its p, positive when the walkers scored higher). ' +
-      up + ' significant paths say walking lifts mood' + (down ? ' and ' + down + ' say it lowers it' : '') + ', from the same data. ' +
-      'Showing every reasonable path at once, as here, is the remedy Simonsohn, Simmons and Nelson call a specification curve.';
+    var cap = 'A specification curve: every path, sorted by its signed z-score. ' +
+      up + ' significant paths say walking lifts mood' + (down ? ' and ' + down + ' say it lowers it' : '') + ', from the same data.';
     $('spec-caption').textContent = cap;
     canvas.setAttribute('aria-label', 'Specification curve of all ' + N + ' paths sorted by signed z. ' + up + ' are significant in the positive direction and ' + down + ' in the negative.');
   }
@@ -844,9 +843,8 @@
     var b = $('run'); b.disabled = false; b.textContent = 'Run 1,000 more';
     var c = function (k) { var s = 0; for (var i = 0; i < RUN_N; i++) s += runs[k][i]; return s; };
     var any = c('any'), pk = c('peek'), pre = c('pre');
-    $('explain-numbers').innerHTML = 'Of 1,000 studies with no effect at all, <b>' + any + '</b> had at least one of the ' + M.N_PATHS +
-      ' paths reach p &lt; 0.05. An analyst who peeked at each fork and took the lowest p got there in <b>' + pk + '</b>. The single pre-registered path did so in <b>' + pre +
-      '</b>, close to the 50 that the 5% threshold promises. Run it again: the numbers move a little, because each run is fresh noise, but the gap stays.';
+    $('explain-numbers').innerHTML = 'Of 1,000 studies with no effect, <b>' + any + '</b> had some path reach p &lt; 0.05 and the peeking analyst got there in <b>' + pk +
+      '</b>. The pre-registered path did so in <b>' + pre + '</b>, close to the 50 that 5% promises.';
     $('studies-explain').hidden = false;
   }
 

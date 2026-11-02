@@ -16,13 +16,10 @@
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Mirage</h1>
-  <p class="kit-lede">Pure noise, six reasonable choices, and a result that looks real.</p>
-
-  <h2>The study</h2>
-  <p>A small, made-up trial. A hundred and twenty adults were split by lot into two groups of sixty. One group took a twenty-minute walk every morning for two weeks; the other carried on as usual. Everyone kept a two-week mood diary and, at the end, filled in a mood questionnaire and a single 0–10 rating. The question is plain: does a morning walk improve mood?</p>
-  <p>The data may or may not contain a real effect. You are the analyst. There are six decisions to make, and each option comes with a sensible reason.</p>
+  <p class="kit-lede">A made-up study asks whether a morning walk lifts mood, and you are the analyst. Make six ordinary analysis choices, each with a good reason, then see every path you could have taken and run a thousand more studies. The study is simulated and its six forks are a tidy stand-in for the messier choices real analyses face; the first study shown was picked so that a path through it works, as the page says at the end.</p>
 
   <section class="kit-stage kit-wide mirage-stage" data-kit-stage aria-label="The analysis">
+    <p class="intro">120 adults, split by lot: 60 walk every morning for two weeks, 60 carry on as usual. The data may or may not contain an effect. Six decisions; each option has a reason.</p>
     <div class="walk" id="walk">
       <div class="fork-panel">
         <div class="walk-head">
@@ -35,6 +32,7 @@
           <button type="button" class="kit-button" id="back">← Back</button>
           <button type="button" class="text-button" id="skip">Skip to the garden</button>
         </div>
+        <p class="peek-note">Seeing p while you choose is itself a fork. Switch it off to walk blind, as a pre-registered analysis does.</p>
       </div>
 
       <div class="data-panel">
@@ -54,95 +52,71 @@
       </div>
     </div>
     <canvas id="preview" class="preview-canvas" hidden role="img" aria-label="A tree of 486 analysis paths grows from one root. A handful of leaves glow as significant, and one path of six sensible choices is traced through to a significant leaf, in data that is pure noise."></canvas>
-  </section>
 
-  <p class="peek-note">Seeing p while you choose is itself a fork. It starts switched on because that is how analysis usually goes: the numbers are on screen while the decisions are made, and each decision has a good reason of its own. Switch it off to walk blind, the way a pre-registered analysis does.</p>
+    <div class="garden" id="garden" hidden role="region" aria-labelledby="garden-h">
+      <div class="garden-grid">
+        <div class="garden-figure">
+          <canvas id="garden-canvas" tabindex="0" role="img" aria-label="The garden of forking paths"></canvas>
+        </div>
+        <div class="garden-side">
+          <h2 id="garden-h">The garden</h2>
+          <p class="headline" id="garden-headline"></p>
+          <p id="garden-noise"></p>
+          <ul class="legend">
+            <li><span class="key key-sig" aria-hidden="true"></span>Path with p &lt; 0.05</li>
+            <li><span class="key key-ns" aria-hidden="true"></span>Path with p ≥ 0.05</li>
+            <li><span class="key key-you" aria-hidden="true"></span>Your path</li>
+            <li><span class="key key-pre" aria-hidden="true"></span>The plain, pre-registered path</li>
+          </ul>
+          <p class="ring-note">From the centre out: outcome, scale, exclusions, who, adjustment, test. Each dot on the rim is one complete analysis.</p>
+          <div class="inspect" id="inspect" aria-live="polite"></div>
+          <p class="hint" id="garden-hint">Point at or tap a rim dot. With the tree focused, arrow keys step along the rim; Shift jumps between significant paths.</p>
+        </div>
+      </div>
 
-  <section class="garden kit-wide" id="garden" hidden aria-labelledby="garden-h">
-    <div class="garden-grid">
-      <div class="garden-figure">
-        <canvas id="garden-canvas" tabindex="0" role="img" aria-label="The garden of forking paths"></canvas>
-      </div>
-      <div class="garden-side">
-        <h2 id="garden-h">The garden</h2>
-        <p class="headline" id="garden-headline"></p>
-        <p id="garden-noise"></p>
-        <ul class="legend">
-          <li><span class="key key-sig" aria-hidden="true"></span>Path with p &lt; 0.05</li>
-          <li><span class="key key-ns" aria-hidden="true"></span>Path with p ≥ 0.05</li>
-          <li><span class="key key-you" aria-hidden="true"></span>Your path</li>
-          <li><span class="key key-pre" aria-hidden="true"></span>The plain, pre-registered path</li>
-        </ul>
-        <p class="ring-note">From the centre out: outcome, scale, exclusions, who, adjustment, test. Each dot on the rim is one complete analysis. The three arcs outside the rim mark the three outcome measures, each labelled at the edge it faces.</p>
-        <div class="inspect" id="inspect" aria-live="polite"></div>
-        <p class="hint" id="garden-hint">Point at or tap a dot on the rim. With the tree focused, the arrow keys step along the rim; with Shift they jump between significant paths.</p>
-      </div>
+      <figure class="spec">
+        <canvas id="spec-canvas" role="img" aria-label="Specification curve"></canvas>
+        <figcaption id="spec-caption"></figcaption>
+      </figure>
+
+      <details class="sig-list">
+        <summary id="sig-summary">List the significant paths</summary>
+        <ol id="sig-list"></ol>
+      </details>
+
+      <p class="drawer" id="drawer"></p>
+      <p><button type="button" class="kit-button" id="again">Walk again with fresh noise</button></p>
     </div>
 
-    <figure class="spec">
-      <canvas id="spec-canvas" role="img" aria-label="Specification curve"></canvas>
-      <figcaption id="spec-caption"></figcaption>
-    </figure>
-
-    <details class="sig-list">
-      <summary id="sig-summary">List the significant paths</summary>
-      <ol id="sig-list"></ol>
-    </details>
-
-    <p class="drawer" id="drawer"></p>
-    <p><button type="button" class="kit-button" id="again">Walk again with fresh noise</button></p>
-  </section>
-
-  <section class="studies kit-wide" id="studies" hidden aria-labelledby="studies-h">
-    <div class="studies-text">
-      <h2 id="studies-h">A thousand more studies</h2>
-      <p>One garden could be a fluke. So run the trial again with fresh noise, a thousand times, and analyse each one in three ways: free to take whichever of the 486 paths works, walking the forks one at a time with p in view and taking the lowest at each, or committed in advance to the plain path alone.</p>
-      <p><button type="button" class="kit-button is-primary" id="run">Run 1,000 new studies</button> <span class="run-status" id="run-status" aria-live="polite"></span></p>
-    </div>
-    <div class="tallies">
-      <div class="tally">
-        <h3>Any path that works</h3>
-        <p class="tally-count" id="t-any">–</p>
-        <canvas id="w-any" role="img" aria-label="Grid of 1,000 studies: any path"></canvas>
+    <div class="studies" id="studies" hidden role="region" aria-labelledby="studies-h">
+      <div class="studies-text">
+        <h2 id="studies-h">A thousand more studies</h2>
+        <p>One garden could be a fluke. Run the trial a thousand times with fresh noise and count three ways: any of the 486 paths, an analyst who peeks at each fork, and one path fixed in advance.</p>
+        <p><button type="button" class="kit-button is-primary" id="run">Run 1,000 new studies</button> <span class="run-status" id="run-status" aria-live="polite"></span></p>
       </div>
-      <div class="tally">
-        <h3>An analyst who peeks</h3>
-        <p class="tally-count" id="t-peek">–</p>
-        <canvas id="w-peek" role="img" aria-label="Grid of 1,000 studies: peeking analyst"></canvas>
+      <div class="tallies">
+        <div class="tally">
+          <h3>Any path that works</h3>
+          <p class="tally-count" id="t-any">–</p>
+          <canvas id="w-any" role="img" aria-label="Grid of 1,000 studies: any path"></canvas>
+        </div>
+        <div class="tally">
+          <h3>An analyst who peeks</h3>
+          <p class="tally-count" id="t-peek">–</p>
+          <canvas id="w-peek" role="img" aria-label="Grid of 1,000 studies: peeking analyst"></canvas>
+        </div>
+        <div class="tally">
+          <h3>One pre-registered path</h3>
+          <p class="tally-count" id="t-pre">–</p>
+          <canvas id="w-pre" role="img" aria-label="Grid of 1,000 studies: pre-registered path"></canvas>
+        </div>
       </div>
-      <div class="tally">
-        <h3>One pre-registered path</h3>
-        <p class="tally-count" id="t-pre">–</p>
-        <canvas id="w-pre" role="img" aria-label="Grid of 1,000 studies: pre-registered path"></canvas>
+      <p class="tally-key"><span class="key key-sq-sig" aria-hidden="true"></span> a study that found “p &lt; 0.05” <span class="key key-sq-ns" aria-hidden="true"></span> a study that found nothing</p>
+      <div class="studies-text" id="studies-explain" hidden>
+        <p id="explain-numbers"></p>
+        <p>With no effect, one fixed test falls below 0.05 about one time in twenty. Each extra path is another, partly overlapping draw. Pre-registration removes the forks, not the noise.</p>
       </div>
     </div>
-    <p class="tally-key"><span class="key key-sq-sig" aria-hidden="true"></span> a study that found “p &lt; 0.05” <span class="key key-sq-ns" aria-hidden="true"></span> a study that found nothing</p>
-    <div class="studies-text" id="studies-explain" hidden>
-      <p id="explain-numbers"></p>
-      <p>Why does the single path stay near 5%? When there is no effect, a p-value is equally likely to land anywhere between 0 and 1, so one fixed test falls below 0.05 about one time in twenty. That is all the 5% promises. Every extra path is another draw. The paths share the same people, so they are far from independent, and 486 paths are not 486 separate tries. But they differ enough that the chance of at least one hit climbs well past 5%.</p>
-      <p>Pre-registration means writing the path down before seeing the data. It removes the forks, not the noise. It does not make an analysis right, only honest about its error rate.</p>
-    </div>
-  </section>
-
-  <section class="kit-notes">
-    <h2>What it’s for</h2>
-    <p>To show how a result that looks true can come out of nothing, with nobody cheating. Each decision in the walk is one an honest analyst might make for a good reason. The trouble is that the reasons are found after the data are in view, and noise always offers a few paths that look like a finding. The 5% error rate on a p-value only holds when the path was fixed in advance.</p>
-
-    <h2>How I know</h2>
-    <p><strong>What is modelled.</strong> Every study is generated fresh from a seeded random number generator (mulberry32, with Box–Muller for normal draws). Each of the 120 participants gets an age, a night’s sleep, an attention-check result and a latent mood that is partly tied to sleep; the three mood measures share that latent mood, as real measures would, and are rounded and bounded like real scales. Only then are the group labels dealt, by a shuffle from a separate random stream, sixty and sixty. Nothing about the group touches any measurement. There is no effect to find.</p>
-    <p><strong>The tests.</strong> The Welch t-test uses the Welch–Satterthwaite degrees of freedom, with the Student t distribution computed from the regularised incomplete beta function. The Mann–Whitney U test uses average ranks for ties, the normal approximation with the tie-corrected variance, and a 0.5 continuity correction, as R and scipy do by default. Regression is ordinary least squares with the group and, if chosen, one covariate, and a t-test on the group coefficient; with no covariate it is the classic pooled t-test. When you adjust and then choose Welch or Mann–Whitney, the test runs on scores with the covariate regressed out. Every p-value is two-sided.</p>
-    <p><strong>What is simplified.</strong> Real forks are messier and more numerous: dozens of plausible outcomes, covariates and exclusion rules, and choices that depend on each other. Here every fork is crossed with every other, which gives 3 × 2 × 3 × 3 × 3 × 3 = 486 paths. The “analyst who peeks” is a simple rule: at each fork, take the option with the lowest p while leaving later forks at their plain defaults. Real people are less mechanical and often more inventive. The first study you see is not a random draw. The page draws studies until it finds one where the plain analysis finds nothing, the peeking analyst finds walkers happier at p &lt; 0.05 but only at the fourth decision or later, and no single change to the plain analysis is enough on its own; it says how many draws it took. Without that last condition the walk often hinges on one choice, usually the outcome measure, and the other decisions do little. The selected study is not typical in its count of significant paths either; walk again to see others. That selection is the file drawer, and the thousand-study run shows how often it happens without any selection.</p>
-    <p><strong>What I checked.</strong> Node tests in the project folder check that p-values match reference values to three decimals (for example t = 2.0 with 30 degrees of freedom gives 0.0546). scipy was not available, so the references come from a separate Python script that integrates the t density numerically and re-implements each test independently, from closed forms for one and two degrees of freedom, and from printed t tables. The tests run all 486 paths on 3,000 fresh null datasets. Every path, taken alone, has a false-positive rate close to 5% (4.0–5.8% across paths; the pre-registered path 4.6%), and no more paths fall outside the 99% binomial interval than chance predicts when 486 paths are checked at once. The Mann–Whitney paths run a touch below 5% because of the continuity correction. Another test confirms that, in the first study, the peeking walk only reaches p &lt; 0.05 at the fourth decision or later. They confirm that the “any path” share is counted from simulation and matches a recount, and that group labels are statistically and structurally independent of every variable.</p>
-    <p><strong>What would change the conclusion.</strong> If the walk had a real effect, more paths would light up and the plain path would find it too; forking paths do not create effects, they create false ones. Fewer or more strongly correlated forks would shrink the any-path share; more forks would grow it. The numbers here belong to this toy design and should not be read as the false-positive rate of any real field.</p>
-
-    <h2>Sources</h2>
-    <ul class="kit-sources">
-      <li>Andrew Gelman and Eric Loken, “The garden of forking paths: Why multiple comparisons can be a problem, even when there is no ‘fishing expedition’ or ‘p-hacking’ and the research hypothesis was posited ahead of time”, unpublished manuscript, Columbia University, 2013.</li>
-      <li>Joseph P. Simmons, Leif D. Nelson and Uri Simonsohn, “False-positive psychology: Undisclosed flexibility in data collection and analysis allows presenting anything as significant”, <i>Psychological Science</i> 22(11), 2011. <a href="https://doi.org/10.1177/0956797611417632">doi:10.1177/0956797611417632</a></li>
-      <li>Uri Simonsohn, Joseph P. Simmons and Leif D. Nelson, “Specification curve analysis”, <i>Nature Human Behaviour</i> 4, 2020. <a href="https://doi.org/10.1038/s41562-020-0912-z">doi:10.1038/s41562-020-0912-z</a></li>
-      <li>Nate Breznau and many co-authors, “Observing many researchers using the same data and hypothesis reveals a hidden universe of uncertainty”, <i>Proceedings of the National Academy of Sciences</i> 119(44), 2022. <a href="https://doi.org/10.1073/pnas.2203150119">doi:10.1073/pnas.2203150119</a></li>
-      <li>Jorge Luis Borges, “The Garden of Forking Paths”, 1941, the story the title nods to.</li>
-    </ul>
   </section>
 </main>
 <script src="model.js"></script>
