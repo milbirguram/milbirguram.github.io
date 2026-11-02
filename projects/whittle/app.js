@@ -34,6 +34,32 @@
     return out + esc(line.slice(last));
   }
 
+  // ---------------------------------------------------------------- wood shavings
+  // One shaving curls off for each shrink step; a bigger cut makes a bigger shaving.
+  // Decoration only: nothing is drawn under reduced motion.
+  var CURL = 'M1 15 C 9 14, 20 6, 31 6 C 40 6, 42 15, 35 17 C 30 18.5, 27 13, 32 11.5';
+  var SHAVING = '<svg viewBox="0 0 44 22" aria-hidden="true" focusable="false">' +
+    '<path d="' + CURL + '" fill="none" stroke="#9c7a48" stroke-width="6" stroke-linecap="round"/>' +
+    '<path d="' + CURL + '" fill="none" stroke="#d9b981" stroke-width="4.2" stroke-linecap="round"/>' +
+    '<path d="M2 14 C 10 12.5, 20 5.5, 30 5" fill="none" stroke="#f6ead0" stroke-width="1.2" stroke-linecap="round"/></svg>';
+  function shaving(scale) {
+    var d = el('span', 'wh-shaving');
+    d.innerHTML = SHAVING;
+    d.style.setProperty('--s', String(scale));
+    return d;
+  }
+  // Bulk of a shown value: characters of strings, elements of arrays, fields of records.
+  function bulk(v) {
+    if (typeof v === 'string') return v.length;
+    if (Array.isArray(v)) return v.reduce(function (n, x) { return n + 1 + bulk(x); }, 0);
+    if (v && typeof v === 'object') return Object.keys(v).reduce(function (n, k) { return n + bulk(v[k]); }, 0);
+    return 0;
+  }
+  function shavingScale(before, after) {
+    var cut = bulk(before) - bulk(after);
+    return cut > 0 ? Math.min(1.4, 0.75 + 0.12 * cut) : 0.55;
+  }
+
   // ================================================================ preview (the card)
   if (Kit.preview) { preview(); return; }
 
@@ -232,12 +258,6 @@
 
   // Steps are labelled by what changed in the shown input, not by the shrinker's internal pass:
   // removing hidden choices can shorten the input, or only change a value in it.
-  function bulk(v) {
-    if (typeof v === 'string') return v.length;
-    if (Array.isArray(v)) return v.reduce(function (n, x) { return n + 1 + bulk(x); }, 0);
-    if (v && typeof v === 'object') return Object.keys(v).reduce(function (n, k) { return n + bulk(v[k]); }, 0);
-    return 0;
-  }
   function stepText(s, steps, i, original) {
     var before = i === 0 ? original : steps[i - 1].value, after = steps[i].value;
     if (s.show(after) === s.show(before)) return 'simplified a hidden choice';
@@ -254,6 +274,22 @@
     return li;
   }
 
+  // A shaving curls off the end of the newly whittled input and falls away.
+  function shave(li, scale, i) {
+    if (Kit.reducedMotion || !li) return;
+    var host = $('wh-shrink'), layer = host.querySelector('.wh-shavings');
+    if (!layer) { layer = el('div', 'wh-shavings'); layer.setAttribute('aria-hidden', 'true'); host.appendChild(layer); }
+    var c = li.querySelector('.wh-chip'), hr = host.getBoundingClientRect(), cr = c.getBoundingClientRect();
+    var sv = shaving(scale);
+    sv.style.left = (cr.right - hr.left - 4) + 'px';
+    sv.style.top = (cr.top - hr.top + cr.height / 2) + 'px';
+    sv.style.setProperty('--dx', ((i % 3) * 9 - 6) + 'px');
+    function done() { if (sv.parentNode) sv.parentNode.removeChild(sv); }
+    sv.addEventListener('animationend', done);
+    setTimeout(done, 1400);
+    layer.appendChild(sv);
+  }
+
   function shrinkSteps(exp) {
     var s = exp.spec, sh = exp.shrunk, list = $('wh-steps'), i = 0;
     $('wh-shrink').hidden = false;
@@ -267,6 +303,7 @@
       var st = sh.steps[i];
       list.appendChild(stepItem(s, 'step ' + (i + 1), stepText(s, sh.steps, i, sh.original.value), st.value));
       list.scrollTop = list.scrollHeight;
+      shave(list.lastChild, shavingScale(i === 0 ? sh.original.value : sh.steps[i - 1].value, st.value), i);
       i++;
       state.anim.timer = setTimeout(next, gap);
     }
@@ -347,6 +384,8 @@
     var box = $('wh-preview');
     box.hidden = false;
     var streamBox = $('wh-p-stream');
+    var pile = el('div', 'wh-p-pile');
+    $('wh-p-big').parentNode.appendChild(pile);
 
     // Real runs of the strongest property on each buggy function, for the seeds listed in the
     // model (W.PREVIEW, checked by the tests); the runs themselves are untouched.
@@ -364,6 +403,26 @@
     }
     var plans = demos.map(timeline);
 
+    // The pile on the bench: one shaving per shrink step taken, placed by a fixed pattern.
+    // When the animation is running, the newest one drops into place.
+    var HEAP = [[30, 22, -8], [4, 18, 170], [40, 4, 14], [14, 2, -24], [22, 12, 192], [0, 0, 8], [36, 14, -168], [10, 24, 26], [26, 0, -4]];
+    function drawPile(e, k) {
+      var have = pile.childNodes.length;
+      if (k < have) { pile.textContent = ''; have = 0; }
+      for (var j = have; j < k; j++) {
+        var st = e.shrunk.steps[j], before = j === 0 ? e.shrunk.original.value : e.shrunk.steps[j - 1].value;
+        var sc = Math.min(1.1, shavingScale(before, st.value)) * 0.85;
+        var sv = shaving(sc);
+        var at = HEAP[j % HEAP.length];
+        var rest = 'translate(' + at[0] + 'px, ' + at[1] + 'px) rotate(' + at[2] + 'deg) scale(' + sc + ')';
+        sv.style.setProperty('--rest', rest);
+        sv.style.transform = rest;
+        sv.style.left = '0'; sv.style.top = '0';
+        if (j === k - 1 && Kit.playing && !Kit.reducedMotion) sv.className += ' is-new';
+        pile.appendChild(sv);
+      }
+    }
+
     var cur = -1, lastKey = '';
     function draw(di, ms) {
       var e = demos[di], T = plans[di], s = e.spec, N = e.run.inputs.length;
@@ -375,7 +434,7 @@
       if (key === lastKey) return;
       lastKey = key;
 
-      if (di !== cur) { cur = di; streamBox.textContent = ''; streamBox.dataset.n = '0'; }
+      if (di !== cur) { cur = di; streamBox.textContent = ''; streamBox.dataset.n = '0'; pile.textContent = ''; }
       var have = +streamBox.dataset.n;
       if (n < have) { streamBox.textContent = ''; have = 0; }
       for (var i = Math.max(have, n - 30); i < n; i++) {
@@ -400,6 +459,7 @@
         big.textContent = '✕ ' + clip(s.show(v), 40);
         big.className = 'wh-p-big is-fail' + (done ? ' is-final' : '');
       }
+      drawPile(e, inShrink ? k : 0);
     }
 
     // A still frame for paused cards and reduced motion: the first demo, fully whittled.

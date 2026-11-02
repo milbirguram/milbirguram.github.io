@@ -50,3 +50,7 @@ I checked the page in a browser at desktop width and at 375 × 812 (no horizonta
 - D. R. MacIver and A. F. Donaldson (2020). “Test-Case Reduction via Test-Case Generation: Insights from the Hypothesis Reducer.” *34th European Conference on Object-Oriented Programming (ECOOP 2020)*, LIPIcs 166.
 - Y. Shafranovich (2005). “Common Format and MIME Type for Comma-Separated Values (CSV) Files.” RFC 4180.
 - K. R. Popper (1963). *Conjectures and Refutations*. Routledge. (The outlook behind the page, not cited on it.)
+
+## Look
+
+The stage is a workbench: birch bench, the code on a cream index card with a pencilled margin, graphite for everything ordinary and carpenter's-pencil red for the bug only. Each shrink step curls a wood shaving off the newly whittled input (larger when more was cut); none are drawn under reduced motion, and the card preview keeps one shaving per step in a small heap. Fonts are Fraunces and JetBrains Mono (SIL Open Font License), self-hosted from Fontsource 5.3.0 in `fonts/` with `OFL.txt`; code ligatures are turned off so `===` reads as typed.
