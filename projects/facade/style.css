@@ -1,0 +1,106 @@
+/* Facade. Page chrome comes from ../kit.css; this styles the stage only. */
+.fc-stage {
+  --knew: #3f5a42;
+  --lucky: #7a5718;
+  --wrong: #8a3b2e;
+}
+
+/* ---- The drive ---- */
+.fc-drive { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); }
+.fc-view { position: relative; }
+.fc-view canvas { display: block; width: 100%; height: clamp(250px, 40vw, 420px); touch-action: pan-y; }
+.fc-caption { padding: 16px 20px 20px; border-top: 1px solid var(--line); min-height: 128px; }
+.fc-say { margin: 0 0 14px; max-width: 64ch; }
+.fc-say strong { font-weight: 500; color: var(--ink-strong); }
+.fc-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.fc-note { color: var(--muted); font-size: 15px; }
+
+/* ---- The cases ---- */
+.fc-cases, .fc-final { max-width: 680px; margin: 0 auto; }
+.fc-rule { margin: 0 0 20px; padding: 12px 16px; background: var(--wash); border-radius: 6px; font-size: 15px; line-height: 1.6; }
+.fc-rule b { font-weight: 500; color: var(--ink-strong); }
+.fc-board {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+  padding: 0 4px 12px; margin-bottom: 16px; border-bottom: 1px solid var(--line);
+}
+.fc-progress { margin: 0; color: var(--muted); font-size: 15px; }
+.fc-tally { display: flex; gap: 24px; margin: 0; }
+.fc-tally div { display: flex; align-items: baseline; gap: 8px; }
+.fc-tally dt { color: var(--muted); font-size: 15px; }
+.fc-tally dd { margin: 0; font-size: 22px; font-weight: 500; color: var(--ink-strong); font-variant-numeric: tabular-nums; min-width: 1.2ch; }
+.fc-tally .is-bumped { animation: fc-bump 0.5s ease-out; }
+@keyframes fc-bump { 0% { color: var(--accent); } 100% { color: var(--ink-strong); } }
+
+.fc-card { border: 1px solid var(--line); border-radius: 6px; padding: 24px 28px 28px; background: var(--bg); }
+.fc-title { margin: 0 0 12px; font-size: 22px; font-weight: 500; line-height: 1.3; letter-spacing: -0.02em; color: var(--ink-strong); }
+.fc-title:focus { outline: none; }
+.fc-story { margin-bottom: 24px; }
+.fc-ask { border: 0; margin: 0 0 20px; padding: 0; min-width: 0; }
+.fc-question { padding: 0; margin-bottom: 10px; font-weight: 500; color: var(--ink-strong); }
+.fc-choices { display: flex; flex-wrap: wrap; gap: 10px; }
+.fc-choices-stack { flex-direction: column; align-items: stretch; }
+.fc-choices-stack .kit-button { text-align: left; }
+.fc-ask .kit-button:disabled[aria-pressed="true"] { opacity: 1; }
+.fc-hint { margin: 10px 0 0; color: var(--muted); font-size: 15px; }
+
+.fc-reveal { margin-top: 8px; padding-top: 20px; border-top: 1px solid var(--line); }
+.fc-reveal:focus { outline: none; }
+.fc-outcome { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 20px; font-weight: 500; }
+.fc-mark {
+  display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid currentColor; font-size: 16px; line-height: 1;
+}
+.is-knew { color: var(--knew); }
+.is-lucky { color: var(--lucky); }
+.is-wrong { color: var(--wrong); }
+.fc-checks { list-style: none; padding: 0; margin: 0 0 16px; }
+.fc-checks li { display: flex; gap: 8px; }
+.fc-checks b { font-weight: 500; color: var(--ink-strong); }
+.fc-facts { margin-bottom: 16px; }
+.fc-links { margin: 0 0 20px; padding: 14px 16px; background: var(--wash); border-radius: 6px; font-size: 15px; line-height: 1.6; }
+.fc-links dt { color: var(--muted); }
+.fc-links dd { margin: 0 0 10px; color: var(--ink); }
+.fc-links dd:last-child { margin-bottom: 0; }
+
+/* ---- The final screen ---- */
+.fc-final { padding-top: 4px; }
+.fc-big { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 8px 0 28px; }
+.fc-score { border: 1px solid var(--line); border-radius: 6px; padding: 18px 20px 16px; }
+.fc-score-label { margin: 0; color: var(--muted); font-size: 15px; }
+.fc-score-num { margin: 0; font-size: clamp(40px, 9vw, 56px); font-weight: 500; line-height: 1.1; letter-spacing: -0.03em; color: var(--ink-strong); font-variant-numeric: tabular-nums; }
+.fc-score-num span { font-size: 0.4em; color: var(--muted); letter-spacing: 0; font-weight: 400; }
+.fc-cells { display: flex; gap: 4px; margin-top: 10px; }
+.fc-cell { flex: 1; height: 8px; border-radius: 2px; background: var(--line); }
+.fc-cell.is-on { background: var(--ink-strong); }
+.fc-sub { margin: 32px 0 8px; font-size: 16px; font-weight: 500; color: var(--ink-strong); }
+.fc-list { margin: 0 0 28px; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.fc-list li { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.fc-list .fc-li-title { color: var(--ink-strong); }
+.fc-list .fc-li-detail { grid-column: 1 / -1; color: var(--muted); font-size: 15px; line-height: 1.6; }
+.fc-list .fc-li-out { white-space: nowrap; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+.fc-list .fc-mark { width: 22px; height: 22px; font-size: 13px; border-width: 1px; }
+
+/* Narrow screens: a taller view, so the look-back can show the barns in two rows. */
+@media (max-width: 499px) {
+  .fc-view canvas { height: 320px; }
+}
+
+@media (max-width: 600px) {
+  .fc-caption { padding: 14px 16px 18px; }
+  .fc-card { padding: 20px 16px 22px; }
+  .fc-big { gap: 10px; }
+  .fc-score { padding: 14px 14px 12px; }
+  .fc-tally { gap: 16px; }
+  .fc-actions .kit-button { flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-tally .is-bumped { animation: none; }
+}
+
+/* ---- Preview (?preview): only the canvas, filling the card ---- */
+html.kit-preview .fc-stage { border: 0; }
+html.kit-preview .fc-drive { border: 0; border-radius: 0; height: 100%; }
+html.kit-preview .fc-view { position: absolute; inset: 0; }
+html.kit-preview .fc-view canvas { height: 100%; }
+html.kit-preview .fc-caption, html.kit-preview .fc-cases, html.kit-preview .fc-final { display: none; }
