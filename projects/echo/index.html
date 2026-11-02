@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Pick a sentence from a Wikipedia article and check whether its cited source was published after the sentence first appeared on Wikipedia, the signature of citogenesis.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Echo — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/echo/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Echo</h1>
+  <p class="kit-lede">Citogenesis is when a claim goes onto Wikipedia unsourced, a writer repeats it, and that writing is then cited back as its source. Echo checks one sentence for the trace this leaves: a source dated after the sentence first appeared on Wikipedia. Open a case file, or load any article and pick a cited sentence. Dates show order, not copying, and Echo matches words, not meaning, so a flag is a reason to look closer, not proof. Article text is from Wikipedia under CC BY-SA 4.0.</p>
+
+  <section class="kit-stage kit-wide echo" data-kit-stage aria-label="Echo">
+    <div class="echo-ui">
+      <form id="load-form" class="load" novalidate>
+        <div class="field grow">
+          <label for="article">English Wikipedia article</label>
+          <input id="article" name="article" type="text" placeholder="Title or link, such as Turnspit dog" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="field rev">
+          <label for="oldid">Revision id <span class="opt">(optional)</span></label>
+          <input id="oldid" name="oldid" type="text" inputmode="numeric" placeholder="oldid" autocomplete="off">
+        </div>
+        <button class="kit-button is-primary" type="submit" id="load-btn">Load</button>
+      </form>
+
+      <div class="cases" role="group" aria-labelledby="cases-h">
+        <p class="cases-h" id="cases-h">Case files <span class="opt">open one to run it live, about a minute each</span></p>
+        <div class="case-row"><span class="case-kind">Documented incidents</span><div class="case-list" id="cases-documented"></div></div>
+        <div class="case-row"><span class="case-kind">Controls</span><div class="case-list" id="cases-control"></div></div>
+        <p class="check-row"><button type="button" class="kit-button case-btn" id="check-btn">Check all case files</button> <span class="opt">runs each in turn: incidents should be flagged, controls not</span></p>
+        <div id="check" class="check" hidden aria-live="polite"></div>
+      </div>
+
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+
+      <div class="workspace">
+        <div class="article-pane" id="article-pane" hidden>
+          <div id="article-head" class="article-head"></div>
+          <label class="filter"><span>Find a sentence</span><input id="filter" type="search" autocomplete="off" spellcheck="false"></label>
+          <div id="sentences" class="sentences" tabindex="-1" aria-label="The article’s sentences. Cited ones are buttons."></div>
+        </div>
+
+        <div class="trace-pane">
+          <div id="chosen" class="chosen" hidden>
+            <p class="pane-h">Sentence</p>
+            <blockquote id="chosen-text" class="chosen-text"></blockquote>
+            <p class="pane-h">Cited to</p>
+            <ul id="cite-list" class="cite-list"></ul>
+            <p id="scope-note" class="hint" hidden>This sentence has no citation of its own. The citation at the end of its paragraph is used, as Wikipedia editors often cite a whole paragraph once.</p>
+            <label for="trace-text" class="pane-h">Text to trace</label>
+            <textarea id="trace-text" rows="3" spellcheck="false"></textarea>
+            <p class="hint">A revision counts when 80% of these words appear close together, with every number and “not”. If the sentence was reworded, trim it to its distinctive words.</p>
+            <button type="button" class="kit-button is-primary" id="trace-btn">Trace this sentence</button>
+          </div>
+
+          <div id="log-wrap" class="log-wrap" hidden>
+            <p class="pane-h">Analysis log</p>
+            <ol id="log" class="log" aria-label="Analysis log"></ol>
+          </div>
+
+          <div id="result" class="result" hidden>
+            <div id="verdict" class="verdict"></div>
+            <canvas id="timeline" class="timeline" role="img" aria-label="Timeline"></canvas>
+            <p class="legend" aria-hidden="true"><span class="k k-claim"></span>claim on Wikipedia <span class="k k-src"></span>source published <span class="k k-cite"></span>citation attached</p>
+            <p id="tl-caption" class="tl-caption"></p>
+            <dl id="evidence" class="evidence"></dl>
+            <ul id="caveats" class="caveats"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <canvas id="preview-canvas" class="preview-canvas" hidden role="img" aria-label="Timeline of a documented case"></canvas>
+  </section>
+
+</main>
+<script src="model.js"></script>
+<script src="cases.js"></script>
+<script src="recorded.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

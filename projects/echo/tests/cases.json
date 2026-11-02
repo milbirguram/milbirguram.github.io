@@ -1,0 +1,405 @@
+{
+  "ranAt": "2026-11-02T01:25:16.906Z",
+  "runner": "node tests/run-cases.js",
+  "results": [
+    {
+      "id": "vulfpeck",
+      "caseId": "vulfpeck",
+      "kind": "documented",
+      "title": "Vulfpeck",
+      "oldid": 563021596,
+      "sentence": "Musicians Jack Stratton (drums, keyboards), Theo Katzman (drums, guitar), Woody Goss (keyboards) and Joe Dart (bass) met in a 19th-century German literature class at The University of Michigan.",
+      "trace": "Musicians Jack Stratton (drums, keyboards), Theo Katzman (drums, guitar), Woody Goss (keyboards) and Joe Dart (bass) met in a 19th-century German literature class at The University of Michigan.",
+      "expect": "echo",
+      "verdict": "Possible echo",
+      "code": "echo",
+      "pass": true,
+      "claimFirstSeen": {
+        "revid": 534774764,
+        "timestamp": "2013-01-25T04:58:35Z",
+        "prevRevid": null,
+        "exact": true,
+        "messy": false,
+        "wordingCheck": "start"
+      },
+      "citationAttached": {
+        "revid": 559153892,
+        "timestamp": "2013-06-10T01:41:36Z",
+        "sameRevision": false
+      },
+      "earlierWording": null,
+      "earlierWordingTraced": null,
+      "sources": [
+        {
+          "title": "Theo Katzman Tour Diary: A Day In The Life of Darren Criss' Opening Act",
+          "work": "Billboard.com",
+          "url": "http://www.billboard.com/articles/columns/pop-shop/1566127/theo-katzman-tour-diary-a-day-in-the-life-of-darren-criss-opening",
+          "date": "6 June 2013",
+          "dateKind": "date",
+          "access": "9 June 2013"
+        }
+      ],
+      "reasons": [
+        "The cited source is dated after a revision that already contained the claim."
+      ],
+      "revisions": 24,
+      "fetches": 10,
+      "capHit": false
+    },
+    {
+      "id": "omonia",
+      "caseId": "omonia",
+      "kind": "documented",
+      "title": "AC Omonia",
+      "oldid": 239656275,
+      "sentence": "Omonia's fans, the \"Zany Ones\" are considered to be left-wing in their majority.",
+      "trace": "fans Zany Ones",
+      "expect": "echo",
+      "verdict": "Possible echo",
+      "code": "echo",
+      "pass": true,
+      "claimFirstSeen": {
+        "revid": 234985174,
+        "timestamp": "2008-08-29T13:41:55Z",
+        "prevRevid": 234984434,
+        "exact": true,
+        "messy": false,
+        "wordingCheck": "none"
+      },
+      "citationAttached": {
+        "revid": 239656275,
+        "timestamp": "2008-09-19T21:24:31Z",
+        "sameRevision": false
+      },
+      "earlierWording": null,
+      "earlierWordingTraced": null,
+      "sources": [
+        {
+          "title": "New-Look Manchester City side begin their UEFA cup campaign in earnest",
+          "work": null,
+          "url": "http://www.mirror.co.uk/sport/football/2008/09/18/new-look-manchester-city-side-begin-their-uefa-cup-campaign-in-earnest-115875-20741334/",
+          "date": "18 September 2008",
+          "dateKind": "url",
+          "access": "19 September 2008"
+        }
+      ],
+      "reasons": [
+        "The cited source is dated after a revision that already contained the claim."
+      ],
+      "revisions": 1347,
+      "fetches": 24,
+      "capHit": false
+    },
+    {
+      "id": "omonia:whole",
+      "caseId": "omonia",
+      "kind": "whole-sentence",
+      "title": "AC Omonia",
+      "oldid": 239656275,
+      "sentence": "Omonia's fans, the \"Zany Ones\" are considered to be left-wing in their majority.",
+      "trace": "Omonia's fans, the \"Zany Ones\" are considered to be left-wing in their majority.",
+      "expect": "not-first",
+      "verdict": "Can’t tell",
+      "code": "unknown",
+      "pass": true,
+      "claimFirstSeen": {
+        "revid": 239656275,
+        "timestamp": "2008-09-19T21:24:31Z",
+        "prevRevid": 239630266,
+        "exact": true,
+        "messy": false,
+        "wordingCheck": "found"
+      },
+      "citationAttached": {
+        "revid": 239656275,
+        "timestamp": "2008-09-19T21:24:31Z",
+        "sameRevision": true
+      },
+      "earlierWording": {
+        "foundIn": 239630266,
+        "timestamp": "2008-09-19T19:18:10Z",
+        "text": "Omonia's fans are considered to be left-wing in their majority.",
+        "suggestions": [
+          "fans considered left-wing majority",
+          "fans Zany Ones"
+        ]
+      },
+      "earlierWordingTraced": {
+        "revid": 131168123,
+        "timestamp": "2007-05-15T23:38:27Z",
+        "text": "Omonia's fans are considered to be left-wing in their majority.",
+        "settled": false
+      },
+      "sources": [
+        {
+          "title": "New-Look Manchester City side begin their UEFA cup campaign in earnest",
+          "work": null,
+          "url": "http://www.mirror.co.uk/sport/football/2008/09/18/new-look-manchester-city-side-begin-their-uefa-cup-campaign-in-earnest-115875-20741334/",
+          "date": "18 September 2008",
+          "dateKind": "url",
+          "access": "19 September 2008"
+        }
+      ],
+      "reasons": [
+        "A cited source is dated before this wording first appeared, but an earlier wording that shares its rarer words was on Wikipedia by 15 May 2007 (revision 131168123): “Omonia's fans are considered to be left-wing in their majority.” The source is not dated before that. If the earlier wording makes the same claim, the source may repeat Wikipedia. Echo cannot tell whether it does.",
+        "Echo could not trace that earlier wording all the way back, so it may be older still."
+      ],
+      "revisions": 1347,
+      "fetches": 40,
+      "capHit": true
+    },
+    {
+      "id": "mottainai",
+      "caseId": "mottainai",
+      "kind": "documented",
+      "title": "Mottainai",
+      "oldid": 925482674,
+      "sentence": "One of the earliest appearances of the word mottainai is in the book Genpei Jōsuiki (A Record of the Genpei War, ca. 1247).",
+      "trace": "One of the earliest appearances of the word mottainai is in the book Genpei Jōsuiki (A Record of the Genpei War, ca. 1247).",
+      "expect": "echo",
+      "verdict": "Possible echo",
+      "code": "echo",
+      "pass": true,
+      "claimFirstSeen": {
+        "revid": 214464791,
+        "timestamp": "2008-05-23T18:04:48Z",
+        "prevRevid": 213989113,
+        "exact": true,
+        "messy": true,
+        "wordingCheck": "found"
+      },
+      "citationAttached": {
+        "revid": 925482674,
+        "timestamp": "2019-11-10T11:05:48Z",
+        "sameRevision": false
+      },
+      "earlierWording": {
+        "foundIn": 213989113,
+        "timestamp": "2008-05-21T17:36:29Z",
+        "text": "One wording of mottainai is in the book Genpei Jōsuiki.",
+        "suggestions": [
+          "mottainai book Genpei Jōsuiki"
+        ]
+      },
+      "earlierWordingTraced": null,
+      "sources": [
+        {
+          "title": "Material Flows: Human Flourishing And The Life Of Goods",
+          "work": null,
+          "url": null,
+          "date": "2015",
+          "dateKind": "free-text",
+          "access": null
+        }
+      ],
+      "reasons": [
+        "The cited source is dated after a revision that already contained the claim.",
+        "History is messy: the claim was removed and re-added at least once, so the first-appearance date is a best effort, not a certainty."
+      ],
+      "revisions": 348,
+      "fetches": 24,
+      "capHit": false
+    },
+    {
+      "id": "meighen-osgoode",
+      "caseId": "meighen-osgoode",
+      "kind": "documented",
+      "title": "Arthur Meighen",
+      "oldid": 1061264562,
+      "sentence": "He also studied law at Osgoode Law School.",
+      "trace": "law Osgoode School",
+      "expect": "echo",
+      "verdict": "Possible echo",
+      "code": "echo",
+      "pass": true,
+      "claimFirstSeen": {
+        "revid": 181750103,
+        "timestamp": "2008-01-03T00:40:03Z",
+        "prevRevid": 181726222,
+        "exact": true,
+        "messy": false,
+        "wordingCheck": "none"
+      },
+      "citationAttached": {
+        "revid": 1061264562,
+        "timestamp": "2021-12-20T17:49:59Z",
+        "sameRevision": false
+      },
+      "earlierWording": null,
+      "earlierWordingTraced": null,
+      "sources": [
+        {
+          "title": "Remembering Meighen",
+          "work": "Toronto Sun",
+          "url": "http://www.torontosun.com/2012/04/20/remembering-meighen",
+          "date": "20 April 2012",
+          "dateKind": "url",
+          "access": null
+        }
+      ],
+      "reasons": [
+        "The cited source is dated after a revision that already contained the claim."
+      ],
+      "revisions": 1036,
+      "fetches": 28,
+      "capHit": false
+    },
+    {
+      "id": "meighen-osgoode:whole",
+      "caseId": "meighen-osgoode",
+      "kind": "whole-sentence",
+      "title": "Arthur Meighen",
+      "oldid": 1061264562,
+      "sentence": "He also studied law at Osgoode Law School.",
+      "trace": "He also studied law at Osgoode Law School.",
+      "expect": "not-first",
+      "verdict": "Can’t tell",
+      "code": "unknown",
+      "pass": true,
+      "claimFirstSeen": {
+        "revid": 792628448,
+        "timestamp": "2017-07-27T17:16:14Z",
+        "prevRevid": 787302626,
+        "exact": true,
+        "messy": false,
+        "wordingCheck": "found"
+      },
+      "citationAttached": {
+        "revid": 1061264562,
+        "timestamp": "2021-12-20T17:49:59Z",
+        "sameRevision": false
+      },
+      "earlierWording": {
+        "foundIn": 787302626,
+        "timestamp": "2017-06-24T16:44:37Z",
+        "text": "Meighen then graduated from Osgoode Hall Law School.",
+        "suggestions": [
+          "law Osgoode School"
+        ]
+      },
+      "earlierWordingTraced": {
+        "revid": 181750103,
+        "timestamp": "2008-01-03T00:40:03Z",
+        "text": "Meighen then graduated from Osgoode Hall Law School.",
+        "settled": true
+      },
+      "sources": [
+        {
+          "title": "Remembering Meighen",
+          "work": "Toronto Sun",
+          "url": "http://www.torontosun.com/2012/04/20/remembering-meighen",
+          "date": "20 April 2012",
+          "dateKind": "url",
+          "access": null
+        }
+      ],
+      "reasons": [
+        "A cited source is dated before this wording first appeared, but an earlier wording that shares its rarer words was on Wikipedia from 3 January 2008 (revision 181750103): “Meighen then graduated from Osgoode Hall Law School.” The source is not dated before that. If the earlier wording makes the same claim, the source may repeat Wikipedia. Echo cannot tell whether it does."
+      ],
+      "revisions": 1036,
+      "fetches": 39,
+      "capHit": false
+    },
+    {
+      "id": "meighen",
+      "caseId": "meighen",
+      "kind": "control",
+      "title": "Arthur Meighen",
+      "oldid": 1061122821,
+      "sentence": "He was renowned for his sharp wit.",
+      "trace": "He was renowned for his sharp wit.",
+      "expect": "clean",
+      "verdict": "Source came first",
+      "code": "first",
+      "pass": true,
+      "claimFirstSeen": {
+        "revid": 107245623,
+        "timestamp": "2007-02-11T04:43:42Z",
+        "prevRevid": 106624140,
+        "exact": true,
+        "messy": false,
+        "wordingCheck": "found"
+      },
+      "citationAttached": {
+        "revid": 430719931,
+        "timestamp": "2011-05-24T19:22:04Z",
+        "sameRevision": false
+      },
+      "earlierWording": {
+        "foundIn": 106624140,
+        "timestamp": "2007-02-08T18:02:33Z",
+        "text": "In public, Meighen was a top class debater, and was known for his sharp wit.",
+        "suggestions": [
+          "sharp wit"
+        ]
+      },
+      "earlierWordingTraced": {
+        "revid": 38883941,
+        "timestamp": "2006-02-09T06:22:03Z",
+        "text": "In public, Meighen was a top class debater, and was known for his sharp wit.",
+        "settled": true
+      },
+      "sources": [
+        {
+          "title": "The Incredible Canadian",
+          "work": null,
+          "url": null,
+          "date": "1952",
+          "dateKind": "free-text",
+          "access": null
+        }
+      ],
+      "reasons": [
+        "At least one cited source is dated before the earliest wording of the claim that Echo found on Wikipedia.",
+        "An earlier wording that shares its rarer words was on Wikipedia from 9 February 2006: “In public, Meighen was a top class debater, and was known for his sharp wit.” The source is dated before that too."
+      ],
+      "revisions": 1024,
+      "fetches": 40,
+      "capHit": false
+    },
+    {
+      "id": "turnspit",
+      "caseId": "turnspit",
+      "kind": "control",
+      "title": "Turnspit dog",
+      "oldid": 1380954886,
+      "sentence": "It is mentioned in Of English Dogs in 1576 under the name \"Turnespete\".",
+      "trace": "It is mentioned in Of English Dogs in 1576 under the name \"Turnespete\".",
+      "expect": "clean",
+      "verdict": "Source came first",
+      "code": "first",
+      "pass": true,
+      "claimFirstSeen": {
+        "revid": 56957871,
+        "timestamp": "2006-06-05T06:15:27Z",
+        "prevRevid": null,
+        "exact": true,
+        "messy": false,
+        "wordingCheck": "start"
+      },
+      "citationAttached": {
+        "revid": 555002327,
+        "timestamp": "2013-05-14T04:22:59Z",
+        "sameRevision": false
+      },
+      "earlierWording": null,
+      "earlierWordingTraced": null,
+      "sources": [
+        {
+          "title": "Of English Dogs",
+          "work": null,
+          "url": "https://books.google.com/books?id=ps00AQAAMAAJ&pg=PA34",
+          "date": "1576",
+          "dateKind": "year",
+          "access": null
+        }
+      ],
+      "reasons": [
+        "At least one cited source is dated before the earliest wording of the claim that Echo found on Wikipedia."
+      ],
+      "revisions": 222,
+      "fetches": 16,
+      "capHit": false
+    }
+  ]
+}
