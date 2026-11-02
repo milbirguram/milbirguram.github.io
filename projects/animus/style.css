@@ -86,9 +86,6 @@
 .an-score-list { padding-left: 20px; margin: 0 0 14px; }
 .an-progress { font-family: var(--mono); font-size: 13px; color: var(--muted); }
 
-.an-list { padding-left: 20px; margin: 0 0 20px; }
-.an-list li { margin-bottom: 8px; }
-.an-list strong { font-weight: 500; color: var(--ink-strong); }
 
 .an-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 

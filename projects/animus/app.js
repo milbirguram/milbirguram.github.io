@@ -437,7 +437,7 @@
     panel.appendChild(dg);
     panel.appendChild(segment('Each sensor’s wire goes', WIRE_OPTS, wg.wires, function (v) { state.wiring.wires = v; renderWorkshop(); focusPressed(0); }));
     panel.appendChild(segment('Effect of light on the motor', SIGN_OPTS, wg.sign, function (v) { state.wiring.sign = v; renderWorkshop(); focusPressed(1); }));
-    panel.appendChild(el('p', { class: 'an-muted an-small', text: 'In the dark every motor turns at the same steady cruising speed. A + wire adds to it as the light grows; a ' + MINUS + ' wire takes away from it, down to a stop.' }));
+    panel.appendChild(el('p', { class: 'an-muted an-small', text: 'In the dark every motor turns at the same steady cruising speed. A + wire adds to it as the light grows; a ' + MINUS + ' wire takes away from it, down to a stop. There is no goal, map or memory inside.' }));
     var name = el('p', { class: 'an-name' });
     name.innerHTML = '<span class="an-swatch" style="background:' + info.colour + '"></span><strong>' + id + ' · ' + info.name + '.</strong> ' + info.text;
     panel.appendChild(name);
