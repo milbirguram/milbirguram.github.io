@@ -1,8 +1,11 @@
 /* Stereo: page-specific styles. The site chrome (back link, lede) comes from ../kit.css.
-   The stage is an anaglyph stereoscope: a dark slate field on which every layer is drawn as two
-   images, the record in red and the truth in cyan. Where they agree they fuse into white; where
-   they disagree they part into red and cyan fringes. Layer names sit on buff labels, like the
-   printed mount of a stereograph card. */
+   The stage is a stereograph card. A buff mount with rounded corners and a printed rule holds a
+   dark slate window whose top edge is cut as the classic twin arch: the left-eye and right-eye
+   images side by side. Inside the window every layer is drawn twice, the record in red and the
+   truth in cyan, added together: where they agree they fuse into white with a half-pixel fringe
+   left over; where they disagree the two images part. Layer names are stamped on tongues of the
+   mount in Space Mono capitals, and controls are square tabs cut from the same card. On the mount
+   (paper) the two inks print out of register; in the window (light) they add up to white. */
 
 @font-face {
   font-family: "Space Grotesk";
@@ -29,89 +32,133 @@
 main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-spacing: -0.01em; }
 
 .st-stage {
-  --st-field: #20242a;      /* the dark slate field */
+  --st-field: #20242a;      /* the dark slate window */
   --st-deep: #191c21;       /* inside the viewer: panels and wells */
   --st-red: #ff4b3e;        /* the record: what a layer sees */
   --st-cyan: #2ec4d6;       /* the truth: what really happened */
   --st-white: #f1efe8;      /* where the two images fuse */
-  --st-buff: #d8c8a2;       /* card mount */
-  --st-buff-ink: #4a4536;   /* printing on the mount */
-  --st-dim: #a9a79f;        /* secondary text: 6:1 on the field */
+  --st-mount: #d8c9a3;      /* the card mount */
+  --st-mount-hi: #e5d9b9;   /* a tab lifted from the mount */
+  --st-ink: #20242a;        /* printing on the mount: 9.5:1 */
+  --st-ink-dim: #4f4a3a;    /* secondary printing: 5.4:1 */
+  --st-ink-rule: rgba(32, 36, 42, 0.42);
+  --st-dim: #a9a79f;        /* secondary text in the window: 6.5:1 */
   --st-rule: rgba(241, 239, 232, 0.13);
   --st-rule-strong: rgba(241, 239, 232, 0.38);  /* 3.2:1, enough to find a control by its edge */
   --st-sans: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --st-mono: "Space Mono", ui-monospace, Menlo, Consolas, monospace;
+  /* fibre and speck in the card stock, made once by the browser from an SVG noise filter */
+  --st-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .25 0 0 0 0 .15 0 0 0 -2.2 1.32'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='.34'/%3E%3C/svg%3E");
   --st-gut: 98px;
+  --st-mpad: 14px;          /* mount margin around the window */
+  --st-wpad: 14px;          /* window's inner margin */
+  --st-bpad: 12px;          /* a layer's inner margin, beside its edge */
+  --st-arch: 24px;          /* rise of the twin arch */
+  position: relative;
   color-scheme: dark;
-  color: var(--st-white);
-  background-color: var(--st-field);
-  /* a fine halftone screen, as on a printed anaglyph */
-  background-image: radial-gradient(rgba(241, 239, 232, 0.028) 0.6px, transparent 1.1px);
-  background-size: 4px 4px;
+  color: var(--st-ink);
+  background: var(--st-grain), var(--st-mount);
   font-family: var(--st-sans);
   font-size: 15px;
   line-height: 1.6;
-  padding: 22px 20px 26px;
-  border-radius: 3px;
+  padding: 14px var(--st-mpad) var(--st-mpad);
+  border-radius: 14px;
+}
+/* the printed rule inside the card's edge */
+.st-stage::after {
+  content: ""; position: absolute; inset: 6px; border: 1px solid var(--st-ink-rule); border-radius: 9px; pointer-events: none;
 }
 .st-stage.kit-wide {
   width: min(100vw - 24px, 1080px);
   margin-left: calc((100% - min(100vw - 24px, 1080px)) / 2);
 }
 @media (max-width: 899px) {
-  .st-stage { padding: 18px 18px 22px; }
+  .st-stage { --st-mpad: 12px; --st-arch: 18px; }
 }
 @media (max-width: 560px) {
-  .st-stage.kit-wide { width: 100vw; margin-left: calc((100% - 100vw) / 2); padding: 16px 16px 20px; border-radius: 0; }
+  .st-stage { --st-mpad: 10px; --st-wpad: 12px; --st-bpad: 10px; --st-arch: 13px; }
+  .st-stage.kit-wide { width: 100vw; margin-left: calc((100% - 100vw) / 2); border-radius: 10px; padding-top: 10px; }
+  .st-stage::after { inset: 4px; border-radius: 7px; }
 }
 .st-stage :focus-visible { outline: 2px solid var(--st-white); outline-offset: 2px; }
 
 /* Visually hidden, still read aloud */
 .st-vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* Buttons inside the viewer: thin-ruled, square-cornered; a pressed one is a card in the holder */
+/* ---------- On the mount: the two modes and the glasses ---------- */
+.st-bar {
+  position: relative; z-index: 1;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+  padding: 2px 0 12px;
+}
+.st-bar :focus-visible { outline-color: var(--st-ink); }
+.st-tabs { display: inline-flex; gap: 0; }
+/* each mode a tab cut in the card: square, stamped; the chosen one lifted, with its rule printed
+   twice, red and cyan, out of register */
+.st-tabs button {
+  appearance: none; position: relative; cursor: pointer;
+  font: 700 12px/1.3 var(--st-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--st-ink-dim);
+  background: transparent; border: 1px solid var(--st-ink-rule); border-radius: 2px; padding: 9px 15px 12px;
+  transition: background-color 0.15s, color 0.15s;
+}
+.st-tabs button + button { margin-left: -1px; }
+.st-tabs button:hover { color: var(--st-ink); background: rgba(255, 255, 255, 0.22); }
+.st-tabs button[aria-selected="true"] { color: var(--st-ink); background: var(--st-mount-hi); border-color: var(--st-ink); z-index: 1; }
+.st-tabs button[aria-selected="true"]::after,
+.st-stage .kit-button[aria-pressed="true"]::after,
+.st-band.is-focus .st-name-main::after,
+.st-options label:has(input:checked)::after {
+  content: ""; position: absolute; left: 13px; right: 16px; bottom: 5px; height: 2px;
+  background: var(--st-red); box-shadow: 3px 2px 0 var(--st-cyan);
+}
+
+/* "Show the truth": a pair of anaglyph glasses. The red lens (the record) is always in;
+   ticking the box fills the cyan lens, the truth. */
+.st-truth {
+  display: inline-flex; align-items: center; gap: 10px; cursor: pointer; min-height: 36px;
+  color: var(--st-ink); font: 700 12px/1.3 var(--st-mono); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.st-truth input {
+  -webkit-appearance: none; appearance: none; flex: none; width: 42px; height: 20px; margin: 0; cursor: pointer; border-radius: 0;
+  background: no-repeat center / 42px 20px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='20' viewBox='0 0 42 20'%3E%3Crect x='1.5' y='3.5' width='16' height='13' rx='1.5' fill='%23ff4b3e' stroke='%2320242a' stroke-width='1.4'/%3E%3Crect x='24.5' y='3.5' width='16' height='13' rx='1.5' fill='none' stroke='%2320242a' stroke-width='1.4' stroke-dasharray='2.2 2'/%3E%3Cpath d='M17.5 8.5q4-3 7 0' fill='none' stroke='%2320242a' stroke-width='1.4'/%3E%3C/svg%3E");
+}
+.st-truth input:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='20' viewBox='0 0 42 20'%3E%3Crect x='1.5' y='3.5' width='16' height='13' rx='1.5' fill='%23ff4b3e' stroke='%2320242a' stroke-width='1.4'/%3E%3Crect x='24.5' y='3.5' width='16' height='13' rx='1.5' fill='%232ec4d6' stroke='%2320242a' stroke-width='1.4'/%3E%3Cpath d='M17.5 8.5q4-3 7 0' fill='none' stroke='%2320242a' stroke-width='1.4'/%3E%3C/svg%3E");
+}
+.st-truth input:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 3px; }
+
+/* ---------- The window: slate, cut with a twin arch across its top ---------- */
+#st-body {
+  position: relative;
+  color: var(--st-white);
+  background-color: var(--st-field);
+  /* a fine halftone screen, as on a printed anaglyph */
+  background-image: radial-gradient(rgba(241, 239, 232, 0.03) 0.6px, transparent 1.1px);
+  background-size: 4px 4px;
+  padding: calc(var(--st-arch) + 8px) var(--st-wpad) 22px;
+}
+/* the mount over the window's top corners: two arches meeting at the middle, one per eye */
+#st-body::before {
+  content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: calc(var(--st-arch) + 1px); pointer-events: none;
+  background:
+    radial-gradient(50% 100% at 50% 100%, transparent calc(100% - 0.75px), var(--st-mount) 100%) 0 0 / 50% 100% repeat-x;
+}
+
+/* Buttons inside the window: thin-ruled, square; a pressed or primary one is a tab of the mount */
 .st-stage .kit-button {
+  position: relative;
   font: 500 14px/1.35 var(--st-sans); letter-spacing: 0.01em; color: var(--st-white);
   background: transparent; border: 1px solid var(--st-rule-strong); border-radius: 2px; padding: 7px 13px;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 .st-stage .kit-button:hover { background: rgba(241, 239, 232, 0.07); border-color: var(--st-white); }
 .st-stage .kit-button[aria-pressed="true"], .st-stage .kit-button.is-primary {
-  background: var(--st-buff); border-color: var(--st-buff); color: var(--st-field);
-  box-shadow: inset 0 0 0 2px var(--st-buff), inset 0 0 0 3px rgba(32, 36, 42, 0.32);
+  background: var(--st-grain), var(--st-mount); border-color: var(--st-mount); color: var(--st-ink);
 }
-.st-stage .kit-button.is-primary:hover:not(:disabled) { background: #e6d9b8; border-color: #e6d9b8; }
+.st-stage .kit-button[aria-pressed="true"] { padding-bottom: 11px; }
+.st-stage .kit-button.is-primary { font: 700 12.5px/1.35 var(--st-mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 9px 14px; }
+.st-stage .kit-button.is-primary:hover:not(:disabled) { background: var(--st-mount-hi); border-color: var(--st-mount-hi); }
 .st-stage .kit-button:disabled { opacity: 0.4; cursor: default; }
-
-/* Top bar: mode tabs and the truth switch */
-.st-bar {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
-  margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--st-rule);
-}
-.st-tabs { display: inline-flex; gap: 8px; }
-/* each mode a stereograph card: rounded corners, a printed rule inside the edge once chosen */
-.st-tabs button {
-  appearance: none; font: 500 14.5px/1.35 var(--st-sans); letter-spacing: 0.01em; color: var(--st-white); cursor: pointer;
-  background: transparent; border: 1px solid var(--st-rule-strong); border-radius: 9px; padding: 8px 16px;
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
-}
-.st-tabs button:hover { border-color: var(--st-white); background: rgba(241, 239, 232, 0.06); }
-.st-tabs button[aria-selected="true"] {
-  color: var(--st-field); background: var(--st-buff); border-color: var(--st-buff);
-  box-shadow: inset 0 0 0 3px var(--st-buff), inset 0 0 0 4px rgba(32, 36, 42, 0.32);
-}
-
-/* "Show the truth": a pair of anaglyph glasses. The red lens (the record) is always in;
-   ticking the box fills the cyan lens, the truth. */
-.st-truth { display: inline-flex; align-items: center; gap: 10px; color: var(--st-white); font-size: 14px; cursor: pointer; min-height: 36px; }
-.st-truth input {
-  -webkit-appearance: none; appearance: none; flex: none; width: 42px; height: 20px; margin: 0; cursor: pointer; border-radius: 3px;
-  background: no-repeat center / 42px 20px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='20' viewBox='0 0 42 20'%3E%3Crect x='1.5' y='3.5' width='16' height='13' rx='3' fill='%23ff4b3e' stroke='%23f1efe8' stroke-width='1.4'/%3E%3Crect x='24.5' y='3.5' width='16' height='13' rx='3' fill='none' stroke='%23f1efe8' stroke-width='1.4' stroke-dasharray='2.2 2'/%3E%3Cpath d='M17.5 8.5q4-3 7 0' fill='none' stroke='%23f1efe8' stroke-width='1.4'/%3E%3C/svg%3E");
-}
-.st-truth input:checked {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='20' viewBox='0 0 42 20'%3E%3Crect x='1.5' y='3.5' width='16' height='13' rx='3' fill='%23ff4b3e' stroke='%23f1efe8' stroke-width='1.4'/%3E%3Crect x='24.5' y='3.5' width='16' height='13' rx='3' fill='%232ec4d6' stroke='%23f1efe8' stroke-width='1.4'/%3E%3Cpath d='M17.5 8.5q4-3 7 0' fill='none' stroke='%23f1efe8' stroke-width='1.4'/%3E%3C/svg%3E");
-}
-.st-truth input:focus-visible { outline: 2px solid var(--st-white); outline-offset: 3px; }
 
 .st-hint { margin: 0 0 12px; color: var(--st-dim); font-size: 14px; line-height: 1.6; max-width: 78ch; }
 .st-hint strong { color: var(--st-white); font-weight: 500; }
@@ -122,23 +169,32 @@ main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-
 .st-story { margin: 0 0 16px; min-height: 1.6em; font-size: 15px; color: var(--st-white); max-width: 82ch; }
 .st-story:empty { display: none; }
 .st-story strong { font-weight: 500; color: var(--st-white); }
-.st-tries { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 10px; }
-.st-tries-l { color: var(--st-dim); font: 12px/1.4 var(--st-mono); letter-spacing: 0.06em; text-transform: uppercase; margin-right: 4px; }
+.st-tries { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.st-tries-l { color: var(--st-dim); font: 12px/1.4 var(--st-mono); letter-spacing: 0.08em; text-transform: uppercase; margin-right: 4px; }
+/* each suggestion a slip of the mount, stamped with what it will do: a fault prints its mark
+   twice, out of register; a real change prints it once */
 .st-try {
-  appearance: none; font: 500 13.5px/1.35 var(--st-sans); color: var(--st-white); cursor: pointer;
-  background: transparent; border: 1px solid var(--st-rule-strong); border-radius: 2px; padding: 5px 12px 5px 10px; min-height: 32px;
-  display: inline-flex; align-items: center; gap: 12px; transition: border-color 0.15s, background-color 0.15s;
+  appearance: none; position: relative; cursor: pointer;
+  font: 500 13.5px/1.35 var(--st-sans); color: var(--st-ink);
+  background: var(--st-grain), var(--st-mount); border: 0; border-radius: 1px; padding: 6px 12px 6px 10px; min-height: 32px;
+  display: inline-flex; align-items: center; gap: 10px; transition: background-color 0.15s;
 }
-/* what each suggestion will do, drawn as the stereo pair: a fault splits the images, a real change keeps them fused */
-.st-try::before { content: ""; width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--st-red); box-shadow: 4px 0 0 var(--st-cyan); }
-.st-try.is-signal::before { background: var(--st-white); box-shadow: none; }
-.st-try:hover { background: rgba(241, 239, 232, 0.07); border-color: var(--st-white); }
-.st-try.st-reset { font-size: 13px; gap: 6px; padding: 2px 10px; min-height: 26px; margin-left: 4px; color: var(--st-dim); border-color: var(--st-rule); vertical-align: 1px; }
-.st-try.st-reset::before { content: "↺"; width: auto; height: auto; background: none; box-shadow: none; border-radius: 0; font-size: 13px; }
-.st-try.st-reset:hover { color: var(--st-white); }
+.st-try::before {
+  content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--st-red); box-shadow: 5px 0 0 var(--st-cyan); margin-right: 5px;
+}
+.st-try.is-signal::before { background: var(--st-ink); box-shadow: none; margin-right: 0; }
+.st-try:hover { background: var(--st-mount-hi); }
+.st-try:focus-visible { outline: 2px solid var(--st-white); outline-offset: 2px; }
+.st-try.st-reset {
+  font: 700 11.5px/1.3 var(--st-mono); letter-spacing: 0.08em; text-transform: uppercase; gap: 6px; padding: 3px 9px; min-height: 26px; margin-left: 4px;
+  color: var(--st-dim); background: transparent; border: 1px solid var(--st-rule-strong); border-radius: 2px; vertical-align: 1px;
+}
+.st-try.st-reset::before { content: "↺"; width: auto; height: auto; background: none; box-shadow: none; border-radius: 0; margin: 0; font: 13px/1 var(--st-sans); }
+.st-try.st-reset:hover { color: var(--st-white); border-color: var(--st-white); background: transparent; }
 /* a fault's date, printed as two images out of register */
 .st-story .st-flag-fault { color: var(--st-white); font-weight: 500; text-shadow: -1px 0 var(--st-red), 1px 0 var(--st-cyan); }
-.st-story .st-flag-signal { color: var(--st-white); font-weight: 500; }
+.st-story .st-flag-signal { color: var(--st-white); font-weight: 500; text-shadow: -0.5px 0 rgba(255, 75, 62, 0.8), 0.5px 0 rgba(46, 196, 214, 0.8); }
 
 /* While a change is being computed */
 .st-stack, .st-main > .st-inspector { transition: opacity 0.2s; }
@@ -179,22 +235,24 @@ main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-
 .st-range:focus, .st-todbar input[type="range"]:focus { outline: none; }
 .st-range:focus-visible, .st-todbar input[type="range"]:focus-visible { outline: 2px solid var(--st-white); outline-offset: 2px; border-radius: 2px; }
 .st-range::-webkit-slider-runnable-track, .st-todbar input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--st-rule-strong); border-radius: 0; }
-/* the thumb is a viewer's lens: a white ring over the cursor */
+/* the thumb is a viewer's lens: a white ring over the cursor, its edge printed in both inks */
 .st-range::-webkit-slider-thumb, .st-todbar input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none; box-sizing: border-box; width: 16px; height: 16px; margin-top: -7px;
   border-radius: 50%; background: var(--st-field); border: 2.5px solid var(--st-white);
+  box-shadow: -1px 0 0 rgba(255, 75, 62, 0.85), 1px 0 0 rgba(46, 196, 214, 0.85);
 }
 .st-range::-moz-range-track, .st-todbar input[type="range"]::-moz-range-track { height: 2px; background: var(--st-rule-strong); border-radius: 0; }
 .st-range::-moz-range-thumb, .st-todbar input[type="range"]::-moz-range-thumb {
   box-sizing: border-box; width: 16px; height: 16px; border-radius: 50%; background: var(--st-field); border: 2.5px solid var(--st-white);
+  box-shadow: -1px 0 0 rgba(255, 75, 62, 0.85), 1px 0 0 rgba(46, 196, 214, 0.85);
 }
 .st-range:hover::-webkit-slider-thumb, .st-todbar input[type="range"]:hover::-webkit-slider-thumb { background: var(--st-white); }
 
-/* The stack of five layers */
+/* ---------- The stack of five layers ---------- */
 .st-stack { position: relative; border-top: 1px solid var(--st-rule); }
 .st-rise { position: absolute; left: 0; top: 0; width: 100%; height: 0; pointer-events: none; z-index: 3; }
 
-.st-band { position: relative; border-bottom: 1px solid var(--st-rule); padding: 6px 0 4px 12px; transition: background-color 0.2s; }
+.st-band { position: relative; border-bottom: 1px solid var(--st-rule); padding: 6px 0 4px var(--st-bpad); transition: background-color 0.2s; }
 /* the band's edge: one white bar while it agrees with the world, a red and a cyan bar side by side when it does not */
 .st-band::before {
   content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
@@ -213,35 +271,46 @@ main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-
 }
 
 /* Between the dashboard and the pipeline: the number on the screen above, the process beneath.
-   Drawn as the fold of a card, where the manifest image meets the scientific one. */
+   A strip of the mount runs across the window here, as between the two halves of a card. */
 .st-seam {
-  display: flex; justify-content: space-between; gap: 12px; padding: 3px 6px 3px 12px;
-  border-bottom: 1px dashed var(--st-rule-strong); background: var(--st-deep);
-  color: var(--st-dim); font: 11.5px/1.35 var(--st-mono); letter-spacing: 0.06em; text-transform: uppercase;
+  position: relative; z-index: 1;
+  display: flex; justify-content: space-between; gap: 12px;
+  margin-left: calc(-1 * var(--st-wpad)); padding: 4px 8px 3px calc(var(--st-wpad) + var(--st-bpad));
+  background: var(--st-grain), var(--st-mount);
+  color: var(--st-ink-dim); font: 700 11px/1.35 var(--st-mono); letter-spacing: 0.1em; text-transform: uppercase;
+}
+@media (max-width: 899px) {
+  .st-seam { margin-right: calc(-1 * var(--st-wpad)); padding-right: var(--st-wpad); }
 }
 
 /* One line per layer where it fits: name, its status against the truth, and its menu of changes.
    Where it does not fit, the status wraps under the name. */
-.st-band-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 2px; }
+.st-band-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 2px; }
 .st-band-head .st-name { order: 1; flex: none; }
 .st-band-head .st-chip { order: 2; flex: 0 1 auto; min-width: 0; }
 .st-band-head .st-change { order: 3; margin-left: auto; }
 .st-name {
   appearance: none; font: inherit; background: transparent; border: 0; padding: 1px 0; margin: 0; cursor: pointer;
-  display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 8px; color: var(--st-white); text-align: left; min-height: 28px;
+  display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 6px; color: var(--st-white); text-align: left; min-height: 28px;
 }
-/* the layer's name, printed on its mount */
+/* the layer's name, stamped on a tongue of the mount that reaches in from the card's edge */
 .st-name-main {
-  font: 500 11.5px/1 var(--st-sans); letter-spacing: 0.11em; text-transform: uppercase;
-  color: var(--st-field); background: var(--st-buff); border-radius: 3px; padding: 6px 9px 5px 10px;
-  box-shadow: inset 0 0 0 2px var(--st-buff), inset 0 0 0 3px rgba(32, 36, 42, 0.28);
+  position: relative; z-index: 1;
+  margin-left: calc(-1 * (var(--st-wpad) + var(--st-bpad)));
+  padding: 7px 9px 6px calc(var(--st-wpad) + var(--st-bpad));
+  font: 700 11.5px/1 var(--st-mono); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--st-ink); background: var(--st-grain), var(--st-mount);
   transition: background-color 0.15s;
 }
+.st-band.is-focus .st-name-main::after { left: calc(var(--st-wpad) + var(--st-bpad)); right: 12px; bottom: 2px; }
+/* a layer that has parted from the truth: its name printed out of register */
+.st-band.is-hit-fault .st-name-main { text-shadow: -1.5px 0 rgba(255, 75, 62, 0.75), 1.5px 0 rgba(46, 196, 214, 0.75); }
 .st-name-sub { font-size: 12.5px; color: var(--st-dim); }
 .st-name-go { font-size: 12.5px; color: var(--st-dim); white-space: nowrap; }
-.st-name:hover .st-name-main { background: #e6d9b8; }
+.st-name:hover .st-name-main { background: var(--st-grain), var(--st-mount-hi); }
 .st-name:hover .st-name-go, .st-band.is-focus .st-name-go { color: var(--st-white); }
-.st-name:focus-visible { outline-offset: 3px; }
+.st-name:focus-visible { outline: none; }
+.st-name:focus-visible .st-name-main { outline: 2px solid var(--st-white); outline-offset: 2px; }
 
 /* A layer's status against the truth. Its mark is the stereo pair: one white dot where the layer
    agrees with the world, a red and a cyan dot apart where it does not. */
@@ -251,20 +320,22 @@ main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-
 }
 .st-chip::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--st-dim); }
 .st-chip[data-state=""]::before { display: none; }
-.st-chip[data-state="eq"]::before, .st-chip[data-state="absorbed"]::before, .st-chip[data-state="signal"]::before { background: var(--st-white); }
+.st-chip[data-state="eq"]::before, .st-chip[data-state="absorbed"]::before, .st-chip[data-state="signal"]::before {
+  background: var(--st-white); box-shadow: -1px 0 0 rgba(255, 75, 62, 0.9), 1px 0 0 rgba(46, 196, 214, 0.9); margin-left: 1px;
+}
 .st-chip[data-state="ref"]::before { background: var(--st-cyan); }
 .st-chip[data-state="ne"] { color: var(--st-white); padding-right: 4px; }
 .st-chip[data-state="ne"]::before { background: var(--st-red); box-shadow: 5px 0 0 var(--st-cyan); margin-right: 5px; }
 .st-chip[data-state="absorbed"], .st-chip[data-state="signal"] { color: var(--st-white); }
 .st-chip:empty { display: none; }
 
-/* Each layer's menu of changes: an empty slot until a card is put in */
+/* Each layer's menu of changes: a square slot with a 1px rule, typed in mono */
 .st-change { display: inline-flex; align-items: center; min-width: 0; }
 .st-change select, .st-change-all select {
-  -webkit-appearance: none; appearance: none; font: 13px/1.4 var(--st-sans); color: var(--st-dim);
-  background: var(--st-field) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23f1efe8' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 10px center;
-  border: 1px dashed var(--st-rule-strong); border-radius: 2px; padding: 3px 28px 3px 10px; min-height: 28px;
-  width: 148px; max-width: 100%; min-width: 0; cursor: pointer; text-overflow: ellipsis;
+  -webkit-appearance: none; appearance: none; font: 11.5px/1.4 var(--st-mono); letter-spacing: 0; color: var(--st-dim);
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M.5 .5h8L4.5 5.5z' fill='%23f1efe8'/%3E%3C/svg%3E") no-repeat right 6px center;
+  border: 1px solid var(--st-rule-strong); border-radius: 0; padding: 4px 18px 4px 7px; min-height: 28px;
+  width: 150px; max-width: 100%; min-width: 0; cursor: pointer; text-overflow: ellipsis;
   transition: border-color 0.15s, color 0.15s;
 }
 .st-change select:hover, .st-change-all select:hover { border-color: var(--st-white); color: var(--st-white); }
@@ -274,23 +345,23 @@ main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-
 }
 /* a real change keeps the images fused */
 .st-band[data-layer="world"] .st-change select.is-set,
-.st-change-all select.is-set.is-real { box-shadow: none; }
-.st-change select option, .st-change-all select option, .st-change-all select optgroup { color: var(--st-white); background: var(--st-deep); }
+.st-change-all select.is-set.is-real { box-shadow: -0.5px 0 0 var(--st-red), 0.5px 0 0 var(--st-cyan); }
+.st-change select option, .st-change-all select option, .st-change-all select optgroup { color: var(--st-white); background: var(--st-deep); font-family: var(--st-sans); }
 
 /* On a phone one grouped menu replaces the five per-layer menus, so the stack stays short. */
-.st-change-all { display: none; align-items: center; gap: 10px; margin: 0 0 12px; color: var(--st-dim); font: 12px/1.4 var(--st-mono); letter-spacing: 0.06em; text-transform: uppercase; }
-.st-change-all select { flex: 1; width: auto; font-size: 14px; letter-spacing: 0; text-transform: none; min-height: 40px; padding-top: 6px; padding-bottom: 6px; }
+.st-change-all { display: none; align-items: center; gap: 10px; margin: 0 0 12px; color: var(--st-dim); font: 12px/1.4 var(--st-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.st-change-all select { flex: 1; width: auto; font-size: 13px; letter-spacing: 0; text-transform: none; min-height: 40px; padding-top: 6px; padding-bottom: 6px; }
 @media (max-width: 560px) {
   .st-change-all { display: flex; }
   .st-change-all[hidden] { display: none; }
   .st-band-head .st-change { display: none; }
   .st-band-head { margin-bottom: 3px; }
   .st-name { min-height: 32px; }
+  .st-name-main { padding-top: 8px; padding-bottom: 7px; }
   .st-name-sub { font-size: 13px; }
   .st-name-go { display: none; }
-  .st-band { padding: 6px 0 6px 10px; }
-  .st-tabs { gap: 6px; }
-  .st-tabs button { padding: 8px 13px; font-size: 14px; }
+  .st-band { padding: 6px 0 6px var(--st-bpad); }
+  .st-tabs button { padding: 9px 12px 12px; font-size: 11.5px; letter-spacing: 0.08em; }
   .st-facts dd { font-size: 14px; }
 }
 
@@ -300,35 +371,36 @@ main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-
 /* a layer not yet examined: an unexposed plate */
 .st-closed {
   display: flex; align-items: center; justify-content: flex-start; gap: 12px; flex-wrap: wrap;
-  padding: 10px 12px; margin: 2px 6px 4px 0; color: var(--st-dim); font-size: 14px; border-radius: 2px;
+  padding: 10px 12px; margin: 2px 6px 4px 0; color: var(--st-dim); font-size: 14px;
   border: 1px dashed var(--st-rule);
   background: repeating-linear-gradient(135deg, transparent 0 7px, rgba(241, 239, 232, 0.05) 7px 8px);
 }
 .st-stage .st-closed .kit-button { font-size: 14px; padding: 6px 12px; }
 
-/* Inspector: the inside of the viewer's hood */
+/* ---------- Inspector: the inside of the viewer's hood ---------- */
 .st-inspector { min-width: 0; font-size: 14px; line-height: 1.6; }
 .st-main > .st-inspector {
-  position: sticky; top: 12px; border: 1px solid var(--st-rule); border-radius: 3px; padding: 14px 16px 16px; background: var(--st-deep);
+  position: sticky; top: 12px; border: 1px solid var(--st-rule-strong); padding: 14px 16px 16px; background: var(--st-deep);
   margin-top: 50px; max-height: calc(100vh - 24px); overflow-y: auto;
 }
-.st-band > .st-inspector { margin: 10px 0 6px; padding: 12px 12px 14px; border: 1px solid var(--st-rule); border-radius: 3px; background: var(--st-deep); }
+.st-band > .st-inspector { margin: 10px 0 6px; padding: 12px 12px 14px; border: 1px solid var(--st-rule-strong); background: var(--st-deep); }
 .st-inspector h3 { margin: 0 0 4px; font-size: 16px; font-weight: 500; color: var(--st-white); line-height: 1.45; letter-spacing: 0; }
 .st-inspector p { margin: 0 0 10px; }
 .st-inspector .st-sub { color: var(--st-dim); font-size: 13.5px; }
 .st-inspector h4 {
-  margin: 18px 0 7px; font: 400 11.5px/1.4 var(--st-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--st-dim);
+  margin: 18px 0 7px; padding-top: 7px; border-top: 1px solid var(--st-rule);
+  font: 700 11px/1.4 var(--st-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--st-dim);
 }
 .st-inspector strong { font-weight: 500; color: var(--st-white); }
 
-.st-map { display: block; width: 100%; aspect-ratio: 54 / 46; background: var(--st-field); border-radius: 2px; border: 1px solid var(--st-rule); }
+.st-map { display: block; width: 100%; aspect-ratio: 54 / 46; background: var(--st-field); border: 1px solid var(--st-rule); }
 .st-todbar { display: flex; align-items: center; gap: 10px; margin: 8px 0 10px; }
 .st-stage .st-todbar .kit-button { font-size: 13.5px; padding: 5px 10px; white-space: nowrap; }
 .st-todbar input { flex: 1; min-width: 0; }
 .st-todbar output { font: 700 13px/1.4 var(--st-mono); color: var(--st-white); min-width: 5ch; text-align: right; }
 
 .st-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 10px; }
-.st-facts div { border: 1px solid var(--st-rule); border-radius: 2px; padding: 6px 8px 7px; min-width: 0; }
+.st-facts div { border: 1px solid var(--st-rule); padding: 6px 8px 7px; min-width: 0; }
 .st-facts dt { font-size: 12px; color: var(--st-dim); line-height: 1.35; }
 .st-facts dd { margin: 3px 0 0; font: 400 15px/1.3 var(--st-mono); letter-spacing: -0.03em; color: var(--st-white); }
 .st-facts dd small { display: block; font: 12px/1.35 var(--st-sans); color: var(--st-dim); margin-top: 3px; }
@@ -344,16 +416,16 @@ main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-
 .st-ticker .t { color: var(--st-dim); }
 .st-ticker .k { min-width: 8ch; }
 .st-ticker .is-ghost { text-decoration: line-through; color: var(--st-dim); }
-.st-note { font: 11.5px/1.5 var(--st-sans); padding: 0 6px; border-radius: 2px; border: 1px solid var(--st-rule-strong); color: var(--st-dim); white-space: nowrap; }
+.st-note { font: 11.5px/1.5 var(--st-sans); padding: 0 6px; border: 1px solid var(--st-rule-strong); color: var(--st-dim); white-space: nowrap; }
 .st-note.is-fault { border-color: var(--st-white); color: var(--st-white); box-shadow: -2px 0 0 var(--st-red), 2px 0 0 var(--st-cyan); margin: 0 2px; }
 
 /* The pipeline's steps: a flow of rows, each step with its count in and out */
 .st-dag { list-style: none; margin: 0 0 10px; padding: 0; }
 .st-dag li { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 10px; padding: 6px 0 7px 14px; border-left: 2px solid var(--st-rule-strong); }
-.st-dag li::before { content: ""; position: absolute; left: -6px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--st-deep); border: 2px solid var(--st-white); box-sizing: border-box; }
+.st-dag li::before { content: ""; position: absolute; left: -6px; top: 12px; width: 10px; height: 10px; background: var(--st-deep); border: 2px solid var(--st-white); box-sizing: border-box; }
 .st-dag li.is-ne { border-left-color: var(--st-red); }
 .st-dag li.is-ne::before { border: 0; background: var(--st-red); box-shadow: 4px 0 0 var(--st-cyan); }
-.st-dag li.is-lane { margin-top: 6px; padding: 4px 0 2px 14px; color: var(--st-dim); font: 11.5px/1.4 var(--st-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.st-dag li.is-lane { margin-top: 6px; padding: 4px 0 2px 14px; color: var(--st-dim); font: 700 11px/1.4 var(--st-mono); letter-spacing: 0.1em; text-transform: uppercase; }
 .st-dag li.is-lane::before { display: none; }
 .st-dag .n { color: var(--st-white); font-weight: 500; }
 .st-dag .w { display: block; color: var(--st-dim); font-size: 12.5px; line-height: 1.4; }
@@ -363,23 +435,30 @@ main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-
 .st-flow { position: relative; display: block; height: 4px; margin: 6px 0 1px; background: transparent; }
 .st-flow i { position: absolute; left: 0; top: 0; height: 4px; }
 .st-flow .in { background: var(--st-rule-strong); }
-.st-flow .out { background: var(--st-white); }
-.st-dag li.is-ne .st-flow .out { background: var(--st-red); }
+.st-flow .out { background: var(--st-white); box-shadow: 0.5px 0 0 var(--st-cyan); }
+.st-dag li.is-ne .st-flow .out { background: var(--st-red); box-shadow: none; }
 .st-flow .tru { width: 2px; height: 12px; top: -4px; margin-left: -1px; background: var(--st-cyan); }
 
 .st-hours { display: block; width: 100%; height: 92px; }
 .st-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--st-dim); font-size: 12.5px; margin: 2px 0 10px; }
-/* legend keys, in the stage's two inks */
-.st-key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--st-red); margin-right: 6px; }
-.st-key.is-truth { border-top: 2px dashed var(--st-cyan); }
-.st-key.is-fused { border-top-color: var(--st-white); }
+/* legend keys, in the window's two inks: a short trace of each kind of line */
+.st-key {
+  display: inline-block; width: 20px; height: 9px; margin-right: 6px; vertical-align: middle;
+  background: no-repeat center / 20px 9px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='9'%3E%3Cpath d='M1 6l4-3 3 4 4-5 3 3 4-2' fill='none' stroke='%23ff4b3e' stroke-width='1.6' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.st-key.is-truth {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='9'%3E%3Cpath d='M1 6l4-3 3 4 4-5 3 3 4-2' fill='none' stroke='%232ec4d6' stroke-width='1.6' stroke-linejoin='round' stroke-dasharray='3 2'/%3E%3C/svg%3E");
+}
+.st-key.is-fused {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='9'%3E%3Cg fill='none' stroke-width='1.6' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M.5 6l4-3 3 4 4-5 3 3 4-2' stroke='%23ff4b3e'/%3E%3Cpath d='M1.5 6l4-3 3 4 4-5 3 3 4-2' stroke='%232ec4d6'/%3E%3Cpath d='M1 6l4-3 3 4 4-5 3 3 4-2' stroke='%23fff' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E");
+}
 .st-key.is-gap {
   width: 14px; height: 10px; border: 0;
   background: repeating-linear-gradient(135deg, rgba(255, 75, 62, 0.85) 0 1.5px, transparent 1.5px 3px, rgba(46, 196, 214, 0.85) 3px 4.5px, transparent 4.5px 6px);
 }
 .st-key.is-box { width: 10px; height: 10px; border: 0; background: var(--st-cyan); }
 .st-key.is-fill { width: 10px; height: 10px; border: 0; background: var(--st-red); }
-.st-key.is-both { width: 10px; height: 10px; border: 0; background: var(--st-white); }
+.st-key.is-both { width: 10px; height: 10px; border: 0; background: var(--st-white); box-shadow: -1px 0 0 var(--st-red), 1px 0 0 var(--st-cyan); }
 .st-key.is-dot { width: 5px; height: 5px; border: 0; border-radius: 50%; background: var(--st-dim); margin: 0 6px 0 2px; }
 
 .st-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 0 0 10px; }
@@ -391,63 +470,72 @@ main > h1 { font-family: "Space Grotesk", var(--font); font-weight: 500; letter-
 .st-table .is-tru { color: var(--st-cyan); }
 
 .st-evidence { list-style: none; margin: 0 0 6px; padding: 0; }
-.st-evidence li { padding: 8px 10px; border: 1px solid var(--st-rule); border-radius: 2px; margin-bottom: 8px; }
+.st-evidence li { padding: 8px 10px; border: 1px solid var(--st-rule); margin-bottom: 8px; }
 .st-evidence li.is-flag { border-color: var(--st-white); box-shadow: -2px 0 0 var(--st-red), 2px 0 0 var(--st-cyan); }
 .st-evidence .et { font-weight: 500; color: var(--st-white); }
 .st-evidence .ev { font-variant-numeric: tabular-nums; }
 .st-evidence .en { display: block; color: var(--st-dim); font-size: 12.5px; }
 .st-evidence .ef {
-  display: inline-block; font: 11px/1.45 var(--st-mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--st-white);
+  display: inline-block; font: 700 11px/1.45 var(--st-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--st-white);
   margin: 0 6px 0 8px; padding: 0 5px; border: 1px solid var(--st-white); box-shadow: -2px 0 0 var(--st-red), 2px 0 0 var(--st-cyan); vertical-align: 1px;
 }
 
 /* "The model learned the fault": a plain statement, its edge out of register */
-.st-plain { padding: 10px 12px 10px 16px; background: linear-gradient(to right, var(--st-red) 0 3px, var(--st-cyan) 3px 6px, rgba(241, 239, 232, 0.04) 6px); border-radius: 0 2px 2px 0; }
+.st-plain { padding: 10px 12px 10px 16px; background: linear-gradient(to right, var(--st-red) 0 3px, var(--st-cyan) 3px 6px, rgba(241, 239, 232, 0.04) 6px); }
 .st-plain.is-ok { background: linear-gradient(to right, var(--st-white) 0 3px, rgba(241, 239, 232, 0.04) 3px); }
 
-/* Detective */
+/* ---------- Detective ---------- */
 .st-case { margin: 0 0 16px; }
 .st-cases { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.st-stage .st-cases .kit-button { font-size: 13.5px; padding: 5px 10px; border-radius: 7px; }
+.st-stage .st-cases .kit-button { font-size: 13.5px; padding: 6px 10px; }
+.st-stage .st-cases .kit-button[aria-pressed="true"] { padding-bottom: 10px; }
+.st-stage .st-cases .kit-button[aria-pressed="true"]::after { left: 10px; right: 13px; bottom: 4px; }
 .st-cases .kit-button .s { color: var(--st-dim); margin-left: 6px; font: 11px/1 var(--st-mono); letter-spacing: 0.04em; text-transform: uppercase; }
-.st-cases .kit-button[aria-pressed="true"] .s { color: var(--st-buff-ink); }
+.st-cases .kit-button[aria-pressed="true"] .s { color: var(--st-ink-dim); }
 .st-score { margin: 0 0 10px; color: var(--st-dim); font-size: 13.5px; }
-/* the ticket: printed on the back of a card mount */
+/* the ticket: printed on the back of a card, rounded at the corners as a card is */
 .st-ticket {
-  position: relative; margin: 0; padding: 14px 18px 15px; border-radius: 10px; background: var(--st-buff); color: var(--st-field);
-  max-width: 82ch; font-size: 15px; box-shadow: inset 0 0 0 4px var(--st-buff), inset 0 0 0 5px rgba(32, 36, 42, 0.3);
+  position: relative; margin: 0; padding: 14px 18px 15px; border-radius: 8px; background: var(--st-grain), var(--st-mount); color: var(--st-ink);
+  max-width: 82ch; font-size: 15px;
 }
-.st-ticket .from { display: block; color: var(--st-buff-ink); font: 11.5px/1.5 var(--st-mono); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+.st-ticket::after { content: ""; position: absolute; inset: 4px; border: 1px solid var(--st-ink-rule); border-radius: 5px; pointer-events: none; }
+.st-ticket .from { display: block; color: var(--st-ink-dim); font: 700 11.5px/1.5 var(--st-mono); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
 
 .st-answer { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--st-rule); }
 .st-field { border: 0; padding: 0; margin: 0 0 14px; min-width: 0; }
 .st-field legend { padding: 0; margin-bottom: 8px; color: var(--st-white); font-size: 15px; font-weight: 500; }
 .st-options { display: flex; flex-wrap: wrap; gap: 6px 8px; }
 .st-options label {
-  display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--st-rule-strong); border-radius: 7px;
+  position: relative; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--st-rule-strong); border-radius: 2px;
   padding: 6px 12px; cursor: pointer; font-size: 14px; min-height: 36px; color: var(--st-white);
   transition: background-color 0.15s, border-color 0.15s;
 }
 .st-options label:hover { border-color: var(--st-white); background: rgba(241, 239, 232, 0.06); }
 .st-options input { accent-color: var(--st-field); margin: 0; }
-.st-options label:has(input:checked) { background: var(--st-buff); border-color: var(--st-buff); color: var(--st-field); }
+.st-options label:has(input:checked) { background: var(--st-grain), var(--st-mount); border-color: var(--st-mount); color: var(--st-ink); padding-bottom: 10px; }
+.st-options label:has(input:checked)::after { left: 12px; right: 15px; bottom: 4px; }
 .st-options label:has(input:disabled) { cursor: default; }
 .st-options label:has(input:focus-visible) { outline: 2px solid var(--st-white); outline-offset: 2px; }
 .st-options input:focus-visible { outline: none; }
 .st-answer-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
 .st-examined { color: var(--st-dim); font-size: 13.5px; }
 /* the verdict: fused when you named it, out of register when you did not */
-.st-verdict { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--st-rule-strong); border-radius: 2px; max-width: 82ch; }
+.st-verdict { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--st-rule-strong); max-width: 82ch; }
 .st-verdict:focus { outline: none; }
 .st-verdict:focus-visible { outline: 2px solid var(--st-white); outline-offset: 4px; }
-.st-verdict.is-right { border-color: var(--st-white); }
+.st-verdict.is-right { border-color: var(--st-white); box-shadow: -0.5px 0 0 var(--st-red), 0.5px 0 0 var(--st-cyan); }
 .st-verdict.is-wrong { border-color: var(--st-white); box-shadow: -2px 0 0 var(--st-red), 2px 0 0 var(--st-cyan); }
 .st-verdict p { margin: 0 0 10px; }
 .st-verdict p:last-child { margin-bottom: 0; }
 .st-verdict .v { font-weight: 500; color: var(--st-white); }
 .st-verdict .st-sub { color: var(--st-dim); font-size: 13.5px; }
 
-/* Card preview (?preview): one canvas fills the frame */
+/* Card preview (?preview): one canvas fills the frame and draws the card itself */
 .st-preview { display: block; width: 100%; height: 100%; }
-html.kit-preview .st-stage { background-color: var(--st-field); padding: 0; border-radius: 0; }
+/* the canvas draws the mount and leaves the window clear, so this slate (with its halftone) shows through it */
+html.kit-preview .st-stage {
+  background-color: var(--st-field); background-image: radial-gradient(rgba(241, 239, 232, 0.03) 0.6px, transparent 1.1px); background-size: 4px 4px;
+  padding: 0; border-radius: 0;
+}
+html.kit-preview .st-stage::after { display: none; }
 html.kit-preview .st-app { display: none; }

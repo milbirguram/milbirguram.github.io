@@ -9,13 +9,18 @@
   // each shows in its own colour. The same tokens are in style.css.
   var COL = {
     field: '#20242a', deep: '#191c21',
-    red: '#ff4b3e', cyan: '#2ec4d6', white: '#f1efe8', buff: '#d8c8a2',
+    red: '#ff4b3e', cyan: '#2ec4d6', white: '#f1efe8', buff: '#d8c9a3',
+    ink: '#20242a',                          // printing on the mount, 9.5:1 on buff
     dim: '#a9a79f',                          // secondary text, 6:1 on the field
     rule: 'rgba(241,239,232,0.13)', ruleStrong: 'rgba(241,239,232,0.30)',
-    context: 'rgba(241,239,232,0.6)',        // lines that are neither record nor truth (the weather)
     wash: 'rgba(241,239,232,0.07)',          // days on which the world itself moved
     water: 'rgba(46,196,214,0.13)'
   };
+  // Where record and truth agree, the red and the cyan image lie on the same line and add up to
+  // white. They are drawn this far either side of it (CSS px), so a half-pixel of each ink stays
+  // visible at the edges: the fused line still shows that it is made of two images. A screen
+  // without high density cannot draw half a pixel crisply, so there the two lie a little further apart.
+  var FUSE = (window.devicePixelRatio || 1) >= 1.5 ? 0.25 : 0.42;
   function easeInOut(p) { return p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; }
   function easeOut(p) { return 1 - Math.pow(1 - p, 3); }
   var FONT = '"Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
@@ -89,11 +94,14 @@
   // Each row: obs (what this layer records), optional tru (the same quantity in the true world),
   // optional dots (actual rides under a forecast). A row with tru is drawn as a stereo pair: the
   // record in red, the truth in cyan, added together, so days on which they agree come out white
-  // and days on which they part show as two lines (the truth dashed there, so the pair does not
-  // rest on colour alone). Rows marked truth (the world) are the cyan image only; rows marked
-  // weather are context. A row without tru (the truth hidden) is the red image alone.
+  // (with a half-pixel red and cyan fringe) and days on which they part show as two lines (the
+  // truth dashed there, so the pair does not rest on colour alone). Rows marked truth (the world)
+  // are the cyan image only; the weather, the same in every image, is a fainter fused pair. A row
+  // without tru (the truth hidden) is the red image alone.
   // o.tint marks where the world itself moved (a real change) and thickens the line there.
-  function rowInk(row) { return row.weather ? COL.context : row.truth ? COL.cyan : row.tru ? COL.white : COL.red; }
+  function paired(row) { return !!(row.tru || row.weather); }
+  // the inks a row's line is drawn in, each with its sideways offset
+  function rowInks(row) { return paired(row) ? [[COL.red, -FUSE], [COL.cyan, FUSE]] : [[row.truth ? COL.cyan : COL.red, 0]]; }
   function drawRows(ctx, w, rows, o) {
     var g = stripGeom(w, o.gutter), y = 0, di = clampDay(o.day);
     var reveal = o.reveal == null ? N - 1 : o.reveal;
@@ -116,7 +124,7 @@
       if (hi - lo < 1e-9) hi = lo + 1;
       var padv = (hi - lo) * 0.06; if (!row.zero) lo -= padv; hi += padv;
       var Y = function (v) { return bot - (v - lo) / (hi - lo) * (bot - top); };
-      var hot = null, ink = rowInk(row);
+      var hot = null, inks = rowInks(row);
       var same = function (dd) { return !row.tru || (finite(row.obs[dd]) && finite(row.tru[dd]) && row.obs[dd] === row.tru[dd]); };
       if (row.kind === 'bars') {
         // how much of the record is not as it was: each bar split into a red half and a cyan half,
@@ -156,14 +164,16 @@
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         if (row.tru) {
-          line(ctx, g, row.tru, Y, COL.cyan, 1.6, null, reveal, function (dd) { return same(dd - 1) && same(dd); });
-          line(ctx, g, row.tru, Y, COL.cyan, 1.6, [4, 3], reveal, function (dd) { return !(same(dd - 1) && same(dd)); });
-          line(ctx, g, row.obs, Y, COL.red, 1.6, null, reveal);
+          // the truth (cyan) and the record (red), each nudged half a fringe to its own side
+          line(ctx, g, row.tru, Y, COL.cyan, 1.6, null, reveal, function (dd) { return same(dd - 1) && same(dd); }, FUSE);
+          line(ctx, g, row.tru, Y, COL.cyan, 1.6, [4, 3], reveal, function (dd) { return !(same(dd - 1) && same(dd)); }, FUSE);
+          line(ctx, g, row.obs, Y, COL.red, 1.6, null, reveal, null, -FUSE);
         } else {
-          line(ctx, g, row.obs, Y, row.weather ? COL.context : row.truth ? COL.cyan : COL.red, row.weather ? 1.3 : 1.6, null, reveal);
+          if (row.weather) ctx.globalAlpha = 0.62;
+          inks.forEach(function (k) { line(ctx, g, row.obs, Y, k[0], row.weather ? 1.3 : 1.6, null, reveal, null, k[1]); });
         }
+        if (hot) inks.forEach(function (k) { hotLine(ctx, g, row.obs, Y, k[0], 2.6, reveal, hot, k[1]); });
         ctx.restore();
-        if (hot) hotLine(ctx, g, row.obs, Y, ink, 2.6, reveal, hot);
         if (row.rain) {
           ctx.fillStyle = COL.dim;
           for (d = 0; d <= reveal; d++) if (row.rain[d]) ctx.fillRect(xOf(g, d) - 1, bot + 1, 2, 3);
@@ -178,9 +188,13 @@
             ctx.beginPath(); ctx.arc(px, py, 4.4, 0, 6.283); ctx.fill();
             if (finite(tv0)) { ctx.beginPath(); ctx.arc(px, Y(tv0), 4.4, 0, 6.283); ctx.fill(); }
             ctx.save(); ctx.globalCompositeOperation = 'lighter';
-            ctx.fillStyle = split ? COL.red : ink;
-            ctx.beginPath(); ctx.arc(px, py, 2.8, 0, 6.283); ctx.fill();
-            if (finite(tv0)) { ctx.fillStyle = COL.cyan; ctx.beginPath(); ctx.arc(px, Y(tv0), 2.8, 0, 6.283); ctx.fill(); }
+            if (finite(tv0)) {
+              ctx.fillStyle = COL.red; ctx.beginPath(); ctx.arc(px, py, 2.8, 0, 6.283); ctx.fill();
+              ctx.fillStyle = COL.cyan; ctx.beginPath(); ctx.arc(px, Y(tv0), 2.8, 0, 6.283); ctx.fill();
+            } else {
+              // one dot of each ink, fused into white with their fringes
+              inks.forEach(function (k) { ctx.fillStyle = k[0]; ctx.beginPath(); ctx.arc(px + k[1], py, 2.8, 0, 6.283); ctx.fill(); });
+            }
             ctx.restore();
           }
         }
@@ -241,12 +255,11 @@
       ctx.save();
       ctx.lineWidth = 1.2; ctx.setLineDash([2, 3]);
       var mx = Math.round(xOf(g, o.marker - 0.5)) + 0.5;
-      if (o.markerFault) {
-        ctx.strokeStyle = COL.red; ctx.beginPath(); ctx.moveTo(mx - 1.5, 0); ctx.lineTo(mx - 1.5, y); ctx.stroke();
-        ctx.strokeStyle = COL.cyan; ctx.beginPath(); ctx.moveTo(mx + 1.5, 0); ctx.lineTo(mx + 1.5, y); ctx.stroke();
-      } else {
-        ctx.strokeStyle = COL.white; ctx.beginPath(); ctx.moveTo(mx, 0); ctx.lineTo(mx, y); ctx.stroke();
-      }
+      // (a real change's two lines lie together and add up to white)
+      var mo = o.markerFault ? 1.5 : FUSE;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = COL.red; ctx.beginPath(); ctx.moveTo(mx - mo, 0); ctx.lineTo(mx - mo, y); ctx.stroke();
+      ctx.strokeStyle = COL.cyan; ctx.beginPath(); ctx.moveTo(mx + mo, 0); ctx.lineTo(mx + mo, y); ctx.stroke();
       ctx.restore();
     }
     if (showCursor) {
@@ -279,9 +292,11 @@
     if (!finite(arr[a]) || !finite(arr[a + 1])) return arr[a];
     return arr[a] + (arr[a + 1] - arr[a]) * f;
   }
-  // A series as a line; with `keep`, only the segments (d-1 → d) for which keep(d) holds.
-  function line(ctx, g, arr, Y, color, width, dash, reveal, keep) {
+  // A series as a line; with `keep`, only the segments (d-1 → d) for which keep(d) holds;
+  // dx shifts it sideways (one image of a stereo pair).
+  function line(ctx, g, arr, Y, color, width, dash, reveal, keep, dx) {
     ctx.save();
+    if (dx) ctx.translate(dx, 0);
     ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = dash ? 'butt' : 'round';
     if (dash) ctx.setLineDash(dash);
     ctx.beginPath();
@@ -297,9 +312,10 @@
     ctx.stroke();
     ctx.restore();
   }
-  // Overdraw the stretches of a line where `hot` is set, heavier, in the row's own ink.
-  function hotLine(ctx, g, arr, Y, color, width, reveal, hot) {
+  // Overdraw the stretches of a line where `hot` is set, heavier, in one of the row's inks.
+  function hotLine(ctx, g, arr, Y, color, width, reveal, hot, dx) {
     ctx.save();
+    if (dx) ctx.translate(dx, 0);
     ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.beginPath();
     for (var d = 1; d <= reveal; d++) {
@@ -376,46 +392,66 @@
       ctx.stroke();
     }
 
+    // The card itself: a buff mount with a printed rule, the slate window cut with a twin arch
+    // across its top (one arch per eye), and the layer names stamped on the mount beside it.
+    // The window is left transparent on this canvas, so the slate behind it shows through and the
+    // two inks add up exactly: red + cyan = white.
+    function windowPath(ctx, wl, wr, wt, wb, arch) {
+      var hw = (wr - wl) / 2;
+      ctx.moveTo(wl, wb); ctx.lineTo(wl, wt + arch);
+      ctx.ellipse(wl + hw / 2, wt + arch, hw / 2, arch, 0, Math.PI, 2 * Math.PI);
+      ctx.ellipse(wl + hw * 1.5, wt + arch, hw / 2, arch, 0, Math.PI, 2 * Math.PI);
+      ctx.lineTo(wr, wb); ctx.closePath();
+    }
+    // a strand of the card stock: faint specks, made once
+    var grainTile = null;
+    function grain(ctx) {
+      if (!grainTile) {
+        grainTile = document.createElement('canvas');
+        grainTile.width = grainTile.height = 96;
+        var gx = grainTile.getContext('2d'), s = 11;
+        for (var i = 0; i < 900; i++) {
+          s = (s * 16807) % 2147483647; var x = s % 96;
+          s = (s * 16807) % 2147483647; var y = s % 96;
+          s = (s * 16807) % 2147483647;
+          gx.fillStyle = 'rgba(70,58,32,' + (0.04 + (s % 1000) / 1000 * 0.1).toFixed(3) + ')';
+          gx.fillRect(x, y, 1, 1);
+        }
+      }
+      return ctx.createPattern(grainTile, 'repeat');
+    }
+    // a series drawn as one image of the pair: shifted sideways by dx
+    function strokeAt(ctx, p, from, to, dx) {
+      ctx.save(); ctx.translate(dx, 0); stroke(ctx, p, from, to); ctx.restore();
+    }
+
     function draw(t) {
       var w = cv.clientWidth || 320, h = cv.clientHeight || 200;
       var ctx = sizeCanvas(cv, w, h);
       cv.style.height = '100%';
       var big = w >= 420, fs = big ? 12 : 11;
-      var padX = big ? 18 : 12, padY = big ? 16 : 10;
+      var M = big ? 14 : 10, arch = big ? 13 : 9, gap = big ? 12 : 8;
       var spaced = 'letterSpacing' in ctx;
-      ctx.font = '500 ' + fs + 'px ' + FONT;
-      if (spaced) ctx.letterSpacing = '0.9px';
+      ctx.font = '700 ' + fs + 'px ' + MONO;
+      if (spaced) ctx.letterSpacing = '1px';
       var labW = 0;
       bands.forEach(function (b) { labW = Math.max(labW, ctx.measureText(b.name.toUpperCase()).width); });
       if (spaced) ctx.letterSpacing = '0px';
-      var tabW = Math.ceil(labW) + 14, tabH = big ? 21 : 19;
-      var x0 = padX + tabW + (big ? 16 : 12), x1 = w - padX;
-      var bandH = (h - 2 * padY) / bands.length;
+      // the window, and the strips inside it
+      var wl = Math.round(M + labW + gap), wr = w - M, wt = M, wb = h - M;
+      var top0 = wt + arch + 1, x0 = wl + (big ? 10 : 7), x1 = wr - (big ? 10 : 7);
+      var bandH = (wb - 3 - top0) / bands.length;
       var X = function (d) { return x0 + (d + 0.5) / N * (x1 - x0); };
       var ph = phase(t), fx = Math.round(X(F - 0.5)) + 0.5;
       // the pulse head climbs from the log band to the top of the model band
-      var ySrc = padY + SRC * bandH + bandH * 0.62, yTop = padY + 5;
+      var ySrc = top0 + SRC * bandH + bandH * 0.62, yTop = top0 + 4;
       var yHead = ph.rise < 0 ? Infinity : ySrc + (yTop - ySrc) * ph.rise;
-      var lw = big ? 1.8 : 1.6;
+      var lw = big ? 1.8 : 1.6, fu = FUSE + 0.12;   // half the fused pair's offset: a little more than the page, as the card is small
       ctx.globalAlpha = ph.alpha;
       bands.forEach(function (b, i) {
-        var top = padY + i * bandH, iTop = top + 7, iBot = top + bandH - 7;
-        var reached = b.hit && yHead <= top + bandH - 4;
-        if (i < bands.length - 1) { ctx.fillStyle = COL.rule; ctx.fillRect(padX, Math.round(top + bandH) - 0.5, w - 2 * padX, 1); }
-        // the layer's name on its mount; once the fault reaches it, the mount slips out of register
-        var ty = Math.round(top + (bandH - tabH) / 2);
-        if (reached) {
-          ctx.save(); ctx.globalCompositeOperation = 'lighter';
-          ctx.fillStyle = COL.red; roundRect(ctx, padX - 2.5, ty, tabW, tabH, 3); ctx.fill();
-          ctx.fillStyle = COL.cyan; roundRect(ctx, padX + 2.5, ty, tabW, tabH, 3); ctx.fill();
-          ctx.restore();
-        }
-        ctx.fillStyle = COL.buff; roundRect(ctx, padX, ty, tabW, tabH, 3); ctx.fill();
-        ctx.strokeStyle = 'rgba(32,36,42,0.3)'; ctx.lineWidth = 1; roundRect(ctx, padX + 2.5, ty + 2.5, tabW - 5, tabH - 5, 1.5); ctx.stroke();
-        ctx.fillStyle = COL.field; ctx.font = '500 ' + fs + 'px ' + FONT; ctx.textBaseline = 'middle';
-        if (spaced) ctx.letterSpacing = '0.9px';
-        ctx.fillText(b.name.toUpperCase(), padX + 7, ty + tabH / 2 + 0.5);
-        if (spaced) ctx.letterSpacing = '0px';
+        var top = top0 + i * bandH, iTop = top + 6, iBot = top + bandH - 6;
+        var reached = b.reached = b.hit && yHead <= top + bandH - 4;
+        if (i < bands.length - 1) { ctx.fillStyle = COL.rule; ctx.fillRect(wl, Math.round(top + bandH) - 0.5, wr - wl, 1); }
         var Y = function (v) { return iBot - (v - b.lo) / (b.hi - b.lo) * (iBot - iTop); };
         var po = pts(b.obs, ph.r, X, Y), pt = b.tru ? pts(b.tru, ph.r, X, Y) : null;
         var split = reached && pt && ph.r > F;
@@ -430,22 +466,27 @@
             ctx.closePath(); ctx.fillStyle = hatch(ctx); ctx.fill();
           }
         }
-        // the world is the true image alone (cyan); every other layer is record and truth fused (white) until they part
-        ctx.strokeStyle = b.hit ? COL.white : COL.cyan;
-        stroke(ctx, po, 0, split ? F - 1 : N);
-        if (split) {
-          ctx.save(); ctx.globalCompositeOperation = 'lighter';
-          ctx.strokeStyle = COL.cyan; stroke(ctx, pt, F - 1, N);
-          ctx.strokeStyle = COL.red; stroke(ctx, po, F - 1, N);
-          ctx.restore();
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        if (!b.hit) {
+          // the world is the true image alone (cyan)
+          ctx.strokeStyle = COL.cyan; stroke(ctx, po, 0, N);
+        } else {
+          // every other layer is a red and a cyan image lying together (white, with a fringe) until they part
+          var upto = split ? F - 1 : N;
+          ctx.strokeStyle = COL.red; strokeAt(ctx, po, 0, upto, -fu);
+          ctx.strokeStyle = COL.cyan; strokeAt(ctx, po, 0, upto, fu);
+          if (split) {
+            ctx.strokeStyle = COL.cyan; strokeAt(ctx, pt, F - 1, N, fu);
+            ctx.strokeStyle = COL.red; strokeAt(ctx, po, F - 1, N, -fu);
+          }
         }
         // the pen: a dot at the end of each line while it draws (two, once the images have parted)
         if (ph.pen && po.length) {
           var last = po[po.length - 1], lt = split && pt.length ? pt[pt.length - 1] : null, r0 = big ? 2.8 : 2.4;
-          ctx.fillStyle = lt && last[2] > F ? COL.red : b.hit ? COL.white : COL.cyan;
-          ctx.beginPath(); ctx.arc(last[0], last[1], r0, 0, 6.283); ctx.fill();
-          if (lt && last[2] > F) { ctx.fillStyle = COL.cyan; ctx.beginPath(); ctx.arc(lt[0], lt[1], r0, 0, 6.283); ctx.fill(); }
+          var dots = !b.hit ? [[COL.cyan, last, 0]] : lt && last[2] > F ? [[COL.red, last, 0], [COL.cyan, lt, 0]] : [[COL.red, last, -fu], [COL.cyan, last, fu]];
+          dots.forEach(function (dd) { ctx.fillStyle = dd[0]; ctx.beginPath(); ctx.arc(dd[1][0] + dd[2], dd[1][1], r0, 0, 6.283); ctx.fill(); });
         }
+        ctx.restore();
       });
       // the fault: a red and a cyan line rising together from the log, out of register
       if (ph.rise >= 0) {
@@ -465,7 +506,7 @@
         // name the fault just before its source, below the line (which runs higher before the fault)
         ctx.font = '500 ' + (big ? 13 : 12) + 'px ' + FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'right';
         ctx.lineWidth = 5; ctx.strokeStyle = COL.field; ctx.lineJoin = 'round';
-        var lx = fx - 8, ly = Math.min(ySrc + bandH * 0.12, padY + (SRC + 1) * bandH - 8);
+        var lx = fx - 8, ly = Math.min(ySrc + bandH * 0.12, top0 + (SRC + 1) * bandH - 8);
         ctx.strokeText('dock fault', lx, ly);
         // printed out of register: a red and a cyan copy either side of the white
         ctx.fillStyle = COL.red; ctx.fillText('dock fault', lx - 1.2, ly);
@@ -474,6 +515,27 @@
         ctx.textAlign = 'left';
       }
       ctx.globalAlpha = 1;
+
+      // the mount over everything outside the window
+      ctx.beginPath(); ctx.rect(0, 0, w, h); windowPath(ctx, wl, wr, wt, wb, arch);
+      ctx.fillStyle = COL.buff; ctx.fill('evenodd');
+      ctx.fillStyle = grain(ctx); ctx.fill('evenodd');
+      ctx.strokeStyle = 'rgba(32,36,42,0.36)'; ctx.lineWidth = 1;
+      roundRect(ctx, 4.5, 4.5, w - 9, h - 9, big ? 8 : 6); ctx.stroke();
+      // the layer names, stamped on the mount; once the fault reaches a layer, its name prints out of register
+      ctx.font = '700 ' + fs + 'px ' + MONO; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      if (spaced) ctx.letterSpacing = '1px';
+      bands.forEach(function (b, i) {
+        var ly = Math.round(top0 + i * bandH + bandH / 2) + 0.5, txt = b.name.toUpperCase();
+        if (b.reached) {
+          ctx.globalAlpha = 0.85 * ph.alpha;
+          ctx.fillStyle = COL.red; ctx.fillText(txt, M - 1.4, ly);
+          ctx.fillStyle = COL.cyan; ctx.fillText(txt, M + 1.4, ly);
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = COL.ink; ctx.fillText(txt, M, ly);
+      });
+      if (spaced) ctx.letterSpacing = '0px';
     }
     function frame(now) {
       raf = 0;
@@ -491,7 +553,7 @@
       else { if (raf) cancelAnimationFrame(raf); raf = 0; draw(null); }
     });
     window.addEventListener('resize', function () { if (!playing) draw(null); });
-    whenFonts(['500 12px "Space Grotesk"'], function () { if (!playing) draw(null); });
+    whenFonts(['500 12px "Space Grotesk"', '700 11px "Space Mono"'], function () { if (!playing) draw(null); });
   }
 
   // =====================================================================================
@@ -860,9 +922,9 @@
       var alpha = t < climb + hold ? 1 : Math.max(0, 1 - (t - climb - hold) / fade);
       parts.forEach(function (p) { if (!rise.fired[p.l] && yh <= p.bot - 2) { rise.fired[p.l] = true; flash(p.l); } });
       var ctx = sizeCanvas(riseCv, W, H);
-      // A real change rises as one white line: record and truth move together. A fault rises as a
-      // red and a cyan line side by side, the two images out of register.
-      var inks = rise.real ? [[COL.white, 0]] : [[COL.red, -1.5], [COL.cyan, 1.5]];
+      // A real change rises as one white line, its red and cyan images lying together: record and
+      // truth move as one. A fault rises as a red and a cyan line apart, out of register.
+      var inks = rise.real ? [[COL.red, -FUSE], [COL.cyan, FUSE]] : [[COL.red, -1.5], [COL.cyan, 1.5]];
       ctx.globalCompositeOperation = 'lighter';
       ctx.lineWidth = rise.real ? 2 : 1.6; ctx.lineCap = 'round';
       inks.forEach(function (k) {
@@ -1271,13 +1333,13 @@
       // and where they differ the taller one shows its own colour above the white, with a tick at the truth's height
       ctx.globalCompositeOperation = 'lighter';
       for (k = 0; k < 24; k++) {
-        var x = left + k * bw, ha = (bottom - top) * a[k] / max;
+        var x = left + k * bw, ha = (bottom - top) * a[k] / max, fo = tv ? FUSE : 0;
         ctx.fillStyle = COL.red;
-        ctx.fillRect(x + 1, bottom - ha, bw - 2, ha);
+        ctx.fillRect(x + 1 - fo, bottom - ha, bw - 2, ha);
         if (tv) {
           var hb = (bottom - top) * b[k] / max;
           ctx.fillStyle = COL.cyan;
-          ctx.fillRect(x + 1, bottom - hb, bw - 2, hb);
+          ctx.fillRect(x + 1 + fo, bottom - hb, bw - 2, hb);
           if (a[k] !== b[k]) ctx.fillRect(x, bottom - hb - 1, bw, 2);
         }
       }
