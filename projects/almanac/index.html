@@ -19,7 +19,7 @@
   <p class="kit-lede">A small data pipeline meant to run once a day: it fetches the hourly Air Quality Health Index for seven western Canadian cities, checks each day against a written contract, stores it, and reports on itself. The answer comes first, then the pipeline’s own health, run by run. The readings are real-time and unverified, and the record begins on 4 August 2026, so the counts are hours since then, not this year. Data Source: Environment and Climate Change Canada, under its <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">data licence</a>.</p>
 
   <section class="kit-stage kit-wide almanac" data-kit-stage aria-label="Almanac: the answer and the pipeline’s health">
-    <canvas id="preview" class="preview" hidden role="img" aria-label="The pipeline's run calendar filling in day by day, mostly green with some amber days, while a bar chart of daily high-risk hours draws beneath a running total."></canvas>
+    <canvas id="preview" class="preview" hidden role="img" aria-label="The pipeline's run calendar filling in day by day, mostly full discs (passed) with some half discs (warnings), while an orange bar chart of daily high-risk hours draws beneath a running total."></canvas>
 
     <div id="full">
       <p class="loading" id="loading">Loading the latest aggregates…</p>
@@ -67,19 +67,19 @@
               <div class="cal" id="cal" role="group" aria-label="Run calendar"></div>
             </div>
             <ul class="cal-legend">
-              <li><span class="cell-key s-pass">✓</span> all checks passed</li>
-              <li><span class="cell-key s-warn">!</span> loaded with a warning</li>
-              <li><span class="cell-key s-fail">×</span> refused</li>
-              <li><span class="cell-key s-none"></span> no run</li>
-              <li><span class="cell-key s-pass is-sched">✓</span> solid: ran on schedule</li>
-              <li><span class="cell-key s-pass">✓</span> pale: backfilled later</li>
+              <li><span class="mk mk-pass" aria-hidden="true"></span> full disc: all checks passed</li>
+              <li><span class="mk mk-warn" aria-hidden="true"></span> half disc: loaded with a warning</li>
+              <li><span class="mk mk-fail" aria-hidden="true"></span> struck ring: refused</li>
+              <li><span class="mk mk-none" aria-hidden="true"></span> point: no run</li>
+              <li><span class="key-box is-sched" aria-hidden="true"><span class="mk mk-pass"></span></span> boxed: ran on schedule</li>
+              <li><span class="key-box is-back" aria-hidden="true"><span class="mk mk-pass"></span></span> unboxed: backfilled later</li>
             </ul>
             <div class="tip" id="tip" role="tooltip" hidden></div>
           </div>
 
           <div class="contract" id="contract">
             <h3 class="h3" id="contract-h">Contract results</h3>
-            <p class="micro contract-what">A data contract is a written promise about what each day’s data must look like. Before loading anything, the pipeline checks the day against the seven promises below. A small breach turns the day amber and it is loaded with a note; a serious one turns it red and the day is refused, not quietly stored. The promises are kept as data in <a href="pipeline/contract.json">contract.json</a>.</p>
+            <p class="micro contract-what">A data contract is a written promise about what each day’s data must look like. Before loading anything, the pipeline checks the day against the seven promises below. A small breach marks the day with a warning and it is loaded with a note; a serious one marks it refused, and the day is not quietly stored. The promises are kept as data in <a href="pipeline/contract.json">contract.json</a>.</p>
             <p class="contract-day" id="contract-day"></p>
             <ol class="checks" id="checks"></ol>
           </div>

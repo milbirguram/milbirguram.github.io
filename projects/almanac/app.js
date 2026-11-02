@@ -24,6 +24,12 @@
     return e;
   }
   function css(name) { return getComputedStyle($('full') || document.body).getPropertyValue(name).trim(); }
+  // the run glyphs: shape carries the status (see style.css), the words beside them say it
+  function mark(status) {
+    var s = el('span', 'mk mk-' + status);
+    s.setAttribute('aria-hidden', 'true');
+    return s;
+  }
 
   if (Kit.preview) { startPreview(); return; }
 
@@ -153,9 +159,18 @@
       var g = geom();
       svg.setAttribute('viewBox', '0 0 ' + g.w + ' ' + g.h);
       svg.textContent = '';
+      var ink = css('--ink') || '#1f1b16', ink3 = css('--ink-3') || '#8c8274';
+      if (cfg.hatch) {
+        // a ruled hatch in black ink, for readings the contract set aside
+        var defs = svgEl('defs', {});
+        var pat = svgEl('pattern', { id: cfg.hatch, width: 4, height: 4, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
+        pat.appendChild(svgEl('rect', { width: 1.6, height: 4, fill: ink }));
+        defs.appendChild(pat);
+        svg.appendChild(defs);
+      }
       var y = function (v) { return g.m.t + g.ph - (v / cfg.max) * g.ph; };
       cfg.ticks.forEach(function (t) {
-        svg.appendChild(svgEl('line', { x1: g.m.l, x2: g.m.l + g.pw, y1: y(t), y2: y(t), stroke: '#dedfd7', 'stroke-width': 1 }));
+        svg.appendChild(svgEl('line', { x1: g.m.l, x2: g.m.l + g.pw, y1: y(t), y2: y(t), stroke: ink3, 'stroke-width': 0.8, 'stroke-dasharray': '1 3' }));
         svg.appendChild(svgEl('text', { x: g.m.l - 6, y: y(t) + 4, 'text-anchor': 'end' }, String(t)));
       });
       var bw = Math.max(1, g.band - (g.band > 4 ? 1.5 : g.band > 2 ? 0.6 : 0));
@@ -165,7 +180,8 @@
         cfg.segments(i).forEach(function (s) {
           if (!s.v) return;
           var a = { x: x.toFixed(2), y: y(base + s.v).toFixed(2), width: bw.toFixed(2), height: (y(base) - y(base + s.v)).toFixed(2) };
-          if (s.outline) { a.fill = 'none'; a.stroke = s.color; a['stroke-width'] = 0.8; a['stroke-dasharray'] = '2 2'; } else a.fill = s.color;
+          if (s.outline) { a.fill = 'none'; a.stroke = s.color; a['stroke-width'] = 0.8; a['stroke-dasharray'] = '1 2'; } else a.fill = s.color;
+          if (s.rule) { a.stroke = s.rule; a['stroke-width'] = 0.6; }
           svg.appendChild(svgEl('rect', a));
           base += s.v;
         });
@@ -173,9 +189,9 @@
           svg.appendChild(svgEl('circle', { cx: (x + bw / 2).toFixed(2), cy: g.m.t + g.ph + 6, r: Math.min(2.6, Math.max(1.6, bw / 2)), fill: 'none', stroke: cfg.markerColor, 'stroke-width': 1.1 }));
         }
       }
-      svg.appendChild(svgEl('line', { x1: g.m.l, x2: g.m.l + g.pw, y1: y(0), y2: y(0), stroke: '#b5bdaf', 'stroke-width': 1 }));
+      svg.appendChild(svgEl('line', { x1: g.m.l, x2: g.m.l + g.pw, y1: y(0), y2: y(0), stroke: ink, 'stroke-width': 1.2 }));
       (cfg.lines || []).forEach(function (L) {
-        svg.appendChild(svgEl('line', { x1: g.m.l, x2: g.m.l + g.pw, y1: y(L.v), y2: y(L.v), stroke: L.color, 'stroke-width': 1.5, 'stroke-dasharray': '5 3' }));
+        svg.appendChild(svgEl('line', { x1: g.m.l, x2: g.m.l + g.pw, y1: y(L.v), y2: y(L.v), stroke: L.color, 'stroke-width': 1.2, 'stroke-dasharray': '6 3' }));
         svg.appendChild(svgEl('text', { x: g.m.l + 6, y: y(L.v) - 6, 'class': 'halo', style: 'fill:' + L.color }, L.label));
       });
       // month labels at each month's first day
@@ -189,7 +205,7 @@
         svg.appendChild(svgEl('text', { x: x, y: g.m.t + g.ph + (cfg.marker ? 21 : 17) }, label));
         lastRight = x + 30;
       });
-      api.cursor = svgEl('rect', { x: 0, y: g.m.t, width: Math.max(2, g.band), height: g.ph, fill: 'rgba(37,40,33,0.08)', visibility: 'hidden' });
+      api.cursor = svgEl('rect', { x: 0, y: g.m.t, width: Math.max(2, g.band), height: g.ph, fill: 'rgba(31,27,22,0.1)', visibility: 'hidden' });
       svg.insertBefore(api.cursor, svg.firstChild);
       api.g = g;
       if (api.index >= 0) api.set(api.index, true);
@@ -233,7 +249,7 @@
     var s = state.summary, id = state.city, ser = s.series[id];
     var keep = charts.hi ? charts.hi.index : -1;
     var svg = $('hi-chart');
-    var hi = css('--hi') || '#a5492b', warn = css('--warn') || '#8a5a0b';
+    var hi = css('--spot') || '#d9662a', warn = css('--ink') || '#1f1b16';
     var fresh = !charts.hi;
     charts.hi = barChart(svg, {
       n: s.dates.length, max: 24, ticks: [0, 12, 24], dates: s.dates,
@@ -266,11 +282,11 @@
   function drawRowsChart() {
     var cal = state.health.calendar;
     var keep = charts.rows ? charts.rows.index : -1;
-    var bar = css('--bar') || '#6f7768', bad = css('--bad') || '#a23b30';
+    var bar = css('--ink-3') || '#8c8274', bad = css('--ink') || '#1f1b16', faint = css('--ink-2') || '#574e43';
     var anyKept = cal.some(function (d) { return d.kept; });
     $('lg-kept').hidden = !anyKept;
     charts.rows = barChart($('rows-chart'), {
-      n: cal.length, max: 168, ticks: [0, 168], dates: cal.map(function (d) { return d.date; }),
+      n: cal.length, max: 168, ticks: [0, 168], dates: cal.map(function (d) { return d.date; }), hatch: 'almanac-hatch',
       lines: [{ v: 84, label: 'below 84, the day is refused', color: bad }],
       segments: function (i) {
         var d = cal[i];
@@ -279,8 +295,8 @@
         var loaded = d.loaded ? d.rows_out : d.kept || 0; // a refused rerun leaves the earlier load counted
         return [
           { v: loaded, color: bar },
-          { v: refused, color: bad },
-          { v: Math.max(0, 168 - loaded - refused), color: '#b5bdaf', outline: true }
+          { v: refused, color: 'url(#almanac-hatch)', rule: bad },
+          { v: Math.max(0, 168 - loaded - refused), color: faint, outline: true }
         ];
       },
       marker: anyKept ? function (i) { return !!cal[i].kept; } : null,
@@ -332,35 +348,52 @@
   }
 
   function drawDial(f, slo) {
+    // a printed clock face: 0 to 48 hours round the rim, the stale part ruled with hatching
     var svg = $('dial');
     svg.textContent = '';
+    var ink = css('--ink') || '#1f1b16', ink2 = css('--ink-2') || '#574e43';
     var max = slo.max_data_age_hours * 4 / 3; // 48 h when the SLO is 36 h
-    var cx = 60, cy = 60, r = 46, start = 135, sweep = 270;
+    var cx = 60, cy = 60, r = 47, start = 135, sweep = 270;
     function pt(t, rr) {
       var a = (start + sweep * t) * Math.PI / 180;
       return [cx + rr * Math.cos(a), cy + rr * Math.sin(a)];
     }
-    function arc(t0, t1, color, width) {
-      var p0 = pt(t0, r), p1 = pt(t1, r);
+    function arc(t0, t1, rr, attrs) {
+      var p0 = pt(t0, rr), p1 = pt(t1, rr);
       var large = (t1 - t0) * sweep > 180 ? 1 : 0;
-      svg.appendChild(svgEl('path', { d: 'M' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2), fill: 'none', stroke: color, 'stroke-width': width, 'stroke-linecap': 'butt' }));
+      attrs.d = 'M' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) + ' A' + rr + ' ' + rr + ' 0 ' + large + ' 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2);
+      attrs.fill = 'none';
+      svg.appendChild(svgEl('path', attrs));
     }
+    var defs = svgEl('defs', {});
+    var pat = svgEl('pattern', { id: 'dial-hatch', width: 3, height: 3, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
+    pat.appendChild(svgEl('rect', { width: 1.1, height: 3, fill: ink }));
+    defs.appendChild(pat);
+    svg.appendChild(defs);
     var limit = slo.max_data_age_hours / max;
-    arc(0, limit, css('--ok-tint') || '#e3ebe0', 10);
-    arc(limit, 1, css('--bad-tint') || '#f7dfdb', 10);
+    arc(0, 1, r + 4, { stroke: ink, 'stroke-width': 1 });          // the rim
+    arc(limit, 1, r - 3, { stroke: 'url(#dial-hatch)', 'stroke-width': 9 }); // stale: hatched
+    for (var hgt = 0; hgt <= max + 0.01; hgt += 3) {
+      var tt = hgt / max, major = hgt % 12 === 0;
+      var p0 = pt(tt, r + 4), p1 = pt(tt, r + 4 - (major ? 8 : 4));
+      svg.appendChild(svgEl('line', { x1: p0[0].toFixed(2), y1: p0[1].toFixed(2), x2: p1[0].toFixed(2), y2: p1[1].toFixed(2), stroke: ink, 'stroke-width': major ? 1.4 : 0.8 }));
+    }
+    [24].forEach(function (hh) {
+      var q = pt(hh / max, r - 13);
+      svg.appendChild(svgEl('text', { x: q[0].toFixed(2), y: (q[1] + 4).toFixed(2), 'text-anchor': 'middle', 'font-size': 10.5, fill: ink2 }, String(hh)));
+    });
+    var a = pt(limit, r - 10), b = pt(limit, r + 9);
+    svg.appendChild(svgEl('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: ink, 'stroke-width': 2 }));
+    var lab = pt(limit, r - 19);
+    svg.appendChild(svgEl('text', { x: lab[0], y: lab[1] + 4, 'text-anchor': 'middle', 'font-size': 11, fill: ink }, slo.max_data_age_hours + 'h'));
     var age = isFinite(f.dataAgeHours) ? Math.max(0, f.dataAgeHours) : max;
     var t = Math.min(1, age / max);
-    arc(0, Math.max(0.004, Math.min(t, limit)), css('--ok') || '#4d6e50', 4);
-    if (t > limit) arc(limit, t, css('--bad') || '#a23b30', 4);
-    var a = pt(limit, r - 9), b = pt(limit, r + 9);
-    svg.appendChild(svgEl('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: '#252821', 'stroke-width': 1.5 }));
-    var lab = pt(limit, r - 17);
-    svg.appendChild(svgEl('text', { x: lab[0], y: lab[1] + 4, 'text-anchor': 'middle', 'font-size': 11, fill: '#686d62' }, slo.max_data_age_hours + 'h'));
-    var n = pt(t, r - 14);
-    svg.appendChild(svgEl('line', { x1: cx, y1: cy, x2: n[0].toFixed(2), y2: n[1].toFixed(2), stroke: '#252821', 'stroke-width': 2, 'stroke-linecap': 'round' }));
-    svg.appendChild(svgEl('circle', { cx: cx, cy: cy, r: 3.5, fill: '#252821' }));
-    svg.appendChild(svgEl('text', { x: cx, y: cy + 24, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 500, fill: f.state === 'fresh' ? (css('--ok') || '#4d6e50') : (css('--bad') || '#a23b30') }, f.word));
-    svg.appendChild(svgEl('text', { x: cx, y: cy + 39, 'text-anchor': 'middle', 'font-size': 11, fill: '#686d62' }, age >= max ? max + 'h+' : Math.round(age) + 'h old'));
+    var n = pt(t, r - 11), tail = pt(t + 0.5, 9);
+    svg.appendChild(svgEl('line', { x1: tail[0].toFixed(2), y1: tail[1].toFixed(2), x2: n[0].toFixed(2), y2: n[1].toFixed(2), stroke: ink, 'stroke-width': 1.8, 'stroke-linecap': 'butt' }));
+    svg.appendChild(svgEl('circle', { cx: cx, cy: cy, r: 3.6, fill: ink }));
+    svg.appendChild(svgEl('circle', { cx: cx, cy: cy, r: 1.3, fill: css('--stock') || '#f3ecdc' }));
+    svg.appendChild(svgEl('text', { x: cx, y: cy + 31, 'text-anchor': 'middle', 'font-size': 15, 'font-family': css('--display') || 'serif', fill: ink }, f.word));
+    svg.appendChild(svgEl('text', { x: cx, y: cy + 45, 'text-anchor': 'middle', 'font-size': 11, 'font-style': 'italic', fill: ink2 }, age >= max ? max + 'h+' : Math.round(age) + 'h old'));
     svg.setAttribute('aria-label', 'Freshness clock: ' + f.word + '. The newest hour is ' + M.ageText(f.dataAgeHours) + ' old; the limit is ' + slo.max_data_age_hours + ' hours.');
     svg.removeAttribute('aria-labelledby');
   }
@@ -375,7 +408,7 @@
     var ul = el('ul');
     [['pass', 'all checks passed'], ['warn', 'loaded with a warning'], ['fail', 'refused by the contract'], ['none', 'no run at all']].forEach(function (p) {
       var li = el('li');
-      li.appendChild(el('span', 'cell-key s-' + p[0], M.STATUS[p[0]].glyph));
+      li.appendChild(mark(p[0]));
       li.append(M.fmtInt(t[p[0]] || 0) + ' ' + p[1]);
       ul.appendChild(li);
     });
@@ -417,7 +450,8 @@
     });
     grid.cells.forEach(function (c, i) {
       var d = c.day;
-      var b = el('button', 'cell s-' + d.status + (d.kinds && d.kinds.indexOf('scheduled') >= 0 ? ' is-sched' : ''), (M.STATUS[d.status] || M.STATUS.none).glyph);
+      var b = el('button', 'cell s-' + d.status + (d.kinds && d.kinds.indexOf('scheduled') >= 0 ? ' is-sched' : ''));
+      b.appendChild(mark(M.STATUS[d.status] ? d.status : 'none'));
       b.type = 'button';
       b.style.gridColumn = String(c.col + 1);
       b.style.gridRow = String(c.row + 2);
@@ -491,7 +525,10 @@
       return;
     }
     var st = M.STATUS[d.status];
-    day.appendChild(el('b', 'w-' + d.status, st.glyph + ' ' + st.word));
+    var dw = el('b', 'w-' + d.status);
+    dw.appendChild(mark(d.status));
+    dw.append(st.word);
+    day.appendChild(dw);
     var src = d.src ? d.src.split(',').map(function (s) { return SOURCE_WORDS[s] || s; }).join(' and ') : 'no source file';
     day.append(': ' + st.day + '. ' + cap(M.KIND[d.kind] || d.kind) + (d.finished ? ', run ' + M.stamp(d.finished) : '') + ', read from ' + src + '. ' +
       M.loadedText(d) +
@@ -500,9 +537,7 @@
     M.dayChecks(d, h).forEach(function (c) {
       var li = el('li', 'check');
       var s = M.STATUS[c.status];
-      var badge = el('span', 'cell-key badge s-' + c.status, s.glyph);
-      badge.setAttribute('aria-hidden', 'true');
-      li.appendChild(badge);
+      li.appendChild(mark(c.status));
       var title = el('p', 'check-title', c.title);
       title.appendChild(el('span', 'word w-' + c.status, s.word));
       li.appendChild(title);
@@ -580,6 +615,8 @@
   // ======================================================================== preview
 
   function startPreview() {
+    // The card: an almanac sheet printing itself. Each day's run glyph is stamped into the
+    // calendar in turn while the smoke-orange bars of high-risk hours rise beneath.
     var P = window.ALMANAC_PREVIEW;
     var canvas = $('preview');
     canvas.hidden = false;
@@ -590,11 +627,13 @@
     var n = P.cal.length;
     var firstDow = (new Date(Date.parse(P.first + 'T00:00:00Z')).getUTCDay() + 6) % 7;
     var weeks = Math.floor((n - 1 + firstDow) / 7) + 1;
-    var FILL = 6000, HOLD = 2600, FADE = 500, LOOP = FILL + HOLD + FADE;
-    var COL = {
-      g: ['#4d6e50', '#e3ebe0'], a: ['#8a5a0b', '#f6e9cf'], r: ['#a23b30', '#f7dfdb'], n: ['#b5bdaf', null]
-    };
+    var FILL = 6400, HOLD = 2600, FADE = 500, LOOP = FILL + HOLD + FADE;
+    var INK = css('--ink') || '#1f1b16', INK2 = css('--ink-2') || '#574e43', INK3 = css('--ink-3') || '#8c8274';
+    var SPOT = css('--spot') || '#d9662a';
+    var SERIF = '"Libre Caslon Text", Georgia, serif', DISPLAY = '"Libre Caslon Display", "Libre Caslon Text", Georgia, serif';
     var W = 0, H = 0, dpr = 1, raf = 0, t0 = 0, playing = false;
+
+    function still() { draw(LOOP - FADE - 1); }
 
     function resize() {
       var r = canvas.getBoundingClientRect();
@@ -602,57 +641,62 @@
       W = Math.max(1, r.width); H = Math.max(1, r.height);
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (!playing) draw(LOOP - FADE - 1);
+      if (!playing) still();
     }
 
     function ease(x) { x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); }
 
+    function glyph(code, x, y, rad) {
+      // the same shapes as the page: full disc, half disc, struck ring, point
+      ctx.fillStyle = INK; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, rad * 0.28);
+      if (code === 'g') { ctx.beginPath(); ctx.arc(x, y, rad, 0, 2 * Math.PI); ctx.fill(); return; }
+      if (code === 'n') { ctx.fillStyle = INK3; ctx.beginPath(); ctx.arc(x, y, Math.max(0.8, rad * 0.3), 0, 2 * Math.PI); ctx.fill(); return; }
+      var ri = rad - ctx.lineWidth / 2;
+      ctx.beginPath(); ctx.arc(x, y, ri, 0, 2 * Math.PI); ctx.stroke();
+      if (code === 'a') { ctx.beginPath(); ctx.arc(x, y, ri, Math.PI / 2, Math.PI * 1.5); ctx.closePath(); ctx.fill(); }
+      else if (code === 'r') { var d = ri * 0.72; ctx.beginPath(); ctx.moveTo(x - d, y - d); ctx.lineTo(x + d, y + d); ctx.stroke(); }
+    }
+
     function draw(t) {
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = '#faf9f6';
-      ctx.fillRect(0, 0, W, H);
-      var alpha = t > FILL + HOLD ? 1 - (t - FILL - HOLD) / FADE : 1;
-      ctx.globalAlpha = Math.max(0, alpha);
-      var pad = Math.round(Math.min(W, H) * 0.08);
+      ctx.clearRect(0, 0, W, H); // the stock and its grain show through from the stage
+      var alpha = Math.max(0, t > FILL + HOLD ? 1 - (t - FILL - HOLD) / FADE : 1);
+      ctx.globalAlpha = alpha;
+      var pad = Math.round(Math.min(W, H) * 0.095);
       var per = FILL / n;
       var shown = Math.min(n, t / per);
+      var small = Math.max(11, Math.round(H * 0.058));
       // calendar, top left
       var calH = H * 0.5;
       var gap = Math.max(1.5, Math.min(W, H) * 0.012);
-      var cell = Math.floor(Math.min((calH - 6 * gap) / 7, (W * 0.52 - (weeks - 1) * gap) / weeks));
+      var cell = Math.floor(Math.min((calH - 6 * gap) / 7, (W * 0.54 - (weeks - 1) * gap) / weeks));
       cell = Math.max(5, cell);
       var cx = pad, cy = pad;
-      var total = 0;
       for (var i = 0; i < n; i++) {
         var k = i + firstDow, col = Math.floor(k / 7), row = k % 7;
-        var x = cx + col * (cell + gap), y = cy + row * (cell + gap);
-        var p = ease((shown - i) * 1.4);
-        var c = COL[P.cal.charAt(i)] || COL.n;
+        var x = cx + col * (cell + gap) + cell / 2, y = cy + row * (cell + gap) + cell / 2;
+        var p = ease((shown - i) * 1.6);
+        var rad = cell * 0.4;
         if (p <= 0) {
-          ctx.strokeStyle = '#e8e9e2'; ctx.lineWidth = 1;
-          rr(x + 0.5, y + 0.5, cell - 1, cell - 1, 2); ctx.stroke();
+          ctx.fillStyle = INK3; ctx.globalAlpha = 0.5 * alpha;
+          ctx.fillRect(x - 0.5, y - 0.5, 1, 1);
+          ctx.globalAlpha = alpha;
           continue;
         }
-        var s = cell * (0.55 + 0.45 * p), o = (cell - s) / 2;
-        var sched = P.backfill.charAt(i) === 's';
-        ctx.fillStyle = sched ? c[0] : (c[1] || '#faf9f6');
-        rr(x + o, y + o, s, s, 2.5); ctx.fill();
-        ctx.strokeStyle = c[0]; ctx.lineWidth = Math.max(1, cell * 0.09);
-        rr(x + o + 0.5, y + o + 0.5, s - 1, s - 1, 2.5); ctx.stroke();
-        if (cell >= 13 && p > 0.9) {
-          ctx.fillStyle = sched ? '#fff' : c[0];
-          ctx.font = '600 ' + Math.round(cell * 0.62) + 'px ' + 'system-ui, sans-serif';
-          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillText(P.cal.charAt(i) === 'g' ? '✓' : P.cal.charAt(i) === 'a' ? '!' : P.cal.charAt(i) === 'r' ? '×' : '', x + cell / 2, y + cell / 2 + 0.5);
+        // stamped in: the mark lands a little large and settles, like a pressed impression
+        glyph(P.cal.charAt(i), x, y, rad * (1 + 0.5 * (1 - p)));
+        if (P.backfill.charAt(i) === 's') {
+          ctx.strokeStyle = INK; ctx.lineWidth = 1;
+          ctx.strokeRect(x - cell / 2 + 0.5, y - cell / 2 + 0.5, cell - 1, cell - 1);
         }
       }
       var days = Math.min(n, Math.floor(shown));
+      var total = 0;
       for (var j = 0; j < days; j++) total += P.hi[j];
       if (shown >= n) total = P.total;
-      var small = Math.max(11, Math.round(H * 0.06));
       var calW = weeks * (cell + gap) - gap;
-      ctx.fillStyle = '#686d62';
-      ctx.font = small + 'px system-ui, -apple-system, "Segoe UI", sans-serif';
+      var calBottom = cy + 7 * (cell + gap) - gap;
+      ctx.fillStyle = INK2;
+      ctx.font = 'italic ' + small + 'px ' + SERIF;
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
       var ran = 0, sched = 0; // worked out from the log: never call a scheduled run backfilled
       for (var m = 0; m < days; m++) {
@@ -660,47 +704,45 @@
         ran++;
         if (P.backfill.charAt(m) === 's') sched++;
       }
-      ctx.fillText(ran + (ran === 1 ? ' run' : ' runs') + (ran === 0 ? '' : sched === 0 ? ', all backfilled' : ', ' + sched + ' on schedule'), cx, cy + 7 * (cell + gap) + small + 1);
+      fitText(ran + (ran === 1 ? ' run' : ' runs') + (ran === 0 ? '' : sched === 0 ? ', all backfilled' : ', ' + sched + ' on schedule'), cx, calBottom + small + 2, calW + pad);
       // the running answer, top right
       var rx = cx + calW + pad * 0.9, rw = W - rx - pad;
-      var big = Math.round(Math.min(H * 0.24, rw * 0.42));
-      ctx.fillStyle = '#252821';
-      ctx.font = '500 ' + big + 'px system-ui, -apple-system, "Segoe UI", sans-serif';
-      ctx.fillText(String(total), rx, cy + big * 0.86);
-      ctx.fillStyle = '#343630';
-      ctx.font = small + 'px system-ui, -apple-system, "Segoe UI", sans-serif';
-      fitText('high-risk hours', rx, cy + big + small * 1.1, rw);
-      ctx.fillStyle = '#686d62';
-      fitText(P.city, rx, cy + big + small * 2.4, rw);
-      fitText('since ' + M.dayLabel(P.first), rx, cy + big + small * 3.6, rw);
-      // the bars, along the bottom
-      var by = H - pad * 0.7, bh = H * 0.3, bx = pad, bwid = W - 2 * pad;
+      var big = Math.round(Math.min(H * 0.27, rw * 0.46));
+      ctx.fillStyle = INK;
+      ctx.font = big + 'px ' + DISPLAY;
+      var numY = cy + big * 0.78;
+      ctx.fillText(String(total), rx, numY);
+      var nw = ctx.measureText(String(total)).width;
+      ctx.fillStyle = SPOT;
+      ctx.fillRect(rx, numY + big * 0.1, Math.max(nw, big * 0.5), Math.max(2, big * 0.07));
+      ctx.fillStyle = INK;
+      ctx.font = 'italic ' + small + 'px ' + SERIF;
+      fitText('high-risk hours', rx, numY + big * 0.17 + small * 1.15, rw);
+      ctx.fillStyle = INK2;
+      ctx.font = small + 'px ' + SERIF;
+      fitText(P.city, rx, numY + big * 0.17 + small * 2.45, rw);
+      fitText('since ' + M.dayLabel(P.first), rx, numY + big * 0.17 + small * 3.6, rw);
+      // the bars, along the foot of the sheet
+      var by = H - pad * 0.85, bx = pad, bwid = W - 2 * pad;
+      var bh = Math.max(10, by - (calBottom + small * 1.9));
       var band = bwid / n;
-      ctx.fillStyle = '#a5492b';
+      ctx.fillStyle = INK3;
+      for (var dx = bx; dx < bx + bwid; dx += 4) ctx.fillRect(dx, by - bh, 1, 0.8); // the 24-hour line, dotted
+      ctx.fillStyle = SPOT;
       for (var b = 0; b < n; b++) {
         var q = ease((shown - b) * 1.2);
         if (q <= 0 || !P.hi[b]) continue;
         var hgt = (P.hi[b] / 24) * bh * q;
         ctx.fillRect(bx + b * band, by - hgt, Math.max(1, band - (band > 3 ? 1 : 0)), hgt);
       }
-      ctx.fillStyle = '#b5bdaf';
-      ctx.fillRect(bx, by, bwid, 1);
+      ctx.fillStyle = INK;
+      ctx.fillRect(bx, by, bwid, 1.2);
       ctx.globalAlpha = 1;
     }
 
     function fitText(s, x, y, w) {
       while (s.length > 4 && ctx.measureText(s).width > w) s = s.slice(0, -2) + '…';
       ctx.fillText(s, x, y);
-    }
-
-    function rr(x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
     }
 
     function frame(ts) {
@@ -711,10 +753,15 @@
 
     window.addEventListener('resize', resize);
     resize();
+    // the faces are self-hosted; once they arrive, redraw the still frame in them
+    if (document.fonts && document.fonts.load) {
+      Promise.all([document.fonts.load('40px ' + DISPLAY), document.fonts.load('italic 12px ' + SERIF), document.fonts.load('12px ' + SERIF)])
+        .then(function () { if (!playing) still(); }, function () {});
+    }
     Kit.onPlay(function (on) {
       playing = on;
       if (on) { t0 = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); }
-      else { cancelAnimationFrame(raf); raf = 0; draw(LOOP - FADE - 1); }
+      else { cancelAnimationFrame(raf); raf = 0; still(); }
     });
   }
 })();
