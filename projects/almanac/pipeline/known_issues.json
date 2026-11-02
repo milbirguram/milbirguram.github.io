@@ -1,0 +1,32 @@
+[
+  {
+    "opened": "2026-11-02",
+    "status": "open",
+    "title": "The daily schedule is not switched on yet",
+    "detail": "The GitHub Actions workflow is written (pipeline/almanac.yml) but has to be moved into .github/workflows by the owner. Until then only hand-run and backfill runs exist, and the freshness clock will turn to stale."
+  },
+  {
+    "opened": "2026-11-02",
+    "status": "open",
+    "title": "The record starts on 4 August 2026, not 1 January",
+    "detail": "The launch backfill was capped at about 90 days, so the counts are hours since 4 August, not hours this year. July's smoke is outside the record: ECCC's revised July file alone has 119 high-risk hours for Kamloops."
+  },
+  {
+    "opened": "2026-11-02",
+    "status": "open",
+    "title": "October is first-release data",
+    "detail": "October came from ECCC's first monthly file and its last days from the live hourly file. ECCC republishes each month about three days after it ends, filling gaps and correcting values (for September it filled 636 blank city-hours and changed 257 values in the BC and Yukon file). The workflow reloads the previous month on the 4th from that revised file."
+  },
+  {
+    "opened": "2026-11-02",
+    "status": "open",
+    "title": "Kelowna and Kamloops often go quiet",
+    "detail": "Central Okanagan (Kelowna) and Kamloops have many hours, and some whole days, without a reading; one or both of them is behind 31 of the 36 amber days. Their counts of high-risk hours are floors, not exact figures."
+  },
+  {
+    "opened": "2026-11-02",
+    "status": "known",
+    "title": "Readings are real-time and unverified",
+    "detail": "ECCC computes the AQHI from data observed in real time without quality control. The file records the top category, 10+, as 11."
+  }
+]

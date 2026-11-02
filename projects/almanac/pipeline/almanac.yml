@@ -1,0 +1,100 @@
+# Install (once, from the repo root, with a token that has the workflow scope): mkdir -p .github/workflows && git mv projects/almanac/pipeline/almanac.yml .github/workflows/almanac.yml && git commit -m "Schedule the Almanac pipeline" && git push
+#
+# Almanac: fetch yesterday's AQHI observations from ECCC, check them against
+# projects/almanac/pipeline/contract.json, store them, rebuild the page's aggregates and
+# append a run record. Commits only when something under projects/almanac/data changed.
+# A run whose contract fails is still committed (the page must show the red day), and
+# then the job is marked failed so the owner is told.
+
+name: Almanac pipeline
+
+on:
+  schedule:
+    - cron: "17 7 * * *" # 07:17 UTC every day; the previous UTC day is complete by then
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "UTC day to process, YYYY-MM-DD (blank means yesterday)"
+        required: false
+        default: ""
+      backfill_start:
+        description: "Backfill from this UTC day, YYYY-MM-DD (with backfill_end)"
+        required: false
+        default: ""
+      backfill_end:
+        description: "Backfill to this UTC day, YYYY-MM-DD"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: almanac-pipeline
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Contract tests
+        run: python -I -m unittest discover -s projects/almanac/tests -p "test_*.py"
+
+      - name: Run the pipeline
+        id: run
+        env:
+          IN_DATE: ${{ github.event.inputs.date }}
+          IN_START: ${{ github.event.inputs.backfill_start }}
+          IN_END: ${{ github.event.inputs.backfill_end }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set +e
+          code=0
+          if [ -n "$IN_START" ] && [ -n "$IN_END" ]; then
+            label="backfill $IN_START to $IN_END"
+            python -I projects/almanac/pipeline/run.py --backfill "$IN_START" "$IN_END" || code=$?
+          else
+            day="${IN_DATE:-$(date -u -d yesterday +%F)}"
+            label="$day"
+            python -I projects/almanac/pipeline/run.py --date "$day" || code=$?
+            # On the 4th, reload last month from ECCC's corrected ("backfilled") monthly file.
+            if [ "$EVENT" = "schedule" ] && [ "$(date -u +%d)" = "04" ]; then
+              first=$(date -u +%Y-%m-01)
+              start=$(date -u -d "$first -1 month" +%F)
+              end=$(date -u -d "$first -1 day" +%F)
+              label="$label, revision $start to $end"
+              python -I projects/almanac/pipeline/run.py --backfill "$start" "$end" --kind revision || code=$?
+            fi
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "label=$label" >> "$GITHUB_OUTPUT"
+
+      - name: Commit the data if it changed
+        env:
+          LABEL: ${{ steps.run.outputs.label }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add projects/almanac/data
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit -m "Almanac: $LABEL"
+          git pull --rebase
+          git push
+
+      - name: Report a failed contract
+        if: steps.run.outputs.code != '0'
+        run: |
+          echo "The pipeline recorded a failed run (exit ${{ steps.run.outputs.code }}). See projects/almanac/data/runs.ndjson."
+          exit 1

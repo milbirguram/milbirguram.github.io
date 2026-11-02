@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A small data pipeline meant to run every day on Environment and Climate Change Canada's air quality data, counts hours of high-risk air in seven western Canadian cities, and shows its own health: every run, every broken contract, how fresh the data is.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Almanac — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/almanac/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Almanac</h1>
+  <p class="kit-lede">A small data pipeline meant to run once a day: it fetches the hourly Air Quality Health Index for seven western Canadian cities, checks each day against a written contract, stores it, and reports on itself. The answer comes first, then the pipeline’s own health, run by run. The readings are real-time and unverified, and the record begins on 4 August 2026, so the counts are hours since then, not this year. Data Source: Environment and Climate Change Canada, under its <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">data licence</a>.</p>
+
+  <section class="kit-stage kit-wide almanac" data-kit-stage aria-label="Almanac: the answer and the pipeline’s health">
+    <canvas id="preview" class="preview" hidden role="img" aria-label="The pipeline's run calendar filling in day by day, mostly green with some amber days, while a bar chart of daily high-risk hours draws beneath a running total."></canvas>
+
+    <div id="full">
+      <p class="loading" id="loading">Loading the latest aggregates…</p>
+      <p class="load-error" id="load-error" hidden role="alert"></p>
+
+      <div id="answer" class="answer" hidden>
+        <p class="eyebrow">The question</p>
+        <p class="question">How many hours has the air been <strong>high-risk</strong> (AQHI 7 or more) in these western Canadian cities?</p>
+        <div class="cities" role="group" aria-label="Choose a city" id="cities"></div>
+        <div class="headline">
+          <p class="big"><span id="big-n">–</span> <span class="big-unit" id="big-unit">hours</span></p>
+          <p class="big-sub" id="big-sub"></p>
+          <p class="big-gap" id="big-gap" hidden></p>
+        </div>
+        <figure class="chart-wrap">
+          <figcaption class="chart-cap" id="hi-cap">High-risk hours each day (0 to 24)</figcaption>
+          <svg id="hi-chart" class="chart" tabindex="0" role="img" aria-describedby="hi-read"></svg>
+          <p class="readout" id="hi-read" aria-live="polite"></p>
+          <p class="legend" aria-hidden="true"><span class="lg lg-hi"></span> high-risk hours <span class="lg lg-gap">○</span> under 18 hours had a reading</p>
+        </figure>
+        <p class="micro">The AQHI is ECCC’s 1 to 10+ scale of health risk from air pollution. 7 to 10 is “high risk”; smoke from wildfires is the usual cause in summer. An hour counts when its reading rounds to 7 or more. Days are UTC days.</p>
+      </div>
+
+      <div id="health" class="health" hidden>
+        <h2 class="h">Is the pipeline healthy?</h2>
+        <p class="micro">The run calendar, contract results and counts below come from the pipeline’s own log. The freshness clock is judged by your clock now, and the known issues are notes kept by hand.</p>
+
+        <div class="row row-status">
+          <div class="fresh" id="fresh">
+            <svg id="dial" class="dial" viewBox="0 0 120 120" role="img" aria-labelledby="fresh-word"></svg>
+            <div class="fresh-text">
+              <p class="fresh-word" id="fresh-word"></p>
+              <p id="fresh-lines" class="fresh-lines"></p>
+              <p class="micro" id="fresh-slo"></p>
+            </div>
+          </div>
+          <div class="tally" id="tally"></div>
+        </div>
+
+        <div class="row row-runs">
+          <div class="cal-box">
+            <h3 class="h3">Every run, one square per day</h3>
+            <p class="micro">Choose a day to read its contract results. Arrow keys move between days.</p>
+            <div class="cal-scroll" id="cal-scroll">
+              <div class="cal" id="cal" role="group" aria-label="Run calendar"></div>
+            </div>
+            <ul class="cal-legend">
+              <li><span class="cell-key s-pass">✓</span> all checks passed</li>
+              <li><span class="cell-key s-warn">!</span> loaded with a warning</li>
+              <li><span class="cell-key s-fail">×</span> refused</li>
+              <li><span class="cell-key s-none"></span> no run</li>
+              <li><span class="cell-key s-pass is-sched">✓</span> solid: ran on schedule</li>
+              <li><span class="cell-key s-pass">✓</span> pale: backfilled later</li>
+            </ul>
+            <div class="tip" id="tip" role="tooltip" hidden></div>
+          </div>
+
+          <div class="contract" id="contract">
+            <h3 class="h3" id="contract-h">Contract results</h3>
+            <p class="micro contract-what">A data contract is a written promise about what each day’s data must look like. Before loading anything, the pipeline checks the day against the seven promises below. A small breach turns the day amber and it is loaded with a note; a serious one turns it red and the day is refused, not quietly stored. The promises are kept as data in <a href="pipeline/contract.json">contract.json</a>.</p>
+            <p class="contract-day" id="contract-day"></p>
+            <ol class="checks" id="checks"></ol>
+          </div>
+        </div>
+
+        <div class="row">
+          <figure class="chart-wrap">
+            <figcaption class="h3">Readings loaded each day</figcaption>
+            <svg id="rows-chart" class="chart" tabindex="0" role="img" aria-describedby="rows-read"></svg>
+            <p class="readout" id="rows-read" aria-live="polite"></p>
+            <p class="legend" aria-hidden="true"><span class="lg lg-in"></span> loaded <span class="lg lg-q"></span> set aside by the contract <span class="lg lg-miss"></span> missing at the source<span id="lg-kept" hidden> <span class="lg lg-gap lg-bad">○</span> refused rerun; earlier load kept</span></p>
+          </figure>
+        </div>
+
+        <div class="row">
+          <h3 class="h3">Where the numbers come from</h3>
+          <ol class="lineage" id="lineage"></ol>
+        </div>
+
+        <div class="row">
+          <h3 class="h3">Known issues</h3>
+          <ul class="issues" id="issues"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="data/aggregates/preview.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

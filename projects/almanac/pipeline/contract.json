@@ -1,0 +1,87 @@
+{
+  "name": "aqhi-hourly-observations",
+  "version": 1,
+  "about": "The promise each day's AQHI observations must keep before Almanac loads them. Read by pipeline/contract.py; the 'plain' lines are shown on the page.",
+  "source": {
+    "publisher": "Environment and Climate Change Canada, Meteorological Service of Canada",
+    "attribution": "Data Source: Environment and Climate Change Canada",
+    "licence": "Environment and Climate Change Canada Data Services End-use Licence",
+    "licence_url": "https://eccc-msc.github.io/open-data/licence/readme_en/",
+    "docs_url": "https://eccc-msc.github.io/open-data/msc-data/aqhi/readme_aqhi_en/",
+    "hourly_url": "https://dd.weather.gc.ca/{yyyymmdd}/WXO-DD/air_quality/aqhi/{region}/observation/realtime/csv/{yyyymmddhh}_AQHI_{REGION}_SiteObs.csv",
+    "monthly_url": "https://dd.weather.gc.ca/today/air_quality/aqhi/{region}/observation/monthly/csv/{yyyymm}_MONTHLY_AQHI_{REGION}_SiteObs{suffix}.csv",
+    "hourly_window_days": 6,
+    "hourly_lookback_hours": 8
+  },
+  "key": ["date", "hour_utc", "location_id"],
+  "columns": {
+    "date": "Date",
+    "hour": "Hour (UTC)"
+  },
+  "locations": [
+    { "id": "JBRIK", "city": "Vancouver", "zone": "Metro Vancouver – NW", "region": "pyr" },
+    { "id": "JBOBQ", "city": "Victoria", "zone": "Victoria / Saanich", "region": "pyr" },
+    { "id": "JAFUV", "city": "Kelowna", "zone": "Central Okanagan", "region": "pyr" },
+    { "id": "JAFNW", "city": "Kamloops", "zone": "Kamloops", "region": "pyr" },
+    { "id": "JBLVS", "city": "Prince George", "zone": "Prince George", "region": "pyr" },
+    { "id": "IAKID", "city": "Calgary", "zone": "Calgary", "region": "pnr" },
+    { "id": "IACMP", "city": "Edmonton", "zone": "Edmonton", "region": "pnr" }
+  ],
+  "high_risk_threshold": 7,
+  "checks": [
+    {
+      "name": "schema",
+      "title": "The columns are where we expect them",
+      "plain": "The file must have a date column, an hour column and one column for each of the seven cities. If ECCC renames or drops a column, nothing is loaded.",
+      "severity": "fail"
+    },
+    {
+      "name": "types",
+      "title": "Every value is the right kind of thing",
+      "plain": "Dates must be dates, hours must be whole numbers from 0 to 23, and readings must be numbers or blank. Anything else means the format changed, so nothing is loaded.",
+      "severity": "fail"
+    },
+    {
+      "name": "range",
+      "title": "Readings are on the AQHI scale",
+      "plain": "A reading must lie between 1 and 11 (the file writes the top category, 10+, as 11). Odd values are set aside; if more than 1 in 100 are odd, the day is refused.",
+      "min": 1.0,
+      "max": 11.0,
+      "fail_fraction": 0.01
+    },
+    {
+      "name": "uniqueness",
+      "title": "One reading per city per hour",
+      "plain": "Each city may have only one reading for each hour. Exact repeats are dropped with a warning; two different readings for the same hour stop the load.",
+      "severity": "fail"
+    },
+    {
+      "name": "completeness",
+      "title": "All 24 hours of the day are in the file",
+      "plain": "The source file must contain a row for every hour of the day, even if some cities are blank in it. A short day is a warning; a missing day is a failure.",
+      "hours": 24
+    },
+    {
+      "name": "volume",
+      "title": "Enough cities reported",
+      "plain": "Each city should have a reading for at least 18 of the 24 hours. Fewer is a warning, because high-risk hours could be missed. Under half of all expected readings is a failure.",
+      "min_hours_per_city": 18,
+      "fail_below_fraction": 0.5
+    },
+    {
+      "name": "freshness",
+      "title": "The source is up to date",
+      "plain": "When the daily run reads the live feed, its newest hour should be at most 6 hours old. Older is a warning that the feed may be stalling; no live file at all in the last 8 hours means it has stalled, and the day is refused. A backfill reads a monthly archive, so this does not apply.",
+      "max_age_hours": 6
+    }
+  ],
+  "slo": {
+    "plain": "Fresh means the newest hour on this page is at most 36 hours old and the pipeline has run in the last 26 hours.",
+    "max_data_age_hours": 36,
+    "max_run_age_hours": 26
+  },
+  "budgets": {
+    "aggregates_bytes": 200000,
+    "detail_days": 90
+  }
+}
