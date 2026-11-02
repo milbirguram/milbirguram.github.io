@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Cardinal step check</title>
+  <style>body { font: 14px/1.5 ui-monospace, Consolas, monospace; margin: 24px; color: #343630; background: #faf9f6; } .fail { color: #9a3b26; } .pass { color: #3f5a41; }</style>
+</head>
+<body>
+<p>Scripted check of every guided step against the pinned DuckDB-Wasm. Results go to <code>window.CARDINAL_STEPS</code>; copy them into tests/steps.json.</p>
+<pre id="log">Loading DuckDB…</pre>
+<script src="../model.js"></script>
+<script src="../engine.js"></script>
+<script src="../lab.js"></script>
+<script>
+(async function () {
+  var M = window.CardinalModel;
+  var log = document.getElementById('log');
+  function say(s) { log.textContent += '\n' + s; }
+
+  function slim(n) {
+    return { op: n.op, table: n.table || undefined, detail: n.detail || undefined, est: n.est, act: n.act, role: n.role,
+      children: n.children.map(slim) };
+  }
+  function slimRun(r) {
+    if (!r) return undefined;
+    return { sql: r.sql, tree: slim(r.tree), timing: { median: +r.timing.median.toFixed(2), runs: r.timing.runs.map(function (x) { return +x.toFixed(2); }) },
+      setupMs: r.setupMs !== undefined ? +r.setupMs.toFixed(2) : undefined,
+      alt: r.alt ? { sql: r.alt.sql, build: r.alt.build, tree: slim(r.alt.tree), timing: { median: +r.alt.timing.median.toFixed(2), runs: r.alt.timing.runs.map(function (x) { return +x.toFixed(2); }) } } : undefined,
+      compare: r.compare ? { sql: r.compare.sql, tree: slim(r.compare.tree), timing: { median: +r.compare.timing.median.toFixed(2), runs: r.compare.timing.runs.map(function (x) { return +x.toFixed(2); }) } } : undefined };
+  }
+
+  try {
+    var engine = await CardinalEngine.load();
+    var out = { generatedAt: new Date().toISOString(), userAgent: navigator.userAgent, packageVersion: engine.packageVersion, duckdbVersion: engine.duckdbVersion, sizes: [] };
+    say('DuckDB ' + engine.duckdbVersion + ' (duckdb-wasm ' + engine.packageVersion + ')');
+    var allPass = true;
+    var sizes = [M.SIZES.laptop, M.SIZES.phone];
+    for (var si = 0; si < sizes.length; si++) {
+      var lab = new CardinalLab(engine, sizes[si]);
+      var entry = { orders: sizes[si], shape: lab.shape, steps: [] };
+      say('\n== ' + sizes[si].toLocaleString('en-CA') + ' orders');
+      for (var i = 0; i < M.STEPS.length; i++) {
+        var step = M.STEPS[i];
+        var r = await lab.runStep(step, { runs: 7 });
+        var rec = { id: step.id, title: step.title, settings: step.settings, then: step.then, claims: r.claims,
+          stats: { cramersV: +r.stats.cramersV.toFixed(4), homeShare: +r.stats.homeShare.toFixed(4), topCustomerShare: +r.stats.topCustomerShare.toFixed(4), topProductShare: +r.stats.topProductShare.toFixed(4), scopeCustomers: r.stats.scopeCustomers, genMs: +r.stats.genMs.toFixed(1) } };
+        if (r.before) { rec.before = slimRun(r.before); rec.after = slimRun(r.after); } else { rec.run = slimRun(r); }
+        entry.steps.push(rec);
+        r.claims.forEach(function (c) { if (!c.pass) allPass = false; say((c.pass ? 'PASS ' : 'FAIL ') + step.id + ': ' + c.claim + (c.detail ? ' — ' + c.detail : '')); });
+      }
+      // Measured relationships between the data and the model's expectations, per setting.
+      var checks = [];
+      var grid = [[0, 0], [0, 0.5], [0, 0.8], [0, 1], [0.5, 0], [0.8, 0], [0.9, 0], [0.8, 0.5]];
+      for (var g = 0; g < grid.length; g++) {
+        var st = { theta: grid[g][0], rho: grid[g][1] };
+        var stats = await lab.ensureData(st);
+        var counts = (await engine.query(
+          'SELECT count(*) FILTER (WHERE c.city = 0)::INTEGER AS city, count(*) FILTER (WHERE c.province = 0 AND p.category = 0)::INTEGER AS star, ' +
+          'count(*) FILTER (WHERE o.product_id = 0)::INTEGER AS best FROM orders o JOIN customers c ON o.customer_id = c.id JOIN products p ON o.product_id = p.id'))[0];
+        checks.push({ theta: st.theta, rho: st.rho, cramersV: +stats.cramersV.toFixed(4), homeShare: +stats.homeShare.toFixed(4), topCustomerShare: +stats.topCustomerShare.toFixed(5), topProductShare: +stats.topProductShare.toFixed(5),
+          ordersInCity0: counts.city, starProvince0Category0: counts.star, bestSellerRows: counts.best });
+      }
+      entry.dataChecks = checks;
+      out.sizes.push(entry);
+    }
+    // Two equality filters on one table: does DuckDB multiply them, or keep the more selective one?
+    // (Backs the aside in step 2.) 20,000 people, 60 cities; province either follows city or is independent.
+    var single = {};
+    var gen = function (name, provinceSql) {
+      return engine.query('CREATE OR REPLACE TEMP TABLE ' + name + ' AS SELECT i AS id, ((hash(i, 21, ' + M.SEED + ') % 1000003) % 60)::INTEGER AS city, ' +
+        provinceSql + ' AS province FROM generate_series(0, 19999) t(i)');
+    };
+    await gen('people_linked', '(((hash(i, 21, ' + M.SEED + ') % 1000003) % 60) // 5)::INTEGER');
+    await gen('people_independent', '((hash(i, 22, ' + M.SEED + ') % 1000003) % 12)::INTEGER');
+    for (var name of ['people_linked', 'people_independent']) {
+      var tr = M.parseProfile((await engine.query('EXPLAIN (ANALYZE, FORMAT JSON) SELECT count(*) FROM ' + name + ' WHERE city = 7 AND province = 1'))[0].explain_value);
+      var sc = M.findScan(tr, name);
+      single[name] = { est: sc.est, act: sc.act, detail: sc.detail };
+    }
+    out.singleTable = single;
+    say('\nSingle table, two filters: linked ' + JSON.stringify(single.people_linked) + ', independent ' + JSON.stringify(single.people_independent));
+
+    // Frames for the card preview: the best-seller query as skew rises (one city). The flip frame
+    // (one province) is taken from step 4's record by make-preview.js, with its other-build-side time.
+    var plab = new CardinalLab(engine, M.SIZES.laptop);
+    var frames = [];
+    var thetas = [0, 0.2, 0.4, 0.6, 0.8];
+    for (var t = 0; t < thetas.length; t++) {
+      await plab.ensureData({ theta: thetas[t], rho: 0 });
+      var pr = await plab.runPreset('best', 'city', { runs: 5, alt: false });
+      frames.push({ theta: thetas[t], scope: 'city', tree: slim(pr.tree), ms: +pr.timing.median.toFixed(1) });
+    }
+    out.previewFrames = frames;
+
+    // Step 3's aside: filtering on a quieter city (30) instead of city 0 turns the underestimate into an overestimate.
+    await plab.ensureData(M.STEPS[2].settings);
+    var quietSql = M.PRESETS.star.sql('city').replace('c.city = 0', 'c.city = 30');
+    var qt = M.parseProfile((await engine.query('EXPLAIN (ANALYZE, FORMAT JSON)\n' + quietSql))[0].explain_value);
+    var qj = M.findJoin(qt, ['customers', 'orders']);
+    out.quietCity = { city: 30, theta: M.STEPS[2].settings.theta, orders: M.SIZES.laptop, est: qj.est, act: qj.act };
+    say('Quiet city 30 at skew ' + out.quietCity.theta + ': ' + qj.est + ' guessed, ' + qj.act + ' real');
+    out.allPass = allPass;
+    window.CARDINAL_STEPS = out;
+    say('\n' + (allPass ? 'ALL CLAIMS PASS' : 'SOME CLAIMS FAIL'));
+    document.title = allPass ? 'PASS' : 'FAIL';
+  } catch (err) {
+    say('ERROR ' + (err && err.stack || err));
+    window.CARDINAL_STEPS = { error: String(err) };
+    document.title = 'ERROR';
+  }
+})();
+</script>
+</body>
+</html>

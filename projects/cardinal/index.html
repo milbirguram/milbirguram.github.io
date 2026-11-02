@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Watch a real query optimiser (DuckDB, in your browser) guess how many rows each step of a join will produce, see the real counts beside its guesses, skew and correlate the data until the guesses break, then widen a filter and watch it pick the slower plan.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Cardinal — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/cardinal/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Cardinal</h1>
+  <p class="kit-lede">A database chooses how to run a query from guesses about how many rows each step will produce. Here a real one, DuckDB, runs in your browser on shop data it generates. Walk the five steps: skew and correlate the data and its guesses part from the real counts; widen a filter on top of a bad guess and it picks a slower plan. This is one optimiser at one version (DuckDB 1.4.3); other databases guess differently, and timings in a browser tab are rough.</p>
+
+  <section class="kit-stage kit-wide cd-stage" data-kit-stage aria-label="Query plan explorer">
+    <canvas class="cd-preview" id="cd-preview" role="img" aria-label="A query plan whose estimated and actual row counts drift apart as a skew dial turns; then the customer filter widens and the plan flips to the slower build side" hidden></canvas>
+
+    <div class="cd-app" id="cd-app">
+      <div class="cd-path">
+        <ol class="cd-dots" id="cd-dots" aria-label="Guided path"></ol>
+        <div class="cd-nav">
+          <button type="button" class="kit-button" id="cd-prev">Back</button>
+          <button type="button" class="kit-button is-primary" id="cd-next">Next step</button>
+        </div>
+      </div>
+
+      <div class="cd-story" id="cd-story" aria-live="polite">
+        <p class="cd-story-title" id="cd-story-title"></p>
+        <p class="cd-story-lead" id="cd-story-lead"></p>
+        <p class="cd-story-result" id="cd-story-result"></p>
+        <p class="cd-story-action" id="cd-story-action" hidden></p>
+      </div>
+
+      <div class="cd-layout">
+        <div class="cd-main">
+          <div class="cd-status" id="cd-status" role="status">
+            <span id="cd-status-text">Starting…</span>
+            <span class="cd-progress" aria-hidden="true"><span id="cd-progress-bar"></span></span>
+            <button type="button" class="kit-button" id="cd-load" hidden>Load DuckDB (about 6 MB)</button>
+            <button type="button" class="kit-button" id="cd-stop" hidden>Stop</button>
+          </div>
+
+          <div class="cd-legend" aria-hidden="true">
+            <span><i class="cd-swatch cd-swatch-est"></i>DuckDB’s guess</span>
+            <span><i class="cd-swatch cd-swatch-act"></i>Real count</span>
+            <span class="cd-legend-note">rows, log scale · q-error = how many times off</span>
+          </div>
+          <div class="cd-plan" id="cd-plan" role="list" aria-label="Query plan, top operator first"></div>
+          <p class="cd-change" id="cd-change" aria-live="polite" hidden></p>
+
+          <div class="cd-time" id="cd-time" hidden></div>
+          <p class="cd-foot" id="cd-foot"></p>
+        </div>
+
+        <div class="cd-controls" id="cd-controls">
+          <fieldset class="cd-group">
+            <legend>Data</legend>
+            <div class="cd-range">
+              <label for="cd-theta">Skew</label>
+              <output id="cd-theta-out" for="cd-theta">0</output>
+              <input type="range" id="cd-theta" min="0" max="0.9" step="0.1" value="0" aria-describedby="cd-theta-note">
+              <p class="cd-note" id="cd-theta-note">How unevenly orders fall on customers and products (0 = evenly).</p>
+            </div>
+            <div class="cd-range">
+              <label for="cd-rho">Province–category link</label>
+              <output id="cd-rho-out" for="cd-rho">0</output>
+              <input type="range" id="cd-rho" min="0" max="1" step="0.1" value="0" aria-describedby="cd-rho-note">
+              <p class="cd-note" id="cd-rho-note">Share of orders moved to the category matching the customer’s province.</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="cd-group">
+            <legend>Customer filter</legend>
+            <div class="cd-seg" id="cd-scope">
+              <label><input type="radio" name="cd-scope" value="city"> One city</label>
+              <label><input type="radio" name="cd-scope" value="province" checked> One province</label>
+              <label><input type="radio" name="cd-scope" value="country"> Whole country</label>
+            </div>
+            <p class="cd-note" id="cd-scope-note"></p>
+          </fieldset>
+
+          <fieldset class="cd-group">
+            <legend>Query</legend>
+            <div class="cd-presets" id="cd-presets">
+              <label><input type="radio" name="cd-preset" value="star" checked> Regional sales</label>
+              <label><input type="radio" name="cd-preset" value="best"> Best seller</label>
+              <label><input type="radio" name="cd-preset" value="fixed"> Best seller, materialised</label>
+              <label><input type="radio" name="cd-preset" value="custom"> Your own SQL</label>
+            </div>
+            <label class="cd-sql-label" for="cd-sql">SQL <span class="cd-note-inline">(read-only queries on orders, customers, products)</span></label>
+            <textarea id="cd-sql" class="cd-sql" rows="7" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+            <div class="cd-sql-row">
+              <button type="button" class="kit-button" id="cd-run">Run this SQL</button>
+              <span class="cd-sql-msg" id="cd-sql-msg" role="alert"></span>
+            </div>
+            <p class="cd-note">Columns: orders(id, customer_id, product_id, amount), customers(id, city, province), products(id, category, price).</p>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

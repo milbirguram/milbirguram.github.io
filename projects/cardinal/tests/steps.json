@@ -1,0 +1,1926 @@
+{
+ "allPass": true,
+ "duckdbVersion": "v1.4.3",
+ "generatedAt": "2026-11-02T03:35:51.385Z",
+ "packageVersion": "1.32.0",
+ "previewFrames": [
+  {
+   "ms": 6.6,
+   "scope": "city",
+   "theta": 0,
+   "tree": {
+    "act": 1,
+    "children": [
+     {
+      "act": 21,
+      "children": [
+       {
+        "act": 1007,
+        "children": [],
+        "detail": "product_id=0",
+        "est": 801,
+        "op": "SEQ_SCAN",
+        "role": "probe",
+        "table": "orders"
+       },
+       {
+        "act": 334,
+        "children": [],
+        "detail": "city=0",
+        "est": 371,
+        "op": "SEQ_SCAN",
+        "role": "build",
+        "table": "customers"
+       }
+      ],
+      "detail": "customer_id = id",
+      "est": 14,
+      "op": "HASH_JOIN"
+     }
+    ],
+    "detail": "count_star(), sum(#0)",
+    "est": null,
+    "op": "UNGROUPED_AGGREGATE"
+   }
+  },
+  {
+   "ms": 5.9,
+   "scope": "city",
+   "theta": 0.2,
+   "tree": {
+    "act": 1,
+    "children": [
+     {
+      "act": 56,
+      "children": [
+       {
+        "act": 3941,
+        "children": [],
+        "detail": "product_id=0",
+        "est": 801,
+        "op": "SEQ_SCAN",
+        "role": "probe",
+        "table": "orders"
+       },
+       {
+        "act": 334,
+        "children": [],
+        "detail": "city=0",
+        "est": 371,
+        "op": "SEQ_SCAN",
+        "role": "build",
+        "table": "customers"
+       }
+      ],
+      "detail": "customer_id = id",
+      "est": 14,
+      "op": "HASH_JOIN"
+     }
+    ],
+    "detail": "count_star(), sum(#0)",
+    "est": null,
+    "op": "UNGROUPED_AGGREGATE"
+   }
+  },
+  {
+   "ms": 9.2,
+   "scope": "city",
+   "theta": 0.4,
+   "tree": {
+    "act": 1,
+    "children": [
+     {
+      "act": 260,
+      "children": [
+       {
+        "act": 15842,
+        "children": [],
+        "detail": "product_id=0",
+        "est": 801,
+        "op": "SEQ_SCAN",
+        "role": "probe",
+        "table": "orders"
+       },
+       {
+        "act": 334,
+        "children": [],
+        "detail": "city=0",
+        "est": 371,
+        "op": "SEQ_SCAN",
+        "role": "build",
+        "table": "customers"
+       }
+      ],
+      "detail": "customer_id = id",
+      "est": 14,
+      "op": "HASH_JOIN"
+     }
+    ],
+    "detail": "count_star(), sum(#0)",
+    "est": null,
+    "op": "UNGROUPED_AGGREGATE"
+   }
+  },
+  {
+   "ms": 12.7,
+   "scope": "city",
+   "theta": 0.6,
+   "tree": {
+    "act": 1,
+    "children": [
+     {
+      "act": 2143,
+      "children": [
+       {
+        "act": 63092,
+        "children": [],
+        "detail": "product_id=0",
+        "est": 801,
+        "op": "SEQ_SCAN",
+        "role": "probe",
+        "table": "orders"
+       },
+       {
+        "act": 334,
+        "children": [],
+        "detail": "city=0",
+        "est": 371,
+        "op": "SEQ_SCAN",
+        "role": "build",
+        "table": "customers"
+       }
+      ],
+      "detail": "customer_id = id",
+      "est": 14,
+      "op": "HASH_JOIN"
+     }
+    ],
+    "detail": "count_star(), sum(#0)",
+    "est": null,
+    "op": "UNGROUPED_AGGREGATE"
+   }
+  },
+  {
+   "ms": 21.5,
+   "scope": "city",
+   "theta": 0.8,
+   "tree": {
+    "act": 1,
+    "children": [
+     {
+      "act": 37715,
+      "children": [
+       {
+        "act": 250474,
+        "children": [],
+        "detail": "product_id=0",
+        "est": 801,
+        "op": "SEQ_SCAN",
+        "role": "probe",
+        "table": "orders"
+       },
+       {
+        "act": 334,
+        "children": [],
+        "detail": "city=0",
+        "est": 371,
+        "op": "SEQ_SCAN",
+        "role": "build",
+        "table": "customers"
+       }
+      ],
+      "detail": "customer_id = id",
+      "est": 14,
+      "op": "HASH_JOIN"
+     }
+    ],
+    "detail": "count_star(), sum(#0)",
+    "est": null,
+    "op": "UNGROUPED_AGGREGATE"
+   }
+  },
+  {
+   "ms": 41.6,
+   "scope": "province",
+   "theta": 0.8,
+   "tree": {
+    "act": 1,
+    "children": [
+     {
+      "act": 62890,
+      "children": [
+       {
+        "act": 1670,
+        "children": [],
+        "detail": "province=0",
+        "est": 1539,
+        "op": "SEQ_SCAN",
+        "role": "probe",
+        "table": "customers"
+       },
+       {
+        "act": 250531,
+        "children": [],
+        "detail": "product_id=0",
+        "est": 801,
+        "op": "SEQ_SCAN",
+        "role": "build",
+        "table": "orders"
+       }
+      ],
+      "detail": "id = customer_id",
+      "est": 61,
+      "op": "HASH_JOIN"
+     }
+    ],
+    "detail": "count_star(), sum(#0)",
+    "est": null,
+    "op": "UNGROUPED_AGGREGATE"
+   }
+  }
+ ],
+ "singleTable": {
+  "people_independent": {
+   "act": 28,
+   "detail": "city=7 AND province=1",
+   "est": 371
+  },
+  "people_linked": {
+   "act": 348,
+   "detail": "city=7 AND province=1",
+   "est": 371
+  }
+ },
+ "sizes": [
+  {
+   "dataChecks": [
+    {
+     "bestSellerRows": 1007,
+     "cramersV": 0.0033,
+     "ordersInCity0": 16988,
+     "rho": 0,
+     "starProvince0Category0": 6947,
+     "theta": 0,
+     "topCustomerShare": 0.00008,
+     "topProductShare": 0.0011
+    },
+    {
+     "bestSellerRows": 972,
+     "cramersV": 0.5002,
+     "ordersInCity0": 16988,
+     "rho": 0.5,
+     "starProvince0Category0": 45183,
+     "theta": 0,
+     "topCustomerShare": 0.00008,
+     "topProductShare": 0.00111
+    },
+    {
+     "bestSellerRows": 1039,
+     "cramersV": 0.7998,
+     "ordersInCity0": 16988,
+     "rho": 0.8,
+     "starProvince0Category0": 67973,
+     "theta": 0,
+     "topCustomerShare": 0.00008,
+     "topProductShare": 0.0011
+    },
+    {
+     "bestSellerRows": 1030,
+     "cramersV": 1,
+     "ordersInCity0": 16988,
+     "rho": 1,
+     "starProvince0Category0": 83209,
+     "theta": 0,
+     "topCustomerShare": 0.00008,
+     "topProductShare": 0.00109
+    },
+    {
+     "bestSellerRows": 31679,
+     "cramersV": 0.0034,
+     "ordersInCity0": 23053,
+     "rho": 0,
+     "starProvince0Category0": 10325,
+     "theta": 0.5,
+     "topCustomerShare": 0.00692,
+     "topProductShare": 0.03168
+    },
+    {
+     "bestSellerRows": 250531,
+     "cramersV": 0.0033,
+     "ordersInCity0": 150172,
+     "rho": 0,
+     "starProvince0Category0": 76151,
+     "theta": 0.8,
+     "topCustomerShare": 0.13803,
+     "topProductShare": 0.25053
+    },
+    {
+     "bestSellerRows": 501252,
+     "cramersV": 0.0037,
+     "ordersInCity0": 379184,
+     "rho": 0,
+     "starProvince0Category0": 253648,
+     "theta": 0.9,
+     "topCustomerShare": 0.37137,
+     "topProductShare": 0.50125
+    },
+    {
+     "bestSellerRows": 176551,
+     "cramersV": 0.5077,
+     "ordersInCity0": 150172,
+     "rho": 0.5,
+     "starProvince0Category0": 163259,
+     "theta": 0.8,
+     "topCustomerShare": 0.13803,
+     "topProductShare": 0.17655
+    }
+   ],
+   "orders": 1000000,
+   "shape": {
+    "categories": 12,
+    "cities": 60,
+    "customers": 20000,
+    "orders": 1000000,
+    "products": 1008,
+    "provinces": 12
+   },
+   "steps": [
+    {
+     "claims": [
+      {
+       "claim": "Every operator’s estimate is within a factor of 2 of the real count",
+       "detail": "worst q-error 1.45",
+       "pass": true
+      }
+     ],
+     "id": "uniform",
+     "run": {
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nJOIN products p ON o.product_id = p.id\nWHERE c.province = 0 AND p.category = 0",
+      "timing": {
+       "median": 27.1,
+       "runs": [
+        43.3,
+        37,
+        47.9,
+        25.6,
+        27.1,
+        18.5,
+        20.5
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 6947,
+         "children": [
+          {
+           "act": 83022,
+           "children": [
+            {
+             "act": 988145,
+             "children": [],
+             "est": 1000000,
+             "op": "SEQ_SCAN",
+             "role": "probe",
+             "table": "orders"
+            },
+            {
+             "act": 84,
+             "children": [],
+             "detail": "category=0",
+             "est": 78,
+             "op": "SEQ_SCAN",
+             "role": "build",
+             "table": "products"
+            }
+           ],
+           "detail": "product_id = id",
+           "est": 62449,
+           "op": "HASH_JOIN",
+           "role": "probe"
+          },
+          {
+           "act": 1670,
+           "children": [],
+           "detail": "province=0",
+           "est": 1539,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "customers"
+          }
+         ],
+         "detail": "customer_id = id",
+         "est": 4805,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "settings": {
+      "preset": "star",
+      "rho": 0,
+      "scope": "province",
+      "theta": 0
+     },
+     "stats": {
+      "cramersV": 0.0033,
+      "genMs": 689.8,
+      "scopeCustomers": {
+       "city": 334,
+       "country": 20000,
+       "province": 1670
+      },
+      "topCustomerShare": 0.0001,
+      "topProductShare": 0.0011
+     },
+     "title": "Uniform data"
+    },
+    {
+     "claims": [
+      {
+       "claim": "The final join is underestimated at least fivefold",
+       "detail": "4,805 guessed, 67,973 real",
+       "pass": true
+      },
+      {
+       "claim": "Each filter on its own is still estimated well",
+       "detail": "customers q 1.09, products q 1.08",
+       "pass": true
+      },
+      {
+       "claim": "The measured correlation matches the setting",
+       "detail": "Cramér’s V 0.800",
+       "pass": true
+      }
+     ],
+     "id": "correlated",
+     "run": {
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nJOIN products p ON o.product_id = p.id\nWHERE c.province = 0 AND p.category = 0",
+      "timing": {
+       "median": 20.4,
+       "runs": [
+        23.7,
+        22.4,
+        20.4,
+        18,
+        19.3,
+        16.1,
+        22
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 67973,
+         "children": [
+          {
+           "act": 83319,
+           "children": [
+            {
+             "act": 988095,
+             "children": [],
+             "est": 1000000,
+             "op": "SEQ_SCAN",
+             "role": "probe",
+             "table": "orders"
+            },
+            {
+             "act": 84,
+             "children": [],
+             "detail": "category=0",
+             "est": 78,
+             "op": "SEQ_SCAN",
+             "role": "build",
+             "table": "products"
+            }
+           ],
+           "detail": "product_id = id",
+           "est": 62449,
+           "op": "HASH_JOIN",
+           "role": "probe"
+          },
+          {
+           "act": 1670,
+           "children": [],
+           "detail": "province=0",
+           "est": 1539,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "customers"
+          }
+         ],
+         "detail": "customer_id = id",
+         "est": 4805,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "settings": {
+      "preset": "star",
+      "rho": 0.8,
+      "scope": "province",
+      "theta": 0
+     },
+     "stats": {
+      "cramersV": 0.7998,
+      "genMs": 561.1,
+      "scopeCustomers": {
+       "city": 334,
+       "country": 20000,
+       "province": 1670
+      },
+      "topCustomerShare": 0.0001,
+      "topProductShare": 0.0011
+     },
+     "title": "Correlated filters"
+    },
+    {
+     "claims": [
+      {
+       "claim": "The orders–customers join is underestimated at least fourfold",
+       "detail": "18,550 guessed, 149,854 real",
+       "pass": true
+      },
+      {
+       "claim": "The customer filter alone is still estimated well",
+       "detail": "q 1.11",
+       "pass": true
+      }
+     ],
+     "id": "skew",
+     "run": {
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nJOIN products p ON o.product_id = p.id\nWHERE c.city = 0 AND p.category = 0",
+      "timing": {
+       "median": 18.5,
+       "runs": [
+        17,
+        18.5,
+        20.7,
+        19.5,
+        18.5,
+        16.7,
+        18.6
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 45727,
+         "children": [
+          {
+           "act": 149854,
+           "children": [
+            {
+             "act": 997612,
+             "children": [],
+             "est": 1000000,
+             "op": "SEQ_SCAN",
+             "role": "probe",
+             "table": "orders"
+            },
+            {
+             "act": 334,
+             "children": [],
+             "detail": "city=0",
+             "est": 371,
+             "op": "SEQ_SCAN",
+             "role": "build",
+             "table": "customers"
+            }
+           ],
+           "detail": "customer_id = id",
+           "est": 18550,
+           "op": "HASH_JOIN",
+           "role": "probe"
+          },
+          {
+           "act": 84,
+           "children": [],
+           "detail": "category=0",
+           "est": 78,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "products"
+          }
+         ],
+         "detail": "product_id = id",
+         "est": 1158,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "settings": {
+      "preset": "star",
+      "rho": 0,
+      "scope": "city",
+      "theta": 0.8
+     },
+     "stats": {
+      "cramersV": 0.0033,
+      "genMs": 459.8,
+      "scopeCustomers": {
+       "city": 334,
+       "country": 20000,
+       "province": 1670
+      },
+      "topCustomerShare": 0.138,
+      "topProductShare": 0.2505
+     },
+     "title": "Skewed join key"
+    },
+    {
+     "after": {
+      "alt": {
+       "build": "customers",
+       "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.province = 0",
+       "timing": {
+        "median": 12.2,
+        "runs": [
+         10.2,
+         12.4,
+         12.2,
+         12,
+         12.6,
+         11.4,
+         13.6
+        ]
+       },
+       "tree": {
+        "act": 1,
+        "children": [
+         {
+          "act": 62890,
+          "children": [
+           {
+            "act": 250482,
+            "children": [],
+            "detail": "product_id=0",
+            "est": 801,
+            "op": "SEQ_SCAN",
+            "role": "probe",
+            "table": "orders"
+           },
+           {
+            "act": 1670,
+            "children": [],
+            "detail": "province=0",
+            "est": 1539,
+            "op": "SEQ_SCAN",
+            "role": "build",
+            "table": "customers"
+           }
+          ],
+          "detail": "customer_id = id",
+          "est": 61,
+          "op": "HASH_JOIN"
+         }
+        ],
+        "detail": "count_star(), sum(#0)",
+        "est": null,
+        "op": "UNGROUPED_AGGREGATE"
+       }
+      },
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.province = 0",
+      "timing": {
+       "median": 31.9,
+       "runs": [
+        27.4,
+        32.1,
+        32.8,
+        35.1,
+        31.2,
+        26.9,
+        31.9
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 62890,
+         "children": [
+          {
+           "act": 1670,
+           "children": [],
+           "detail": "province=0",
+           "est": 1539,
+           "op": "SEQ_SCAN",
+           "role": "probe",
+           "table": "customers"
+          },
+          {
+           "act": 250531,
+           "children": [],
+           "detail": "product_id=0",
+           "est": 801,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "orders"
+          }
+         ],
+         "detail": "id = customer_id",
+         "est": 61,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "before": {
+      "alt": {
+       "build": "orders",
+       "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM customers c\nJOIN orders o ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.city = 0",
+       "timing": {
+        "median": 27.1,
+        "runs": [
+         30.6,
+         27.5,
+         28.4,
+         25.4,
+         27.1,
+         24.2,
+         25.1
+        ]
+       },
+       "tree": {
+        "act": 1,
+        "children": [
+         {
+          "act": 37715,
+          "children": [
+           {
+            "act": 334,
+            "children": [],
+            "detail": "city=0",
+            "est": 371,
+            "op": "SEQ_SCAN",
+            "role": "probe",
+            "table": "customers"
+           },
+           {
+            "act": 250531,
+            "children": [],
+            "detail": "product_id=0",
+            "est": 801,
+            "op": "SEQ_SCAN",
+            "role": "build",
+            "table": "orders"
+           }
+          ],
+          "detail": "id = customer_id",
+          "est": 14,
+          "op": "HASH_JOIN"
+         }
+        ],
+        "detail": "count_star(), sum(#0)",
+        "est": null,
+        "op": "UNGROUPED_AGGREGATE"
+       }
+      },
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.city = 0",
+      "timing": {
+       "median": 16,
+       "runs": [
+        13.1,
+        16,
+        14,
+        17.8,
+        16.1,
+        18,
+        14.6
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 37715,
+         "children": [
+          {
+           "act": 250474,
+           "children": [],
+           "detail": "product_id=0",
+           "est": 801,
+           "op": "SEQ_SCAN",
+           "role": "probe",
+           "table": "orders"
+          },
+          {
+           "act": 334,
+           "children": [],
+           "detail": "city=0",
+           "est": 371,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "customers"
+          }
+         ],
+         "detail": "customer_id = id",
+         "est": 14,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "claims": [
+      {
+       "claim": "With one city, DuckDB builds its hash table on customers",
+       "detail": "",
+       "pass": true
+      },
+      {
+       "claim": "With one province, it flips and builds on orders",
+       "detail": "",
+       "pass": true
+      },
+      {
+       "claim": "It does so because it guesses product 0’s orders at least 50 times too low",
+       "detail": "801 guessed, 250,531 real",
+       "pass": true
+      },
+      {
+       "claim": "The other build side really is the customers side",
+       "detail": "",
+       "pass": true
+      },
+      {
+       "claim": "DuckDB’s flipped plan is at least 1.5 times slower than the other build side",
+       "detail": "31.9 ms against 12.2 ms",
+       "pass": true
+      },
+      {
+       "claim": "The query slows down after the flip",
+       "detail": "16.0 ms, then 31.9 ms",
+       "pass": true
+      }
+     ],
+     "id": "flip",
+     "settings": {
+      "preset": "best",
+      "rho": 0,
+      "scope": "city",
+      "theta": 0.8
+     },
+     "stats": {
+      "cramersV": 0.0033,
+      "genMs": 459.8,
+      "scopeCustomers": {
+       "city": 334,
+       "country": 20000,
+       "province": 1670
+      },
+      "topCustomerShare": 0.138,
+      "topProductShare": 0.2505
+     },
+     "then": {
+      "scope": "province"
+     },
+     "title": "The plan flips"
+    },
+    {
+     "claims": [
+      {
+       "claim": "With the orders materialised, DuckDB counts them exactly",
+       "detail": "250,531 guessed, 250,482 real",
+       "pass": true
+      },
+      {
+       "claim": "and builds its hash table on customers again",
+       "detail": "",
+       "pass": true
+      },
+      {
+       "claim": "The join then runs at least 1.5 times faster than DuckDB’s own plan",
+       "detail": "7.9 ms against 39.3 ms; materialising took 30.5 ms",
+       "pass": true
+      }
+     ],
+     "id": "fix",
+     "run": {
+      "compare": {
+       "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.province = 0",
+       "timing": {
+        "median": 39.3,
+        "runs": [
+         37.5,
+         52.2,
+         36,
+         39.3,
+         40.2,
+         41.5,
+         36.7
+        ]
+       },
+       "tree": {
+        "act": 1,
+        "children": [
+         {
+          "act": 62890,
+          "children": [
+           {
+            "act": 1670,
+            "children": [],
+            "detail": "province=0",
+            "est": 1539,
+            "op": "SEQ_SCAN",
+            "role": "probe",
+            "table": "customers"
+           },
+           {
+            "act": 250531,
+            "children": [],
+            "detail": "product_id=0",
+            "est": 801,
+            "op": "SEQ_SCAN",
+            "role": "build",
+            "table": "orders"
+           }
+          ],
+          "detail": "id = customer_id",
+          "est": 61,
+          "op": "HASH_JOIN"
+         }
+        ],
+        "detail": "count_star(), sum(#0)",
+        "est": null,
+        "op": "UNGROUPED_AGGREGATE"
+       }
+      },
+      "setupMs": 30.5,
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM best_seller o\nJOIN customers c ON o.customer_id = c.id\nWHERE c.province = 0",
+      "timing": {
+       "median": 7.9,
+       "runs": [
+        8.5,
+        10.3,
+        7.5,
+        7.9,
+        6,
+        6.7,
+        8.4
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 62890,
+         "children": [
+          {
+           "act": 250482,
+           "children": [],
+           "est": 250531,
+           "op": "SEQ_SCAN",
+           "role": "probe",
+           "table": "best_seller"
+          },
+          {
+           "act": 1670,
+           "children": [],
+           "detail": "province=0",
+           "est": 1539,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "customers"
+          }
+         ],
+         "detail": "customer_id = id",
+         "est": 19278,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "settings": {
+      "preset": "fixed",
+      "rho": 0,
+      "scope": "province",
+      "theta": 0.8
+     },
+     "stats": {
+      "cramersV": 0.0033,
+      "genMs": 459.8,
+      "scopeCustomers": {
+       "city": 334,
+       "country": 20000,
+       "province": 1670
+      },
+      "topCustomerShare": 0.138,
+      "topProductShare": 0.2505
+     },
+     "title": "What helps"
+    }
+   ]
+  },
+  {
+   "dataChecks": [
+    {
+     "bestSellerRows": 392,
+     "cramersV": 0.0051,
+     "ordersInCity0": 6629,
+     "rho": 0,
+     "starProvince0Category0": 2738,
+     "theta": 0,
+     "topCustomerShare": 0.0002,
+     "topProductShare": 0.00115
+    },
+    {
+     "bestSellerRows": 392,
+     "cramersV": 0.5007,
+     "ordersInCity0": 6629,
+     "rho": 0.5,
+     "starProvince0Category0": 18113,
+     "theta": 0,
+     "topCustomerShare": 0.0002,
+     "topProductShare": 0.00117
+    },
+    {
+     "bestSellerRows": 425,
+     "cramersV": 0.7997,
+     "ordersInCity0": 6629,
+     "rho": 0.8,
+     "starProvince0Category0": 27189,
+     "theta": 0,
+     "topCustomerShare": 0.0002,
+     "topProductShare": 0.00123
+    },
+    {
+     "bestSellerRows": 417,
+     "cramersV": 1,
+     "ordersInCity0": 6629,
+     "rho": 1,
+     "starProvince0Category0": 33351,
+     "theta": 0,
+     "topCustomerShare": 0.0002,
+     "topProductShare": 0.00116
+    },
+    {
+     "bestSellerRows": 12430,
+     "cramersV": 0.0053,
+     "ordersInCity0": 10786,
+     "rho": 0,
+     "starProvince0Category0": 4405,
+     "theta": 0.5,
+     "topCustomerShare": 0.01125,
+     "topProductShare": 0.03107
+    },
+    {
+     "bestSellerRows": 100359,
+     "cramersV": 0.0049,
+     "ordersInCity0": 70604,
+     "rho": 0,
+     "starProvince0Category0": 34532,
+     "theta": 0.8,
+     "topCustomerShare": 0.16542,
+     "topProductShare": 0.2509
+    },
+    {
+     "bestSellerRows": 200654,
+     "cramersV": 0.005,
+     "ordersInCity0": 165479,
+     "rho": 0,
+     "starProvince0Category0": 109583,
+     "theta": 0.9,
+     "topCustomerShare": 0.40664,
+     "topProductShare": 0.50164
+    },
+    {
+     "bestSellerRows": 73402,
+     "cramersV": 0.5037,
+     "ordersInCity0": 70604,
+     "rho": 0.5,
+     "starProvince0Category0": 73973,
+     "theta": 0.8,
+     "topCustomerShare": 0.16542,
+     "topProductShare": 0.18351
+    }
+   ],
+   "orders": 400000,
+   "shape": {
+    "categories": 12,
+    "cities": 60,
+    "customers": 8000,
+    "orders": 400000,
+    "products": 1008,
+    "provinces": 12
+   },
+   "steps": [
+    {
+     "claims": [
+      {
+       "claim": "Every operator’s estimate is within a factor of 2 of the real count",
+       "detail": "worst q-error 1.42",
+       "pass": true
+      }
+     ],
+     "id": "uniform",
+     "run": {
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nJOIN products p ON o.product_id = p.id\nWHERE c.province = 0 AND p.category = 0",
+      "timing": {
+       "median": 9.4,
+       "runs": [
+        7.4,
+        9.4,
+        7.9,
+        10.6,
+        9.8,
+        8.1,
+        10.4
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 2738,
+         "children": [
+          {
+           "act": 33116,
+           "children": [
+            {
+             "act": 394828,
+             "children": [],
+             "est": 400000,
+             "op": "SEQ_SCAN",
+             "role": "probe",
+             "table": "orders"
+            },
+            {
+             "act": 84,
+             "children": [],
+             "detail": "category=0",
+             "est": 78,
+             "op": "SEQ_SCAN",
+             "role": "build",
+             "table": "products"
+            }
+           ],
+           "detail": "product_id = id",
+           "est": 24979,
+           "op": "HASH_JOIN",
+           "role": "probe"
+          },
+          {
+           "act": 670,
+           "children": [],
+           "detail": "province=0",
+           "est": 616,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "customers"
+          }
+         ],
+         "detail": "customer_id = id",
+         "est": 1923,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "settings": {
+      "preset": "star",
+      "rho": 0,
+      "scope": "province",
+      "theta": 0
+     },
+     "stats": {
+      "cramersV": 0.0051,
+      "genMs": 162.9,
+      "scopeCustomers": {
+       "city": 134,
+       "country": 8000,
+       "province": 670
+      },
+      "topCustomerShare": 0.0002,
+      "topProductShare": 0.0012
+     },
+     "title": "Uniform data"
+    },
+    {
+     "claims": [
+      {
+       "claim": "The final join is underestimated at least fivefold",
+       "detail": "1,923 guessed, 27,189 real",
+       "pass": true
+      },
+      {
+       "claim": "Each filter on its own is still estimated well",
+       "detail": "customers q 1.09, products q 1.08",
+       "pass": true
+      },
+      {
+       "claim": "The measured correlation matches the setting",
+       "detail": "Cramér’s V 0.800",
+       "pass": true
+      }
+     ],
+     "id": "correlated",
+     "run": {
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nJOIN products p ON o.product_id = p.id\nWHERE c.province = 0 AND p.category = 0",
+      "timing": {
+       "median": 8.3,
+       "runs": [
+        9,
+        8.3,
+        7.5,
+        8.6,
+        8.2,
+        7.6,
+        9.2
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 27189,
+         "children": [
+          {
+           "act": 33323,
+           "children": [
+            {
+             "act": 394827,
+             "children": [],
+             "est": 400000,
+             "op": "SEQ_SCAN",
+             "role": "probe",
+             "table": "orders"
+            },
+            {
+             "act": 84,
+             "children": [],
+             "detail": "category=0",
+             "est": 78,
+             "op": "SEQ_SCAN",
+             "role": "build",
+             "table": "products"
+            }
+           ],
+           "detail": "product_id = id",
+           "est": 24979,
+           "op": "HASH_JOIN",
+           "role": "probe"
+          },
+          {
+           "act": 670,
+           "children": [],
+           "detail": "province=0",
+           "est": 616,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "customers"
+          }
+         ],
+         "detail": "customer_id = id",
+         "est": 1923,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "settings": {
+      "preset": "star",
+      "rho": 0.8,
+      "scope": "province",
+      "theta": 0
+     },
+     "stats": {
+      "cramersV": 0.7997,
+      "genMs": 179.6,
+      "scopeCustomers": {
+       "city": 134,
+       "country": 8000,
+       "province": 670
+      },
+      "topCustomerShare": 0.0002,
+      "topProductShare": 0.0012
+     },
+     "title": "Correlated filters"
+    },
+    {
+     "claims": [
+      {
+       "claim": "The orders–customers join is underestimated at least fourfold",
+       "detail": "7,450 guessed, 70,437 real",
+       "pass": true
+      },
+      {
+       "claim": "The customer filter alone is still estimated well",
+       "detail": "q 1.11",
+       "pass": true
+      }
+     ],
+     "id": "skew",
+     "run": {
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nJOIN products p ON o.product_id = p.id\nWHERE c.city = 0 AND p.category = 0",
+      "timing": {
+       "median": 12.7,
+       "runs": [
+        10.4,
+        10.9,
+        10.3,
+        12.7,
+        13.7,
+        14.3,
+        13.7
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 21463,
+         "children": [
+          {
+           "act": 70437,
+           "children": [
+            {
+             "act": 398889,
+             "children": [],
+             "est": 400000,
+             "op": "SEQ_SCAN",
+             "role": "probe",
+             "table": "orders"
+            },
+            {
+             "act": 134,
+             "children": [],
+             "detail": "city=0",
+             "est": 149,
+             "op": "SEQ_SCAN",
+             "role": "build",
+             "table": "customers"
+            }
+           ],
+           "detail": "customer_id = id",
+           "est": 7450,
+           "op": "HASH_JOIN",
+           "role": "probe"
+          },
+          {
+           "act": 84,
+           "children": [],
+           "detail": "category=0",
+           "est": 78,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "products"
+          }
+         ],
+         "detail": "product_id = id",
+         "est": 465,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "settings": {
+      "preset": "star",
+      "rho": 0,
+      "scope": "city",
+      "theta": 0.8
+     },
+     "stats": {
+      "cramersV": 0.0049,
+      "genMs": 169.4,
+      "scopeCustomers": {
+       "city": 134,
+       "country": 8000,
+       "province": 670
+      },
+      "topCustomerShare": 0.1654,
+      "topProductShare": 0.2509
+     },
+     "title": "Skewed join key"
+    },
+    {
+     "after": {
+      "alt": {
+       "build": "customers",
+       "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.province = 0",
+       "timing": {
+        "median": 5.7,
+        "runs": [
+         4.9,
+         6,
+         5.7,
+         6,
+         5.3,
+         4.7,
+         5.8
+        ]
+       },
+       "tree": {
+        "act": 1,
+        "children": [
+         {
+          "act": 28562,
+          "children": [
+           {
+            "act": 100321,
+            "children": [],
+            "detail": "product_id=0",
+            "est": 321,
+            "op": "SEQ_SCAN",
+            "role": "probe",
+            "table": "orders"
+           },
+           {
+            "act": 670,
+            "children": [],
+            "detail": "province=0",
+            "est": 616,
+            "op": "SEQ_SCAN",
+            "role": "build",
+            "table": "customers"
+           }
+          ],
+          "detail": "customer_id = id",
+          "est": 24,
+          "op": "HASH_JOIN"
+         }
+        ],
+        "detail": "count_star(), sum(#0)",
+        "est": null,
+        "op": "UNGROUPED_AGGREGATE"
+       }
+      },
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.province = 0",
+      "timing": {
+       "median": 13.2,
+       "runs": [
+        10.7,
+        13.8,
+        14.2,
+        13.2,
+        14.2,
+        11.9,
+        11.5
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 28562,
+         "children": [
+          {
+           "act": 670,
+           "children": [],
+           "detail": "province=0",
+           "est": 616,
+           "op": "SEQ_SCAN",
+           "role": "probe",
+           "table": "customers"
+          },
+          {
+           "act": 100359,
+           "children": [],
+           "detail": "product_id=0",
+           "est": 321,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "orders"
+          }
+         ],
+         "detail": "id = customer_id",
+         "est": 24,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "before": {
+      "alt": {
+       "build": "orders",
+       "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM customers c\nJOIN orders o ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.city = 0",
+       "timing": {
+        "median": 14.1,
+        "runs": [
+         15.2,
+         13.7,
+         14.1,
+         13.2,
+         14.6,
+         15.8,
+         11.1
+        ]
+       },
+       "tree": {
+        "act": 1,
+        "children": [
+         {
+          "act": 17719,
+          "children": [
+           {
+            "act": 134,
+            "children": [],
+            "detail": "city=0",
+            "est": 149,
+            "op": "SEQ_SCAN",
+            "role": "probe",
+            "table": "customers"
+           },
+           {
+            "act": 100359,
+            "children": [],
+            "detail": "product_id=0",
+            "est": 321,
+            "op": "SEQ_SCAN",
+            "role": "build",
+            "table": "orders"
+           }
+          ],
+          "detail": "id = customer_id",
+          "est": 5,
+          "op": "HASH_JOIN"
+         }
+        ],
+        "detail": "count_star(), sum(#0)",
+        "est": null,
+        "op": "UNGROUPED_AGGREGATE"
+       }
+      },
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.city = 0",
+      "timing": {
+       "median": 6.6,
+       "runs": [
+        6.6,
+        17.2,
+        5.9,
+        4.8,
+        7.3,
+        7.9,
+        6.4
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 17719,
+         "children": [
+          {
+           "act": 100309,
+           "children": [],
+           "detail": "product_id=0",
+           "est": 321,
+           "op": "SEQ_SCAN",
+           "role": "probe",
+           "table": "orders"
+          },
+          {
+           "act": 134,
+           "children": [],
+           "detail": "city=0",
+           "est": 149,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "customers"
+          }
+         ],
+         "detail": "customer_id = id",
+         "est": 5,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "claims": [
+      {
+       "claim": "With one city, DuckDB builds its hash table on customers",
+       "detail": "",
+       "pass": true
+      },
+      {
+       "claim": "With one province, it flips and builds on orders",
+       "detail": "",
+       "pass": true
+      },
+      {
+       "claim": "It does so because it guesses product 0’s orders at least 50 times too low",
+       "detail": "321 guessed, 100,359 real",
+       "pass": true
+      },
+      {
+       "claim": "The other build side really is the customers side",
+       "detail": "",
+       "pass": true
+      },
+      {
+       "claim": "DuckDB’s flipped plan is at least 1.5 times slower than the other build side",
+       "detail": "13.2 ms against 5.7 ms",
+       "pass": true
+      },
+      {
+       "claim": "The query slows down after the flip",
+       "detail": "6.6 ms, then 13.2 ms",
+       "pass": true
+      }
+     ],
+     "id": "flip",
+     "settings": {
+      "preset": "best",
+      "rho": 0,
+      "scope": "city",
+      "theta": 0.8
+     },
+     "stats": {
+      "cramersV": 0.0049,
+      "genMs": 169.4,
+      "scopeCustomers": {
+       "city": 134,
+       "country": 8000,
+       "province": 670
+      },
+      "topCustomerShare": 0.1654,
+      "topProductShare": 0.2509
+     },
+     "then": {
+      "scope": "province"
+     },
+     "title": "The plan flips"
+    },
+    {
+     "claims": [
+      {
+       "claim": "With the orders materialised, DuckDB counts them exactly",
+       "detail": "100,359 guessed, 100,321 real",
+       "pass": true
+      },
+      {
+       "claim": "and builds its hash table on customers again",
+       "detail": "",
+       "pass": true
+      },
+      {
+       "claim": "The join then runs at least 1.5 times faster than DuckDB’s own plan",
+       "detail": "4.0 ms against 11.6 ms; materialising took 13.1 ms",
+       "pass": true
+      }
+     ],
+     "id": "fix",
+     "run": {
+      "compare": {
+       "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM orders o\nJOIN customers c ON o.customer_id = c.id\nWHERE o.product_id = 0 AND c.province = 0",
+       "timing": {
+        "median": 11.6,
+        "runs": [
+         10.4,
+         9.6,
+         10.5,
+         12.1,
+         11.6,
+         12,
+         12.6
+        ]
+       },
+       "tree": {
+        "act": 1,
+        "children": [
+         {
+          "act": 28562,
+          "children": [
+           {
+            "act": 670,
+            "children": [],
+            "detail": "province=0",
+            "est": 616,
+            "op": "SEQ_SCAN",
+            "role": "probe",
+            "table": "customers"
+           },
+           {
+            "act": 100359,
+            "children": [],
+            "detail": "product_id=0",
+            "est": 321,
+            "op": "SEQ_SCAN",
+            "role": "build",
+            "table": "orders"
+           }
+          ],
+          "detail": "id = customer_id",
+          "est": 24,
+          "op": "HASH_JOIN"
+         }
+        ],
+        "detail": "count_star(), sum(#0)",
+        "est": null,
+        "op": "UNGROUPED_AGGREGATE"
+       }
+      },
+      "setupMs": 13.1,
+      "sql": "SELECT count(*) AS orders, sum(o.amount) AS revenue\nFROM best_seller o\nJOIN customers c ON o.customer_id = c.id\nWHERE c.province = 0",
+      "timing": {
+       "median": 4,
+       "runs": [
+        5.1,
+        4,
+        4.7,
+        4.2,
+        3,
+        3.7,
+        3.4
+       ]
+      },
+      "tree": {
+       "act": 1,
+       "children": [
+        {
+         "act": 28562,
+         "children": [
+          {
+           "act": 100321,
+           "children": [],
+           "est": 100359,
+           "op": "SEQ_SCAN",
+           "role": "probe",
+           "table": "best_seller"
+          },
+          {
+           "act": 670,
+           "children": [],
+           "detail": "province=0",
+           "est": 616,
+           "op": "SEQ_SCAN",
+           "role": "build",
+           "table": "customers"
+          }
+         ],
+         "detail": "customer_id = id",
+         "est": 7727,
+         "op": "HASH_JOIN"
+        }
+       ],
+       "detail": "count_star(), sum(#0)",
+       "est": null,
+       "op": "UNGROUPED_AGGREGATE"
+      }
+     },
+     "settings": {
+      "preset": "fixed",
+      "rho": 0,
+      "scope": "province",
+      "theta": 0.8
+     },
+     "stats": {
+      "cramersV": 0.0049,
+      "genMs": 169.4,
+      "scopeCustomers": {
+       "city": 134,
+       "country": 8000,
+       "province": 670
+      },
+      "topCustomerShare": 0.1654,
+      "topProductShare": 0.2509
+     },
+     "title": "What helps"
+    }
+   ]
+  }
+ ],
+ "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/3.6556.2 Chrome/152.0.7977.167 Safari/537.36 MSIX",
+ "quietCity": {
+  "city": 30,
+  "theta": 0.8,
+  "orders": 1000000,
+  "est": 18550,
+  "act": 13323,
+  "recordedAt": "2026-11-02T03:55:00.196Z",
+  "note": "From a later full run of tests/steps.html (all claims passed again) with the same pinned version; added here without replacing the rest of this recording."
+ },
+ "homeShareChecks": {
+  "recordedAt": "2026-11-02T03:55:00.196Z",
+  "note": "From a later full run of tests/steps.html (all claims passed again) with the same pinned version; added here without replacing the rest of this recording.",
+  "sizes": [
+   {
+    "orders": 1000000,
+    "checks": [
+     {
+      "theta": 0,
+      "rho": 0,
+      "homeShare": 0.083
+     },
+     {
+      "theta": 0,
+      "rho": 0.5,
+      "homeShare": 0.5419
+     },
+     {
+      "theta": 0,
+      "rho": 0.8,
+      "homeShare": 0.8165
+     },
+     {
+      "theta": 0,
+      "rho": 1,
+      "homeShare": 1
+     },
+     {
+      "theta": 0.5,
+      "rho": 0,
+      "homeShare": 0.0838
+     },
+     {
+      "theta": 0.8,
+      "rho": 0,
+      "homeShare": 0.1242
+     },
+     {
+      "theta": 0.9,
+      "rho": 0,
+      "homeShare": 0.2767
+     },
+     {
+      "theta": 0.8,
+      "rho": 0.5,
+      "homeShare": 0.5625
+     }
+    ]
+   },
+   {
+    "orders": 400000,
+    "checks": [
+     {
+      "theta": 0,
+      "rho": 0,
+      "homeShare": 0.0827
+     },
+     {
+      "theta": 0,
+      "rho": 0.5,
+      "homeShare": 0.5423
+     },
+     {
+      "theta": 0,
+      "rho": 0.8,
+      "homeShare": 0.8164
+     },
+     {
+      "theta": 0,
+      "rho": 1,
+      "homeShare": 1
+     },
+     {
+      "theta": 0.5,
+      "rho": 0,
+      "homeShare": 0.0838
+     },
+     {
+      "theta": 0.8,
+      "rho": 0,
+      "homeShare": 0.1329
+     },
+     {
+      "theta": 0.9,
+      "rho": 0,
+      "homeShare": 0.2956
+     },
+     {
+      "theta": 0.8,
+      "rho": 0.5,
+      "homeShare": 0.567
+     }
+    ]
+   }
+  ]
+ }
+}
