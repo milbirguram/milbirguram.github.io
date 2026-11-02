@@ -33,6 +33,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 .kit-back { color: var(--muted); }
 .kit-lede { color: var(--muted); margin-bottom: 0; }
+.kit-credit { margin: 10px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
 
 /* A stage may break out of the 660px text column, up to 1040px. */
 .kit-stage { margin: 36px 0; }
