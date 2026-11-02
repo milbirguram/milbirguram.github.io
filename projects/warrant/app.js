@@ -6,10 +6,11 @@
   var Kit = window.Kit || { preview: false, reducedMotion: false, onPlay: function (cb) { cb(true); } };
   var D = W.DEFAULTS, S = W.SHIFT, C = W.CONTROLS;
 
+  // A bond certificate: ink and intaglio green on security paper, serial red for the misses.
   var COL = {
-    ink: '#343630', strong: '#252821', muted: '#686d62', line: '#dedfd7', lineStrong: '#b5bdaf',
-    accent: '#58705a', miss: '#a3402a', bandFill: 'rgba(88,112,90,0.17)', cal: '#c6ccc0',
-    range: 'rgba(88,112,90,0.13)', ghost: '#8b9185', plot: '#fdfcf9', wash: '#f3f3ed'
+    ink: '#1c1d19', strong: '#1c1d19', muted: '#4c5446', line: 'rgba(31,90,70,0.15)', lineStrong: 'rgba(31,90,70,0.5)',
+    accent: '#1f5a46', miss: '#9a2b1e', bandFill: 'rgba(31,90,70,0.06)', hatch: 'rgba(31,90,70,0.55)', cal: '#a6b3a3',
+    range: 'rgba(31,90,70,0.12)', ghost: '#5d6357', plot: '#f8f5ea', wash: '#f3eedd', fitted: 'rgba(28,29,25,0.45)'
   };
   var VIEW = { xMax: 12, yMax: 90 };      // display range of the scatter, km and minutes
   var SHOWN = 600;                         // trips on the history chart
@@ -41,7 +42,28 @@
     return o;
   }
 
-  function font(px, weight) { return (weight || 400) + ' ' + px + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'; }
+  function font(px, weight, italic) { return (italic ? 'italic ' : '') + (weight || 400) + ' ' + px + 'px "Playfair Display", Georgia, "Times New Roman", serif'; }
+  // Canvas text waits for the self-hosted face; redraw once it is in.
+  function whenFonts(cb) {
+    if (!document.fonts || !document.fonts.load) return;
+    Promise.all(['400', '700', 'italic 400'].map(function (f) { return document.fonts.load(f + ' 12px "Playfair Display"'); }))
+      .then(cb, function () {});
+  }
+  // The seal on the chart: whole, cracked while coverage is below the expected range, mended after.
+  function sealer() {
+    var E = window.WarrantEngraving, svg = $('wa-seal');
+    var set = E && svg ? E.seal(svg, 'wa-seal') : function () {}, broke = false;
+    return {
+      reset: function () { broke = false; },
+      show: function (flag, promise) {
+        if (flag === 'below') broke = true;
+        var st = flag === 'below' ? 'broken' : broke ? 'mended' : 'whole';
+        set(st, st === 'broken' ? 'Seal cracked: coverage has fallen below the range expected if nothing had changed. The promise is ' + promise + '.'
+          : st === 'mended' ? 'Seal mended: coverage is back inside the expected range. The promise is ' + promise + '.'
+          : 'Seal intact: coverage is not below the expected range. The promise is ' + promise + '.', promise);
+      }
+    };
+  }
 
   // A small Gaussian kernel density over distance, for the "old versus new" strip.
   function density(xs, grid, bw) {
@@ -103,7 +125,7 @@
       ctx.beginPath(); ctx.moveTo(px(grid[0]), B);
       grid.forEach(function (g, j) { ctx.lineTo(px(g), dy(sim._calDens[j])); });
       ctx.lineTo(px(grid[n - 1]), B); ctx.closePath();
-      ctx.fillStyle = 'rgba(181,189,175,0.45)'; ctx.fill();
+      ctx.fillStyle = COL.range; ctx.fill();
       if (newDens) {
         ctx.beginPath();
         grid.forEach(function (g, j) { if (j) ctx.lineTo(px(g), dy(newDens[j])); else ctx.moveTo(px(g), dy(newDens[j])); });
@@ -128,6 +150,13 @@
       ctx.beginPath(); ctx.arc(px(sim.cal.xs[i]), py(sim.cal.ys[i]), rc, 0, 6.2832); ctx.fill();
     }
 
+    // the axes, ruled twice like the frame of a certificate
+    ctx.restore();
+    ctx.strokeStyle = COL.accent; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(L + 0.5, T); ctx.lineTo(L + 0.5, B + 0.5); ctx.lineTo(R, B + 0.5); ctx.stroke();
+    ctx.save();
+    ctx.beginPath(); ctx.rect(L, T, R - L, B - T); ctx.clip();
+
     // bands
     function bandPath(m) {
       var top = [], bot = [], unb = [], empty = false, steps = 72;
@@ -147,9 +176,27 @@
       ctx.beginPath(); edge(bp.top);
       for (i = bp.bot.length - 1; i >= 0; i--) ctx.lineTo(bp.bot[i][0], bp.bot[i][1]);
       ctx.closePath(); ctx.fillStyle = COL.bandFill; ctx.fill();
-      ctx.strokeStyle = COL.accent; ctx.lineWidth = 1.5;
+      // The band as an engraved ribbon: lines that run with it, closer together where it is narrow.
+      var widest = 0, j2, k2;
+      for (j2 = 0; j2 < bp.top.length; j2++) widest = Math.max(widest, bp.bot[j2][1] - bp.top[j2][1]);
+      var nl = clamp(Math.round(widest / (opt.preview ? 3.4 : 3.2)), 3, 48);
+      ctx.strokeStyle = COL.hatch; ctx.lineWidth = opt.preview ? 0.7 : 0.6; ctx.beginPath();
+      for (k2 = 1; k2 < nl; k2++) {
+        for (j2 = 0; j2 < bp.top.length; j2++) {
+          var yy = bp.top[j2][1] + k2 / nl * (bp.bot[j2][1] - bp.top[j2][1]);
+          if (j2) ctx.lineTo(bp.top[j2][0], yy); else ctx.moveTo(bp.top[j2][0], yy);
+        }
+      }
+      ctx.stroke();
+      ctx.strokeStyle = COL.accent; ctx.lineWidth = 1.6;
       ctx.beginPath(); edge(bp.top); ctx.stroke();
       ctx.beginPath(); edge(bp.bot); ctx.stroke();
+      if (widest > 12) {
+        var inner = function (pts, d) { pts.forEach(function (p, j) { if (j) ctx.lineTo(p[0], p[1] + d); else ctx.moveTo(p[0], p[1] + d); }); };
+        ctx.lineWidth = 0.6;
+        ctx.beginPath(); inner(bp.top, 2.8); ctx.stroke();
+        ctx.beginPath(); inner(bp.bot, -2.8); ctx.stroke();
+      }
     }
     if (method !== 'split' && opt.ghost !== false) {
       var gp = bandPath('split');
@@ -159,7 +206,7 @@
       ctx.setLineDash([]);
     }
     // the fitted line
-    ctx.strokeStyle = 'rgba(52,54,48,0.45)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = COL.fitted; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(px(0), py(sim.model.predict(0))); ctx.lineTo(px(VIEW.xMax), py(sim.model.predict(VIEW.xMax))); ctx.stroke();
 
     // recent trips: dots inside the band, crosses outside
@@ -172,7 +219,7 @@
       if (hit) {
         ctx.fillStyle = COL.ink; ctx.beginPath(); ctx.arc(X, Y, r, 0, 6.2832); ctx.fill();
       } else {
-        ctx.strokeStyle = COL.miss; ctx.lineWidth = 1.8; ctx.beginPath();
+        ctx.strokeStyle = COL.miss; ctx.lineWidth = 2; ctx.beginPath();
         ctx.moveTo(X - r - 0.5, Y - r - 0.5); ctx.lineTo(X + r + 0.5, Y + r + 0.5);
         ctx.moveTo(X + r + 0.5, Y - r - 0.5); ctx.lineTo(X - r - 0.5, Y + r + 0.5); ctx.stroke();
       }
@@ -231,7 +278,7 @@
   function fullPage() {
     var sc = surface($('wa-scatter')), hc = surface($('wa-history'));
     var state = { step: 1, method: 'split', aciScores: 'fixed', running: !Kit.reducedMotion, speed: 1, acc: 0, events: [], flag: null, kit: true };
-    var sim;
+    var sim, seal = sealer();
 
     function active() {
       if (state.step !== 3) return 'split';
@@ -249,7 +296,7 @@
     function build(seed, from) {
       sim = new W.Simulator({ seed: seed, alpha: from ? from.alpha : D.alpha, gamma: from ? from.o.gamma : D.gamma });
       if (from) { sim.cur = copyShift(from.cur); sim.target = copyShift(from.target); sim.setWeightMode(from.weightMode); }
-      state.events = []; state.lows = null;
+      state.events = []; state.lows = null; seal.reset();
       prefill();
     }
     build(D.seed);
@@ -266,7 +313,7 @@
     alphaIn.addEventListener('input', function () {
       var a = Number((1 - Number(alphaIn.value)).toFixed(decimals(C.alpha.step)));
       sim.setAlpha(a);
-      state.events = []; state.lows = null;
+      state.events = []; state.lows = null; seal.reset();
       prefill();
       promiseText(); refresh(true);
     });
@@ -472,6 +519,7 @@
         else if (flag === 'inside' && state.flag === 'below') say('Coverage is back inside the expected range.');
         state.flag = flag;
       }
+      seal.show(flag, pct(1 - sim.alpha, 0));
       var chip = $('wa-chip');
       chip.textContent = 'Coverage ' + pct(sum.coverage) + (flag ? ' · ' + flag + ' the expected range' : '');
       chip.className = 'wa-chip' + (flag === 'below' ? ' is-low' : '');
@@ -602,18 +650,20 @@
 
     setStep(1);
     schedule();
+    whenFonts(draw);
   }
 
   // ---------------------------------------------------------------- preview (the card on projects.html)
   // A loop of about ten seconds: the promise holds, the trips shift, misses appear and coverage dips,
   // then adaptive conformal inference takes over and coverage recovers.
   function preview() {
-    var sf = surface($('wa-scatter'));
+    var sf = surface($('wa-scatter')), seal = sealer();
     var RATE = 45, WIN = 60, A = 140, B2 = 290, END = 470;
     var p;
     function start() {
       var sim = new W.Simulator({ seed: D.seed, gamma: 0.05, ramp: 0.03 });
       p = { sim: sim, n: 0, method: 'split', hits: [], sum: 0, rows: [], acc: 0 };
+      seal.reset();
       // Fill one coverage window before the loop starts, so the strip begins steady.
       for (var i = 0; i < WIN; i++) {
         var rec = sim.step();
@@ -631,6 +681,9 @@
       p.hits.push(rec.shown ? 1 : 0); p.sum += rec.shown ? 1 : 0;
       if (p.hits.length > WIN) p.sum -= p.hits.shift();
       p.rows.push({ t: p.n, cov: p.sum / p.hits.length, n: p.hits.length });
+      // The seal follows every trip, so a crack mended before a still frame still shows its seam.
+      p.low = p.sum / p.hits.length < W.coverageRange(p.hits.length, sim.calScores.length, sim.alpha).lo;
+      seal.show(p.low ? 'below' : 'inside', pct(1 - sim.alpha, 0));
       p.n++;
       if (p.n >= END) start();
     }
@@ -638,21 +691,21 @@
     function draw() {
       var w = sf.w, h = sf.h, ctx = sf.ctx, stripTop = Math.round(h * 0.7);
       drawScatter(sf, p.sim, p.method, { preview: true, bottom: stripTop - 6, ghost: false, hitOf: function (r) { return r.shown; } });
-      var fs = Math.max(11, Math.min(14, Math.round(w / 30)));
-      ctx.font = font(fs, 600); ctx.fillStyle = COL.strong; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-      ctx.fillText(caption(), 10, 7);
-      ctx.textAlign = 'right'; ctx.font = font(fs); ctx.fillStyle = COL.muted;
-      ctx.fillText('promise ' + pct(1 - p.sim.alpha, 0), w - 10, 7);
-      // coverage strip
+      var fs = Math.max(12, Math.min(16, Math.round(w / 24)));
+      ctx.font = font(fs, 400, true); ctx.fillStyle = COL.strong; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText(caption(), 10, 5);
+      // coverage strip, ruled off twice
       ctx.fillStyle = COL.wash; ctx.fillRect(0, stripTop, w, h - stripTop);
-      ctx.strokeStyle = COL.line; ctx.beginPath(); ctx.moveTo(0, stripTop + 0.5); ctx.lineTo(w, stripTop + 0.5); ctx.stroke();
-      var box = { L: 10, R: w - 64, T: stripTop + 8, B: h - 8 };
+      ctx.strokeStyle = COL.accent; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, stripTop + 0.5); ctx.lineTo(w, stripTop + 0.5); ctx.moveTo(0, stripTop + 3.5); ctx.lineTo(w, stripTop + 3.5); ctx.stroke();
+      var box = { L: 10, R: w - 64, T: stripTop + 10, B: h - 8 };
       var rows = p.rows.slice(-END);
       drawCoverage(ctx, box, rows, { yLo: 0.5, target: 1 - p.sim.alpha, alpha: p.sim.alpha, nCal: p.sim.calScores.length, span: END, preview: true });
       var cur = rows.length ? rows[rows.length - 1].cov : NaN;
-      ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = font(fs, 600); ctx.fillStyle = COL.strong;
+      var low = !!p.low;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = font(fs, 700); ctx.fillStyle = low ? COL.miss : COL.strong;
       ctx.fillText(pct(cur, 0), w - 56, (box.T + box.B) / 2 - fs * 0.55);
-      ctx.font = font(11); ctx.fillStyle = COL.muted;
+      ctx.font = font(12, 400, true); ctx.fillStyle = COL.muted;
       ctx.fillText('covered', w - 56, (box.T + box.B) / 2 + fs * 0.6);
     }
 
@@ -678,6 +731,7 @@
     });
     var ro = window.ResizeObserver ? new ResizeObserver(function () { sf.resize(); draw(); }) : null;
     if (ro) ro.observe($('wa-scatter')); else window.addEventListener('resize', function () { sf.resize(); draw(); });
+    whenFonts(draw);
   }
 
   if (Kit.preview) preview(); else fullPage();
