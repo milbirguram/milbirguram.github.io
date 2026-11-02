@@ -22,7 +22,7 @@
   // misreading Sproat and Jaitly describe; the other two are conTEXT's own outputs listed in its README.
   // None of the systems on this page makes them. Right readings come from the rules.
   var PREVIEW = [
-    { tok: '£900', wrong: 'nine hundred euros', src: 'Sproat & Jaitly RNN' },
+    { tok: '£900', wrong: 'nine hundred euros', src: 'RNN, Sproat & Jaitly' },
     { tok: '3,500 kg', wrong: 'hundred hundred five meters', src: 'conTEXT' },
     { tok: 'May 20, 2008', wrong: 'december twentieth two thousand eight', src: 'conTEXT' }
   ];
@@ -31,89 +31,185 @@
     J: '11010', K: '11110', L: '01001', M: '00111', N: '00110', O: '00011', P: '01101', Q: '11101', R: '01010', S: '10100',
     T: '00001', U: '11100', V: '01111', W: '11001', X: '10111', Y: '10101', Z: '10001', ' ': '00100' };
 
+  // The card is a teleprinter: the printout advances a line at a time and never clears, the
+  // tape below punches each surviving reading in five-hole ITA2 code, and a two-line tally at the
+  // foot of the paper sets the claimed figure against the honest one. One cycle ends exactly where
+  // it began, so the still frame (paused, or reduced motion) is the fully printed state.
   function runPreview() {
     $('rt-app').hidden = true;
     var box = $('rt-preview');
     box.hidden = false;
-    var item = document.createElement('div');
-    item.className = 'rt-pv-item';
-    item.innerHTML = '<span class="rt-pv-tok"></span><span class="rt-pv-wrong"><span class="rt-pv-src"></span><span class="rt-pv-txt"></span></span><span class="rt-pv-right"></span>';
-    box.appendChild(item);
-    var mark = document.createElement('span');
-    mark.className = 'rt-pv-mark';
-    box.appendChild(mark);
-    var tape = document.createElement('canvas');
-    tape.className = 'rt-pv-tape';
+    // the two figures sit in index.html as [data-num] spans that tests/test_numbers.js checks
+    // against data/eval.json, so the card needs no request of its own
+    var claimed = box.querySelector('[data-num="original.claimed_val_acc"]').textContent;
+    var hard = box.querySelector('[data-num="scores.01.gated.exact"]').textContent;
+    box.setAttribute('aria-label', box.getAttribute('aria-label') + ' At the foot of the paper a tally reads: claimed ' + claimed +
+      ', with padding counted; on hard tokens ' + hard + ', exact match on tokens never seen in training.');
+
+    function mk(tag, cls, parent) { var e = document.createElement(tag); e.className = cls; if (parent) parent.appendChild(e); return e; }
+    var roll = mk('div', 'rt-pv-roll', box);
+    var stack = mk('div', 'rt-pv-stack', roll);
+    var score = mk('div', 'rt-pv-score', box);
+    var s1 = mk('div', 'rt-pv-line', score), s2 = mk('div', 'rt-pv-line', score);
+    var bed = mk('div', 'rt-pv-bed', box);
+    var tape = mk('canvas', 'rt-pv-tape', bed);
     tape.setAttribute('aria-hidden', 'true');
-    box.appendChild(tape);
-    var punched = '';
-    var elTok = item.querySelector('.rt-pv-tok'), elWrong = item.querySelector('.rt-pv-txt'), elRight = item.querySelector('.rt-pv-right');
-    var elSrc = item.querySelector('.rt-pv-src');
+
+    var LF = 0.2, TPS = 18, CPS = 48, SCPS = 60, STRIKE = 0.3, HOLD = 0.45, LH = 1.42;
     var items = PREVIEW.map(function (p) { return { tok: p.tok, wrong: p.wrong, src: p.src, right: R.normalize(p.tok, {}).out }; });
-    var CPS = 24, TPS = 14;
-    // each item: type token, type the wrong reading in red, strike it, type the right reading, hold
-    items.forEach(function (it) {
-      it.t1 = it.tok.length / TPS + 0.2;
-      it.t2 = it.t1 + it.wrong.length / CPS + 0.2;
-      it.t3 = it.t2 + 0.35;
-      it.t4 = it.t3 + 0.25 + it.right.length / CPS;
-      it.dur = it.t4 + 1.3;
-    });
-    var LOOP = items.reduce(function (a, it) { return a + it.dur; }, 0);
-    var last = '';
-    function draw(t) {
-      var k = 0;
-      while (k < items.length - 1 && t >= items[k].dur) { t -= items[k].dur; k++; }
-      var it = items[k];
-      var a = Math.min(it.tok.length, Math.floor(t * TPS));
-      var b = Math.min(it.wrong.length, Math.max(0, Math.floor((t - it.t1) * CPS)));
-      var s = Math.max(0, Math.min(1, (t - it.t2) / 0.35));
-      var c = Math.min(it.right.length, Math.max(0, Math.floor((t - it.t3 - 0.25) * CPS)));
-      var key = k + ',' + a + ',' + b + ',' + s.toFixed(2) + ',' + c;
-      if (key === last) return;
-      last = key;
-      elTok.textContent = it.tok.slice(0, a);
-      elWrong.textContent = it.wrong.slice(0, b);
-      elSrc.textContent = b ? it.src : '';
-      elWrong.style.setProperty('--s', (s * 100) + '%');
-      elRight.textContent = it.right.slice(0, c);
-      mark.textContent = (k + 1) + ' / ' + items.length;
-      punched = it.right.slice(0, c);
-      drawTape();
+    // the cycle ends on £900, the headline example, so start it on the next one
+    var order = [items[1], items[2], items[0]];
+    var lines = [], punch = [];
+    function addLines(hist, t) {
+      order.forEach(function (it) {
+        var specs = [
+          { k: 'tok', text: it.tok, src: it.src, rate: TPS, extra: 0.12 },
+          { k: 'wrong', text: it.wrong, rate: CPS, extra: STRIKE },
+          { k: 'right', text: it.right, rate: CPS, extra: 0 }
+        ];
+        specs.forEach(function (L) {
+          L.hist = hist;
+          L.ts = t;
+          L.ty = t + LF;
+          L.dur = L.text.length / L.rate;
+          if (L.k === 'right') { L.seed = punch.length; punch.push(L); }
+          t = L.ty + L.dur + L.extra;
+          lines.push(L);
+        });
+        t += HOLD;
+      });
+      return t;
     }
-    // the tape below punches only the reading that survives, in five-hole ITA2 (Baudot) code
-    function drawTape() {
+    // the previous cycle, already printed, then this one
+    addLines(true, -1e9);
+    var HN = lines.length;
+    var t = addLines(false, 0);
+    var SC = [
+      [{ t: pad('CLAIMED', 16), c: '' }, { t: claimed, c: 'rt-pv-b' }, { t: '  padding counted', c: 'rt-pv-note' }],
+      [{ t: pad('ON HARD TOKENS', 16), c: 'rt-pv-red' }, { t: hard, c: 'rt-pv-red rt-pv-b' }, { t: '  unseen, exact', c: 'rt-pv-note' }]
+    ];
+    function segLen(s) { return s.reduce(function (a, g) { return a + g.t.length; }, 0); }
+    var scStart = t + 0.1, sc1 = segLen(SC[0]) / SCPS, sc2 = segLen(SC[1]) / SCPS;
+    var LOOP = scStart + 0.15 + sc1 + 0.12 + sc2 + 1;
+
+    // ribbon ink: each glyph strikes a little harder or softer (opacity 0.85 to 1)
+    function inkInto(parent, text, seed, cls) {
+      var host = mk('span', cls || '', parent);
+      for (var i = 0; i < text.length; i++) {
+        var g = mk('span', '', host);
+        g.textContent = text[i];
+        var h = Math.sin((seed + i) * 12.9898) * 43758.5453;
+        g.style.opacity = (0.85 + 0.15 * (h - Math.floor(h))).toFixed(2);
+      }
+      return host;
+    }
+    function typed(L, t) { return L.hist ? L.text.length : Math.max(0, Math.min(L.text.length, Math.floor((t - L.ty) * L.rate))); }
+    function after(L, t) { return L.hist ? 1 : Math.max(0, Math.min(1, (t - L.ty - L.dur) / (L.extra || 1))); }
+
+    var POOL = 9, pool = [];
+    for (var i = 0; i < POOL; i++) { var p = mk('div', 'rt-pv-line', stack); p.sig = ''; pool.push(p); }
+    function setLine(el, L, t, idx) {
+      if (!L) { if (el.sig !== '-') { el.sig = '-'; el.textContent = ''; } return; }
+      var n = typed(L, t), s = after(L, t);
+      var sig = idx + ',' + n + ',' + (L.k === 'right' ? 0 : s.toFixed(2));
+      if (el.sig === sig) return;
+      el.sig = sig;
+      el.textContent = '';
+      if (L.k === 'tok') {
+        inkInto(el, L.text.slice(0, n), idx * 7, 'rt-pv-box' + (n ? '' : ' is-empty'));
+        if (s >= 1) mk('span', 'rt-pv-src', el).textContent = '✕ ' + L.src;
+      } else if (L.k === 'wrong') {
+        mk('span', 'rt-pv-x', el).textContent = '✕ ';
+        var w = mk('span', 'rt-pv-txt', el);
+        w.textContent = L.text.slice(0, n);
+        w.style.setProperty('--s', (s * 100) + '%');
+      } else {
+        el.appendChild(document.createTextNode('  '));
+        inkInto(el, L.text.slice(0, n), idx * 7, 'rt-pv-ink');
+      }
+    }
+    function setScore(el, segs, n) {
+      if (el.sig === n) return;
+      el.sig = n;
+      el.textContent = '';
+      segs.forEach(function (g, i) {
+        if (n <= 0) return;
+        var part = g.t.slice(0, n);
+        n -= g.t.length;
+        if (g.c.indexOf('red') < 0 && g.c.indexOf('note') < 0) inkInto(el, part, i * 5, g.c + ' rt-pv-ink');
+        else mk('span', g.c, el).textContent = part;
+      });
+    }
+    function draw(t) {
+      var k = HN - 1;
+      while (k + 1 < lines.length && lines[k + 1].ts <= t) k++;
+      var off = 0;
+      if (k >= HN) { var f = Math.min(1, (t - lines[k].ts) / LF); off = 1 - f * (2 - f); }
+      stack.style.transform = off ? 'translateY(' + (off * LH).toFixed(3) + 'em)' : '';
+      for (var i = 0; i < POOL; i++) { var j = k - (POOL - 1) + i; setLine(pool[i], lines[j], t, j); }
+      var a = 1e3, b = 1e3;
+      if (t >= scStart) {
+        a = Math.floor((t - scStart - 0.15) * SCPS);
+        b = Math.floor((t - scStart - 0.27 - sc1) * SCPS);
+      }
+      setScore(s1, SC[0], a);
+      setScore(s2, SC[1], b);
+      // the tape holds the readings punched so far, newest at the punch
+      var text = [];
+      punch.forEach(function (L) { var m = typed(L, t); if (L.hist || m) text.push(L.text.slice(0, m)); });
+      drawTape(text.join(' '));
+    }
+    var lastTape = '';
+    function drawTape(text, force) {
       var dpr = Math.min(2, window.devicePixelRatio || 1);
       var w = tape.clientWidth, h = tape.clientHeight;
       if (!w || !h) return;
+      var key = text + '|' + w + 'x' + h + '@' + dpr;
+      if (key === lastTape && !force) return;
+      lastTape = key;
       if (tape.width !== Math.round(w * dpr) || tape.height !== Math.round(h * dpr)) {
         tape.width = Math.round(w * dpr); tape.height = Math.round(h * dpr);
       }
       var g = tape.getContext('2d');
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
       g.clearRect(0, 0, w, h);
-      var pitch = h / 7, r = pitch * 0.32, cols = Math.floor(w / pitch);
-      var text = punched.toUpperCase().slice(-cols + 1);
-      for (var i = 0; i < cols; i++) {
-        var x = (i + 0.5) * pitch;
-        g.fillStyle = '#26221c';
-        g.beginPath(); g.arc(x, pitch * 4, r * 0.55, 0, 7); g.fill(); // feed hole
-        var code = ITA2[text[i]];
+      // the tape: a strip with a feed track of small sprocket holes and five data tracks
+      var top = h * 0.1, th = h * 0.8, pitch = th / 7, r = pitch * 0.34;
+      var headX = w - Math.max(26, w * 0.1), headW = Math.max(10, w * 0.035);
+      g.fillStyle = '#eccf6c';
+      g.fillRect(0, top, w, th);
+      g.fillStyle = '#c4a443';
+      g.fillRect(0, top, w, 1);
+      g.fillRect(0, top + th - 1, w, 1);
+      var cols = Math.floor((headX - 2) / pitch);
+      var chars = text.toUpperCase().slice(-cols);
+      g.fillStyle = '#26221c';
+      for (var i = 0; i < chars.length; i++) {
+        var x = headX - (chars.length - i - 0.5) * pitch;
+        g.beginPath(); g.arc(x, top + pitch * 3.5, r * 0.55, 0, 7); g.fill(); // sprocket hole
+        var code = ITA2[chars[i]];
         if (!code) continue;
         for (var b = 0; b < 5; b++) {
           if (code[b] !== '1') continue;
-          var y = pitch * (1 + b + (b >= 3 ? 1 : 0));
+          var y = top + pitch * (1 + b + (b >= 2 ? 1 : 0));
           g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
         }
       }
+      // the punch block the tape runs through; beyond it the tape is still blank
+      g.fillStyle = '#26221c';
+      g.fillRect(headX, 0, headW, h);
+      g.fillStyle = '#4a443a';
+      g.fillRect(headX + 2, h * 0.04, headW - 4, 1.5);
     }
-    var still = items[0].dur - 0.01; // the finished first item: £900 resolved
+
     var raf = 0, t0 = 0;
-    draw(still);
+    function still() { draw(LOOP); }
     function frame(now) {
       draw(((now - t0) / 1000) % LOOP);
       raf = requestAnimationFrame(frame);
     }
+    still();
+    window.addEventListener('resize', function () { lastTape = ''; if (!raf) still(); });
     Kit.onPlay(function (playing) {
       if (playing && !raf) {
         t0 = performance.now();
@@ -121,10 +217,10 @@
       } else if (!playing && raf) {
         cancelAnimationFrame(raf);
         raf = 0;
-        last = '';
-        draw(still);
+        still();
       }
     });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { lastTape = ''; if (!raf) still(); });
   }
 
   if (Kit.preview) { runPreview(); return; }

@@ -1,4 +1,6 @@
-/* Rote: teleprinter tape. Paper tape, a two-colour ribbon (black readings, red errors), a teletype printout. */
+/* Rote: teleprinter tape. Canary teleprinter paper, a paper-tape strip whose punched holes mean
+   "this reading matches", a two-colour ribbon (black readings, red errors) that inks unevenly,
+   and the scoreboard as a teletype printout. Palette: canary, ribbon black, ribbon red, machine body. */
 @font-face {
   font-family: "Courier Prime";
   src: url("fonts/courier-prime-latin-400-normal.woff2") format("woff2");
@@ -11,15 +13,21 @@
 }
 
 .rt-stage {
-  --paper: #f3ead4;
+  --paper: #fae58f;
+  --tape: #eccf6c;
+  --tape-edge: #c4a443;
   --ink: #1f1c17;
   --red: #c1272d;
   --carbon: #2e4372;
   --grey: #5e5546;
+  --cap: #3b3730;
   --type: "Courier Prime", "Courier New", Courier, monospace;
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .33 0 0 0 0 .08 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* ribbon ink is uneven: streaky patches print up to 22% lighter, never below 4.5:1 even with the
+     per-glyph variation (black ink only; red stays full strength for contrast) */
+  --ribbon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='90'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .07' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3 0 0 0 2.2'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='.22' intercept='.78'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='260' height='90' filter='url(%23r)'/%3E%3C/svg%3E");
   --body: #26221c;
-  --dim: #d9ceb2;
+  --dim: #e6d9a6;
   color: var(--ink);
   font-family: var(--type);
   font-size: 15px;
@@ -38,24 +46,27 @@
 .rt-app > *, .rt-print > *, .rt-row > * { min-width: 0; }
 .rt-feed { display: grid; gap: 10px; }
 .rt-modes { display: flex; flex-wrap: wrap; gap: 10px; }
+/* keys are teleprinter keytops: dark caps, canary legends, a skirt that sinks when struck */
 .rt-key {
   appearance: none;
-  border: 2px solid var(--paper);
-  background: var(--paper);
-  color: var(--ink);
+  border: 1.5px solid #6d6553;
+  background: var(--cap);
+  color: var(--paper);
   font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   padding: 8px 14px 7px;
-  border-radius: 3px 3px 8px 8px / 3px 3px 10px 10px;
-  box-shadow: 0 3px 0 #000, 0 3px 0 1px #8a7f66;
+  border-radius: 5px 5px 9px 9px / 5px 5px 12px 12px;
+  box-shadow: inset 0 1px 0 #5b5446, 0 4px 0 #0c0b09;
   cursor: pointer;
   transition: transform 60ms, box-shadow 60ms;
 }
-.rt-key:hover { background: #fff8e6; }
-.rt-key:active { transform: translateY(3px); box-shadow: 0 0 0 #000; }
-.rt-key-hollow { background: transparent; color: var(--paper); }
-.rt-key-hollow:hover { background: #3a342b; }
+.rt-key:hover { background: #48433a; }
+.rt-key:active { transform: translateY(4px); box-shadow: inset 0 1px 0 #5b5446, 0 0 0 #0c0b09; }
+.rt-key-hollow { background: transparent; border-style: dashed; box-shadow: none; }
+.rt-key-hollow:hover { background: #312d27; }
+.rt-key-hollow:active { transform: translateY(2px); box-shadow: none; }
 .rt-stage .rt-feed :focus-visible, .rt-stage .rt-key:focus-visible { outline-color: var(--paper); }
 .rt-key-small { padding: 6px 12px 5px; }
 
@@ -71,7 +82,7 @@
   background: var(--paper) var(--grain);
   border: 0;
   border-bottom: 2px solid var(--ink);
-  border-top: 1px solid #cdbf9c;
+  border-top: 1px solid var(--tape-edge);
   padding: 9px 10px 7px;
   border-radius: 0;
 }
@@ -100,7 +111,7 @@
 .rt-chip.f-quantity .rt-cls { color: var(--carbon); }
 .rt-chip.f-calendar { border-style: dashed; background: rgba(31, 28, 23, 0.05); }
 .rt-chip.f-spelled { border-style: dotted; background: repeating-linear-gradient(135deg, rgba(31, 28, 23, 0.06) 0 2px, transparent 2px 6px); }
-.rt-chip.f-plain { border-color: #b5a882; }
+.rt-chip.f-plain { border-color: #a8924a; }
 .rt-chip.is-split::after {
   content: "≠";
   position: absolute; top: -9px; right: -8px;
@@ -113,13 +124,7 @@
 .rt-tape {
   position: relative;
   background: var(--paper) var(--grain);
-  padding: 4px 14px 12px 40px;
-}
-/* sprocket feed holes down the left edge */
-.rt-tape::before {
-  content: "";
-  position: absolute; left: 12px; top: 0; bottom: 0; width: 8px;
-  background: radial-gradient(circle at 4px 6px, var(--body) 2.6px, transparent 3.2px) 0 0 / 8px 12px repeat-y;
+  padding: 4px 16px 12px;
 }
 .rt-rows { list-style: none; margin: 0; padding: 0; }
 .rt-row {
@@ -127,7 +132,7 @@
   grid-template-columns: minmax(130px, 210px) 1fr;
   gap: 4px 18px;
   padding: 12px 0;
-  border-bottom: 1px dashed #c9b98f;
+  border-bottom: 1px dashed var(--tape-edge);
 }
 .rt-row:last-child { border-bottom: 0; }
 .rt-row-token { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
@@ -137,11 +142,23 @@
 }
 .rt-stamp.is-unseen { color: var(--red); }
 .rt-stamp.is-seen { color: var(--grey); }
-.rt-readings { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.rt-reading { display: grid; grid-template-columns: 16px 70px 1fr; gap: 8px; align-items: baseline; }
-.rt-hole { width: 13px; height: 13px; border-radius: 50%; align-self: center; border: 1.5px dotted #a3956f; }
+/* The signature: each token's readings run beside a strip of paper tape. Small sprocket holes
+   feed it; a data hole is punched through only where a reading matches the reference. */
+.rt-readings { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; position: relative; }
+.rt-readings::before {
+  content: "";
+  position: absolute; left: 0; top: 0; bottom: 0; width: 30px;
+  background:
+    radial-gradient(circle, var(--body) 1.6px, transparent 2.1px) 0 0 / 9px 8px repeat-y,
+    linear-gradient(90deg, var(--tape-edge) 1px, var(--tape) 1px calc(100% - 1px), var(--tape-edge) calc(100% - 1px));
+}
+.rt-reading { display: grid; grid-template-columns: 30px 70px 1fr; gap: 8px; align-items: baseline; position: relative; }
+.rt-hole { width: 13px; height: 13px; border-radius: 50%; align-self: center; justify-self: end; margin-right: 3px; border: 1.5px dotted #96813c; }
 .rt-hole.is-punched { border: 0; background: var(--body); box-shadow: inset 0 2px 0 #000; }
 .rt-hole.is-none { border-color: transparent; }
+.rt-say:not(.is-wrong):not(.is-missing), .rt-paper {
+  -webkit-mask: var(--ribbon) 0 0 / 260px 90px; mask: var(--ribbon) 0 0 / 260px 90px;
+}
 .rt-sys { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--grey); }
 .rt-say { word-break: break-word; }
 .rt-say.is-ref { font-weight: 700; }
@@ -153,15 +170,22 @@
 .rt-legend { margin-top: 8px; }
 
 /* uneven ribbon ink: a few glyph runs print lighter */
-.rt-ink-a { opacity: 0.84; }
+.rt-ink-a { opacity: 0.86; }
 .rt-ink-b { opacity: 0.93; }
 .rt-say.is-wrong .rt-ink-a, .rt-say.is-wrong .rt-ink-b, .rt-say.is-missing .rt-ink-a, .rt-say.is-missing .rt-ink-b { opacity: 1; }
 
 /* ---------- the printout ---------- */
 .rt-print {
+  position: relative;
   background: var(--paper) var(--grain);
-  padding: 16px 16px 14px;
+  padding: 18px 16px 14px;
   display: grid; gap: 12px;
+}
+/* the printout is torn off the roll */
+.rt-print::before {
+  content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 7px;
+  background: linear-gradient(135deg, var(--body) 33%, transparent 34%) 0 0 / 10px 7px repeat-x,
+              linear-gradient(225deg, var(--body) 33%, transparent 34%) 0 0 / 10px 7px repeat-x;
 }
 .rt-print-head { display: grid; gap: 4px; }
 .rt-print-title { margin: 0; font: 700 16px/1.4 var(--type); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); }
@@ -203,9 +227,10 @@
 @media (max-width: 640px) {
   .rt-stage { font-size: 14px; padding: 10px; }
   .rt-row { grid-template-columns: 1fr; }
-  .rt-reading { grid-template-columns: 14px 62px 1fr; gap: 6px; }
-  .rt-tape { padding-left: 32px; padding-right: 10px; }
-  .rt-tape::before { left: 9px; }
+  .rt-reading { grid-template-columns: 26px 62px 1fr; gap: 6px; }
+  .rt-readings::before { width: 26px; }
+  .rt-hole { margin-right: 2px; }
+  .rt-tape { padding-left: 10px; padding-right: 10px; }
   .rt-paper { font-size: 13px; }
   .rt-key { font-size: 14px; }
   .rt-switch { min-height: 44px; }
@@ -215,35 +240,45 @@
   .rt-key, .rt-switch-cap { transition: none; }
 }
 
-/* ---------- preview (?preview): the typewriter loop ---------- */
+/* ---------- preview (?preview): the teleprinter loop ---------- */
 .rt-preview {
   position: absolute; inset: 0;
-  background: var(--paper) var(--grain);
-  font-family: var(--type);
-  font-size: min(5.3vw, 8.2vh);
-  line-height: 1.25;
-  padding: 7vh 6vw 6vh 13vw;
   overflow: hidden;
+  background: var(--body);
+  color: var(--ink);
+  font: 400 min(3.75vw, 6vh)/1.42 var(--type);
 }
-.rt-preview::before {
-  content: "";
-  position: absolute; left: 3.2vw; top: 0; bottom: 0; width: 4vw;
-  background: radial-gradient(circle at 50% 50%, #faf9f6 30%, #c9b98f 38%, transparent 44%) 0 0 / 4vw 4vw repeat-y;
+/* the paper is a strip coming up out of the machine, its body showing either side */
+.rt-pv-roll {
+  position: absolute; left: 0.55em; right: 0.55em; top: 0; bottom: 6.5em; overflow: hidden;
+  background: var(--paper) var(--grain);
 }
-.rt-pv-item { display: grid; gap: 0.35em; align-content: start; }
-.rt-pv-tok { font-weight: 700; font-size: 1.5em; display: inline-block; border: 0.07em solid var(--ink); padding: 0 0.25em; justify-self: start; min-height: 1.3em; }
-.rt-pv-tok:empty { visibility: hidden; }
-.rt-pv-wrong { color: var(--red); justify-self: start; min-height: 1.25em; }
+.rt-pv-stack { position: absolute; left: 0.3em; right: 0.2em; bottom: 0; }
+.rt-pv-line { height: 1.42em; white-space: pre; overflow: hidden; }
+.rt-pv-box {
+  display: inline-block; font-weight: 700; line-height: 1.12; padding: 0 0.25em;
+  border: 1px solid var(--ink); vertical-align: 0.06em;
+  -webkit-mask: var(--ribbon) 0 0 / 200px 70px; mask: var(--ribbon) 0 0 / 200px 70px;
+}
+.rt-pv-box.is-empty { visibility: hidden; }
+.rt-pv-src { color: var(--red); font-size: max(11px, 0.85em); font-weight: 700; letter-spacing: 0.02em; margin-left: 0.7em; }
+.rt-pv-x { color: var(--red); font-weight: 700; }
 .rt-pv-txt {
-  background: linear-gradient(var(--red), var(--red)) no-repeat 0 58% / var(--s, 0%) 0.11em;
-  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  color: var(--red);
+  background: linear-gradient(var(--red), var(--red)) no-repeat 0 58% / var(--s, 0%) 0.1em;
 }
-.rt-pv-src {
-  font-size: max(11px, 0.6em); font-weight: 700; letter-spacing: 0.04em;
-  border: 1px solid var(--red); padding: 0 0.3em; margin-right: 0.45em; vertical-align: 0.15em; white-space: nowrap;
+.rt-pv-ink { -webkit-mask: var(--ribbon) 0 0 / 200px 70px; mask: var(--ribbon) 0 0 / 200px 70px; }
+/* the tally at the foot of the paper, below a fan-fold perforation */
+.rt-pv-score {
+  position: absolute; left: 0.55em; right: 0.55em; bottom: 3em; height: 3.5em;
+  padding: 0.33em 0.2em 0 0.3em;
+  white-space: nowrap; overflow: hidden;
+  background: radial-gradient(circle, var(--tape-edge) 0.09em, transparent 0.13em) 0 0 / 0.6em 0.3em repeat-x, var(--grain);
+  background-color: var(--paper);
 }
-.rt-pv-src:empty { display: none; }
-.rt-pv-right { color: var(--ink); min-height: 1.25em; }
-.rt-pv-tape { position: absolute; left: 13vw; right: 0; bottom: 3vh; height: 18vh; width: 87vw; background: #e6d9b8; }
-.rt-pv-mark { position: absolute; right: 5vw; top: 6vh; font-size: max(11px, 0.62em); letter-spacing: 0.12em; color: var(--grey); text-transform: uppercase; font-weight: 700; }
-html.kit-preview .rt-stage { padding: 0; }
+.rt-pv-b { font-weight: 700; }
+.rt-pv-red { color: var(--red); }
+.rt-pv-note { color: var(--grey); }
+.rt-pv-bed { position: absolute; left: 0; right: 0; bottom: 0; height: 3em; background: var(--body); }
+.rt-pv-tape { position: absolute; inset: 0; width: 100%; height: 100%; }
+html.kit-preview .rt-stage { padding: 0; border-radius: 0; }
