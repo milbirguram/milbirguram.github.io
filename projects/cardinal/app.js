@@ -147,6 +147,7 @@
     });
     el.prev.disabled = S.step === 0;
     el.next.textContent = S.step === M.STEPS.length - 1 ? 'Start again' : 'Next step';
+    $('cd-tb-sheet').textContent = (S.step + 1) + ' of ' + M.STEPS.length;
   }
 
   function onStep() {
@@ -362,6 +363,7 @@
     el.foot.textContent = fmt(SHAPE.orders) + ' orders, ' + fmt(SHAPE.customers) + ' customers and ' + fmt(SHAPE.products) +
       ' products, generated in this tab in ' + (st.genMs / 1000).toFixed(1) + ' s from a seeded hash, so every visit gets the same rows' +
       (small ? ' (fewer than on a laptop, to stay quick on a phone).' : '.') + ' DuckDB ' + engine.duckdbVersion + ', duckdb-wasm ' + engine.packageVersion + '.';
+    $('cd-tb-engine').textContent = 'DuckDB ' + engine.duckdbVersion;
   }
 
   var MAX = Math.pow(10, Math.ceil(Math.log10(ORDERS * 1.5)));
@@ -405,6 +407,8 @@
     var n = r.node;
     row.style.setProperty('--depth', r.depth);
     row.classList.toggle('is-root', r.depth === 0);
+    // Where the real count is 1.5 times or more off the guess, the row carries red-pencil corrections.
+    row.classList.toggle('is-off', n.est !== null && n.act !== null && r.q >= 1.5);
     var q = r.q;
     var dir = M.direction(n.est, n.act);
     var hasEst = n.est !== null && n.act !== null;
@@ -615,6 +619,7 @@
   }
 
   buildDots();
+  $('cd-tb-data').textContent = fmt(SHAPE.orders) + ' orders';
   wireControls();
   goStep(0);
   var conn = navigator.connection;
@@ -693,119 +698,192 @@
       return s;
     }
 
-    function draw(s) {
-      var bg = '#faf9f6', ink = '#252821', muted = '#686d62', line = '#dedfd7', act = '#58705a', est = '#4f544a', warn = '#93412a';
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-      ctx.globalAlpha = s.alpha;
-      var pad = Math.max(10, W * 0.045);
-      var fs = Math.max(11, Math.min(15, Math.min(W / 26, H / 15)));
-      var font = (window.getComputedStyle(document.body).fontFamily) || 'sans-serif';
-      ctx.textBaseline = 'middle';
+    // Drawn as a cyanotype: white linework for the optimiser's plan, red pencil for the real counts.
+    var C = { bp: '#1c3f6e', deep: '#163257', chalk: '#eef5fb', cyan: '#a9dcef', pencil: '#d9472b', pencilHi: '#ff9175' };
+    var MONO = '"B612 Mono", ui-monospace, Consolas, monospace';
+    var HAND = 'Caveat, "Segoe Print", cursive';
+    var CODE = 'ui-monospace, Menlo, Consolas, monospace'; // filter details, as on the page
+    var grid = null; // the field and its drafting grid, drawn once per size
 
-      // Header: skew dial on the left, query time on the right.
-      var r = Math.max(14, Math.min(H * 0.11, W * 0.07));
-      var cx = pad + r, cy = pad + r + 2;
-      ctx.lineWidth = Math.max(3, r * 0.22); ctx.lineCap = 'round';
-      ctx.strokeStyle = line;
-      ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI); ctx.stroke();
+    function drawField() {
+      grid = document.createElement('canvas');
+      grid.width = canvas.width; grid.height = canvas.height;
+      var g = grid.getContext('2d');
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var bg = g.createLinearGradient(0, 0, W * 0.2, H);
+      bg.addColorStop(0.25, C.bp); bg.addColorStop(1, C.deep);
+      g.fillStyle = bg; g.fillRect(0, 0, W, H);
+      var x, y;
+      g.lineWidth = 1;
+      for (x = 0.5; x < W; x += 10) {
+        g.strokeStyle = (Math.round(x - 0.5) % 50 === 0) ? 'rgba(169,220,239,0.13)' : 'rgba(169,220,239,0.055)';
+        g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke();
+      }
+      for (y = 0.5; y < H; y += 10) {
+        g.strokeStyle = (Math.round(y - 0.5) % 50 === 0) ? 'rgba(169,220,239,0.13)' : 'rgba(169,220,239,0.055)';
+        g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke();
+      }
+      var m = Math.max(5, Math.min(W, H) * 0.03);
+      g.strokeStyle = 'rgba(238,245,251,0.6)';
+      g.strokeRect(m + 0.5, m + 0.5, W - 2 * m - 1, H - 2 * m - 1);
+    }
+
+    function draw(s) {
+      if (!grid || grid.width !== canvas.width || grid.height !== canvas.height) drawField();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(grid, 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.globalAlpha = s.alpha;
+      var pad = Math.max(14, W * 0.055);
+      var fs = Math.max(11, Math.min(15, Math.min(W / 27, H / 15.5)));
+      var small = Math.max(11, fs * 0.82);
+      ctx.textBaseline = 'middle';
+      ctx.lineCap = 'butt';
+
+      // Header: the skew dial as a drafting protractor on the left, the query time on the right.
+      var r = Math.max(14, Math.min(H * 0.105, W * 0.065));
+      var cx = pad + r, cy = pad + r + 1;
+      ctx.strokeStyle = C.chalk; ctx.lineWidth = 1.25;
+      ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI); ctx.lineTo(cx - r, cy); ctx.stroke();
+      for (var k = 0; k <= 9; k++) {
+        var a = Math.PI + Math.PI * k / 9, len = k % 3 === 0 ? 0.28 : 0.15;
+        ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+        ctx.lineTo(cx + Math.cos(a) * r * (1 - len), cy + Math.sin(a) * r * (1 - len)); ctx.stroke();
+      }
       var frac = s.theta / 0.9;
-      ctx.strokeStyle = act;
-      ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, Math.PI + Math.PI * Math.max(0.001, frac)); ctx.stroke();
       var ang = Math.PI + Math.PI * frac;
-      ctx.strokeStyle = ink; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(ang) * r * 0.8, cy + Math.sin(ang) * r * 0.8); ctx.stroke();
-      ctx.fillStyle = ink;
-      ctx.font = '500 ' + fs + 'px ' + font;
+      ctx.strokeStyle = C.cyan; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.55, Math.PI, Math.PI + Math.PI * Math.max(0.001, frac)); ctx.stroke();
+      ctx.strokeStyle = C.chalk; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(ang) * r * 1.05, cy + Math.sin(ang) * r * 1.05); ctx.stroke();
+      ctx.fillStyle = C.chalk; ctx.fillRect(cx - 2, cy - 2, 4, 4);
       ctx.textAlign = 'left';
-      ctx.fillText('skew ' + s.thetaLabel.toFixed(1), cx + r + 8, cy - fs * 0.45);
-      ctx.fillStyle = muted;
-      ctx.font = Math.max(11, fs * 0.85) + 'px ' + font;
-      // Skew moves the counts; the flip comes from widening the customer filter, so say so.
-      ctx.fillText(s.flip > 0.5 ? 'filter widened → plan flips' : 'customers in one city', cx + r + 8, cy + fs * 0.65);
+      ctx.fillStyle = C.chalk;
+      ctx.font = '700 ' + fs + 'px ' + MONO;
+      ctx.fillText('SKEW ' + s.thetaLabel.toFixed(1), cx + r + 8, cy - fs * 0.5);
       ctx.textAlign = 'right';
-      ctx.fillStyle = ink;
-      ctx.font = '500 ' + Math.round(fs * 1.25) + 'px ' + font;
-      ctx.fillText(Math.round(s.ms) + ' ms', W - pad, cy - fs * 0.45);
-      ctx.fillStyle = muted;
-      ctx.font = Math.max(11, fs * 0.85) + 'px ' + font;
+      ctx.fillStyle = C.chalk;
+      ctx.font = '700 ' + Math.round(fs * 1.2) + 'px ' + MONO;
+      ctx.fillText(Math.round(s.ms) + ' ms', W - pad, cy - fs * 0.5);
+      ctx.fillStyle = C.cyan;
+      ctx.font = small + 'px ' + MONO;
       // After the flip, the fair comparison: the same query with the other build side.
-      ctx.fillText(s.altMs ? 'other side ' + Math.round(s.altMs) + ' ms' : 'query time', W - pad, cy + fs * 0.65);
+      var sub = s.altMs ? 'other side ' + Math.round(s.altMs) + ' ms' : 'query time';
+      ctx.fillText(sub, W - pad, cy + fs * 0.6);
+      var room = W - pad - ctx.measureText(sub).width - 10 - (cx + r + 8);
+      ctx.textAlign = 'left';
+      // Skew moves the counts; the flip comes from widening the customer filter, so say so.
+      // The flip is a revision to the drawing, so it is noted in red pencil.
+      if (s.flip > 0.5) {
+        var hs = Math.round(fs * 1.25);
+        ctx.font = '600 ' + hs + 'px ' + HAND;
+        while (hs > 11 && ctx.measureText('filter widened → plan flips').width > room) { hs--; ctx.font = '600 ' + hs + 'px ' + HAND; }
+        ctx.fillStyle = C.pencilHi;
+        ctx.fillText('filter widened → plan flips', cx + r + 8, cy + fs * 0.6);
+      } else {
+        ctx.font = small + 'px ' + MONO;
+        ctx.fillText('customers in one city', cx + r + 8, cy + fs * 0.6);
+      }
 
       // Rows.
-      var ly = Math.max(cy + r * 0.25, cy + fs * 1.3) + fs * 0.75; // legend line, below the subtitle
-      var top = ly + fs * 0.8;
-      var rowH = (H - top - pad * 0.6) / s.rows.length;
-      var labelW = W * 0.4;
-      var qW = Math.max(34, fs * 3);
-      var bx = pad + labelW, bw = W - pad - qW - bx - 6;
+      var ly = Math.max(cy + r * 0.3, cy + fs * 1.3) + fs * 0.75; // legend line, below the subtitle
+      var top = ly + fs * 0.85;
+      var rowH = (H - top - pad * 0.75) / s.rows.length;
+      // Bars start just right of the widest operator label.
+      var labelW = 0;
+      s.rows.forEach(function (row) {
+        var w = row.depth * fs;
+        ctx.font = '700 11px ' + MONO;
+        if (row.role) w += ctx.measureText(row.role.toUpperCase()).width + 14;
+        ctx.font = '700 ' + fs + 'px ' + MONO;
+        labelW = Math.max(labelW, w + ctx.measureText(row.label).width + 12);
+      });
+      labelW = Math.max(labelW, W * 0.3);
+      var qW = Math.max(46, fs * 3.6);
+      var bx = pad + labelW, bw = W - pad - qW - bx - 8;
       var MAXV = 1e6 * 1.5;
-      ctx.strokeStyle = line; ctx.lineWidth = 1;
+      ctx.strokeStyle = C.chalk; ctx.lineWidth = 1.25;
       ctx.beginPath(); ctx.moveTo(pad, top - 2); ctx.lineTo(W - pad, top - 2); ctx.stroke();
       s.rows.forEach(function (row, k) {
         var slot = row.slot !== undefined ? row.slot : k;
         var y = top + slot * rowH;
         var mid = y + rowH / 2;
-        var indent = row.depth * fs * 0.9;
+        var indent = row.depth * fs * 1.0;
         ctx.textAlign = 'left';
         var x = pad + indent;
-        if (row.role) {
-          ctx.font = Math.max(11, fs * 0.8) + 'px ' + font;
-          var tw = ctx.measureText(row.role).width + 8;
-          ctx.strokeStyle = row.role === 'build' ? ink : line;
-          ctx.lineWidth = 1;
-          roundRect(x, mid - fs * 0.62 - fs * 0.45, tw, fs * 1.05, 3); ctx.stroke();
-          ctx.fillStyle = row.role === 'build' ? ink : muted;
-          ctx.fillText(row.role, x + 4, mid - fs * 0.62 + fs * 0.08);
-          ctx.fillStyle = ink;
-          ctx.font = '500 ' + fs + 'px ' + font;
-          ctx.fillText(row.label, x + tw + 5, mid - fs * 0.55);
-        } else {
-          ctx.fillStyle = ink;
-          ctx.font = '500 ' + fs + 'px ' + font;
-          ctx.fillText(row.label, x, mid - fs * 0.55);
+        if (row.depth > 0) { // schematic connector from the parent
+          ctx.strokeStyle = 'rgba(238,245,251,0.7)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(pad + fs * 0.35, y - rowH * 0.25); ctx.lineTo(pad + fs * 0.35, mid - fs * 0.6); ctx.lineTo(x - 2, mid - fs * 0.6); ctx.stroke();
         }
-        ctx.fillStyle = muted;
-        ctx.font = Math.max(11, fs * 0.82) + 'px ' + font;
-        ctx.fillText(row.detail, x, mid + fs * 0.6);
-        // bars
-        var h = Math.max(5, Math.min(9, rowH * 0.16));
-        var we = bw * M.logPos(row.est, MAXV), wa = bw * M.logPos(row.act, MAXV);
-        ctx.strokeStyle = est; ctx.lineWidth = 1.5;
-        ctx.strokeRect(bx + 0.75, mid - h - 2, Math.max(2, we) - 1.5, h);
-        ctx.fillStyle = act;
-        ctx.fillRect(bx, mid + 2, Math.max(2, wa), h);
-        // q-error
+        if (row.role) {
+          ctx.font = (row.role === 'build' ? '700 ' : '') + 11 + 'px ' + MONO;
+          var tw = ctx.measureText(row.role.toUpperCase()).width + 8, th = 15;
+          var ty = mid - fs * 0.6 - th / 2;
+          if (row.role === 'build') { ctx.fillStyle = C.chalk; ctx.fillRect(x, ty, tw, th); ctx.fillStyle = C.deep; }
+          else {
+            ctx.strokeStyle = C.cyan; ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
+            ctx.strokeRect(x + 0.5, ty + 0.5, tw - 1, th - 1); ctx.setLineDash([]); ctx.fillStyle = C.cyan;
+          }
+          ctx.fillText(row.role.toUpperCase(), x + 4, ty + th / 2 + 0.5);
+          ctx.fillStyle = C.chalk;
+          ctx.font = '700 ' + fs + 'px ' + MONO;
+          ctx.fillText(row.label, x + tw + 6, mid - fs * 0.6);
+        } else {
+          ctx.fillStyle = C.chalk;
+          ctx.font = '700 ' + fs + 'px ' + MONO;
+          ctx.fillText(row.label, x, mid - fs * 0.6);
+        }
+        ctx.fillStyle = C.cyan;
+        ctx.font = small + 'px ' + CODE;
+        ctx.fillText(row.detail, x, mid + fs * 0.62);
+        // Bars: the guess as a white dimension line, the real count as a red-pencil stroke.
+        var h = Math.max(5, Math.min(8, rowH * 0.15));
+        var we = Math.max(2, bw * M.logPos(row.est, MAXV)), wa = Math.max(2, bw * M.logPos(row.act, MAXV));
+        var ey = mid - h - 2;
+        ctx.strokeStyle = C.chalk; ctx.lineWidth = 1.25;
+        ctx.strokeRect(bx + 0.6, ey, we - 1.2, h);
+        ctx.beginPath(); ctx.moveTo(bx + we - 0.6, ey - 3); ctx.lineTo(bx + we - 0.6, ey + h + 3); ctx.stroke();
+        ctx.fillStyle = C.pencil; ctx.fillRect(bx, mid + 2, wa, h);
+        ctx.strokeStyle = C.pencilHi; ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, mid + 2.5, wa - 1, h - 1);
+        // q-error: lettered when close, written in red pencil when off, ringed past x10.
         var q = row.qShow;
+        var qx = W - pad - (q >= 10 ? 5 : 0), qy = mid - fs * 0.35;
         ctx.textAlign = 'right';
-        ctx.fillStyle = q >= 10 ? warn : ink;
-        ctx.font = '500 ' + fs + 'px ' + font;
-        ctx.fillText('×' + M.formatQ(q), W - pad, mid - fs * 0.4);
-        ctx.fillStyle = q >= 10 ? warn : muted;
-        ctx.font = Math.max(11, fs * 0.78) + 'px ' + font;
-        ctx.fillText(q < 1.5 ? 'close' : 'off', W - pad, mid + fs * 0.6);
+        if (q < 1.5) {
+          ctx.fillStyle = C.chalk; ctx.font = '700 ' + fs + 'px ' + MONO;
+          ctx.fillText('×' + M.formatQ(q), qx, qy);
+          ctx.fillStyle = C.cyan; ctx.font = small + 'px ' + MONO;
+          ctx.fillText('close', qx, mid + fs * 0.7);
+        } else {
+          ctx.fillStyle = C.pencilHi; ctx.font = '600 ' + Math.round(fs * 1.65) + 'px ' + HAND;
+          var label = '×' + M.formatQ(q);
+          ctx.fillText(label, qx - 2, qy);
+          if (q >= 10) {
+            var lw = ctx.measureText(label).width;
+            ctx.save();
+            ctx.strokeStyle = C.pencilHi; ctx.lineWidth = 1.4;
+            ctx.translate(qx - 2 - lw / 2, qy + 1); ctx.rotate(-0.08);
+            ctx.beginPath(); ctx.ellipse(0, 0, lw / 2 + 6, fs * 0.82, 0, 0.15, Math.PI * 2 + 0.05); ctx.stroke();
+            ctx.restore();
+          }
+          ctx.font = '600 ' + Math.round(fs * 1.2) + 'px ' + HAND;
+          ctx.fillText(row.act < row.est ? 'too many' : 'too few', qx, mid + fs * 0.85);
+        }
         if (k < s.rows.length - 1 || row.slot !== undefined) {
-          ctx.strokeStyle = line; ctx.lineWidth = 1;
+          ctx.strokeStyle = 'rgba(169,220,239,0.3)'; ctx.lineWidth = 1;
           ctx.beginPath(); ctx.moveTo(pad, y + rowH); ctx.lineTo(W - pad, y + rowH); ctx.stroke();
         }
       });
-      // legend under the dial row, right-aligned over the bars
+      // Legend under the dial row, over the bars.
       ctx.textAlign = 'left';
-      ctx.font = Math.max(11, fs * 0.78) + 'px ' + font;
-      ctx.strokeStyle = est; ctx.lineWidth = 1.5; ctx.strokeRect(bx + 0.75, ly - 3.5, 12, 7);
-      ctx.fillStyle = muted; ctx.fillText('guess', bx + 17, ly);
-      var gx = bx + 17 + ctx.measureText('guess').width + 10;
-      ctx.fillStyle = act; ctx.fillRect(gx, ly - 3.5, 12, 7);
-      ctx.fillStyle = muted; ctx.fillText('real', gx + 17, ly);
+      ctx.font = small + 'px ' + MONO;
+      ctx.strokeStyle = C.chalk; ctx.lineWidth = 1.25; ctx.strokeRect(bx + 0.6, ly - 3.5, 13, 7);
+      ctx.fillStyle = C.cyan; ctx.fillText('guess', bx + 18, ly);
+      var gx = bx + 18 + ctx.measureText('guess').width + 10;
+      ctx.fillStyle = C.pencil; ctx.fillRect(gx, ly - 3.5, 13, 7);
+      ctx.strokeStyle = C.pencilHi; ctx.lineWidth = 1; ctx.strokeRect(gx + 0.5, ly - 3, 12, 6);
+      ctx.fillStyle = C.cyan; ctx.fillText('real', gx + 18, ly);
       ctx.globalAlpha = 1;
-    }
-
-    function roundRect(x, y, w, h, rr) {
-      ctx.beginPath();
-      ctx.moveTo(x + rr, y); ctx.lineTo(x + w - rr, y); ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
-      ctx.lineTo(x + w, y + h - rr); ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
-      ctx.lineTo(x + rr, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
-      ctx.lineTo(x, y + rr); ctx.quadraticCurveTo(x, y, x + rr, y);
     }
 
     var tNow = 8.6; // the still frame: skewed, flipped, guesses far from the counts
@@ -819,6 +897,11 @@
 
     resize();
     draw(stateAt(tNow));
+    // The drawing's lettering is self-hosted; redraw the still frame once it has loaded.
+    if (document.fonts && document.fonts.load) {
+      Promise.all([document.fonts.load('400 12px "B612 Mono"'), document.fonts.load('700 12px "B612 Mono"'), document.fonts.load('600 16px Caveat')])
+        .then(function () { if (!playing) draw(stateAt(tNow)); }, function () {});
+    }
     window.addEventListener('resize', function () { resize(); draw(stateAt(tNow)); });
     Kit.onPlay(function (on) {
       playing = on;
