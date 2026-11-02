@@ -16,7 +16,7 @@
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Undertow</h1>
-  <p class="kit-lede">Twenty clients, a queue, four workers. A short burst pushes replies past the clients’ timeout, the clients retry, and the retries keep the service down after the burst has gone. Step through it, then find which of the usual remedies pull it out, and why. Every number comes from one seeded model: the live run in your browser, the many-run figures precomputed from it. The simplification that matters most: new requests keep arriving at a steady rate, as from many independent users, so nothing outside the service ever eases off.</p>
+  <p class="kit-lede">A short load spike makes clients time out and retry, and the retries keep the service down long after the spike has passed. Step through the collapse, then find which remedies actually pull it out.</p>
 
   <section class="kit-stage kit-wide ut-stage" data-kit-stage aria-label="Retry storm simulation">
     <div class="ut-guide">

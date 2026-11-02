@@ -16,7 +16,7 @@
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Cardinal</h1>
-  <p class="kit-lede">A database chooses how to run a query from guesses about how many rows each step will produce. Here a real one, DuckDB, runs in your browser on shop data it generates. Walk the five steps: skew and correlate the data and its guesses part from the real counts; widen a filter on top of a bad guess and it picks a slower plan. This is one optimiser at one version (DuckDB 1.4.3); other databases guess differently, and timings in a browser tab are rough.</p>
+  <p class="kit-lede">DuckDB runs in your browser and shows, for each step of a query, how many rows its optimiser expected beside how many it got. Skew and correlate the data to make those guesses drift, then widen a filter on a bad guess and watch it pick a slower plan.</p>
 
   <section class="kit-stage kit-wide cd-stage" data-kit-stage aria-label="Query plan explorer">
     <canvas class="cd-preview" id="cd-preview" role="img" aria-label="A query plan whose estimated and actual row counts drift apart as a skew dial turns; then the customer filter widens and the plan flips to the slower build side" hidden></canvas>

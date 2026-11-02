@@ -20,6 +20,7 @@ function test(name, fn) {
 function text(s) { return s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); }
 
 var lede = text((html.match(/<p class="kit-lede">([\s\S]*?)<\/p>/) || [])[1] || '');
+var credit = text((html.match(/<p class="kit-credit">([\s\S]*?)<\/p>/) || [])[1] || '');
 var meta = (html.match(/<meta name="description" content="([^"]*)"/) || [])[1] || '';
 var years = data.meta.years;
 var ONES = ['', '-one', '-two', '-three', '-four', '-five', '-six', '-seven', '-eight', '-nine'];
@@ -43,16 +44,17 @@ test('the meta description and the lede count the rolls the same way, and match 
   });
 });
 
-test('the lede carries both licence attributions, Statistics Canada in its required form', function () {
-  assert.ok(lede.indexOf('Contains information licensed under the Open Government Licence – Vancouver') >= 0);
+test('the paragraph and credit line carry both licence attributions, Statistics Canada in its required form', function () {
+  var attribution = lede + ' ' + credit;
+  assert.ok(attribution.indexOf('Contains information licensed under the Open Government Licence – Vancouver') >= 0);
   // Statistics Canada Open Licence: "Adapted from Statistics Canada, name of product,
   // reference date. This does not constitute an endorsement by Statistics Canada of this product."
   var cpiYears = Object.keys(data.meta.cpi.values).map(Number).filter(function (y) {
     return y >= years[0] - data.meta.valuation_lag && y <= years[years.length - 1] - data.meta.valuation_lag;
   });
   var ref = Math.min.apply(null, cpiYears) + '–' + Math.max.apply(null, cpiYears);
-  assert.ok(lede.indexOf('Adapted from Statistics Canada, Table 18-10-0005-01 (' + ref + ')') >= 0, 'reference date ' + ref + ' missing');
-  assert.ok(/does not constitute an endorsement by Statistics Canada of this product/.test(lede));
+  assert.ok(attribution.indexOf('Adapted from Statistics Canada, Table 18-10-0005-01 (' + ref + ')') >= 0, 'reference date ' + ref + ' missing');
+  assert.ok(/does not constitute an endorsement by Statistics Canada of this product/.test(attribution));
 });
 
 test('the two main caveats sit beside the map, before the controls and the ledger', function () {

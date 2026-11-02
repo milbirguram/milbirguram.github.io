@@ -16,7 +16,8 @@
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Almanac</h1>
-  <p class="kit-lede">A small data pipeline meant to run once a day: it fetches the hourly Air Quality Health Index for seven western Canadian cities, checks each day against a written contract, stores it, and reports on itself. The answer comes first, then the pipeline’s own health, run by run. The readings are real-time and unverified, and the record begins on 4 August 2026, so the counts are hours since then, not this year. Data Source: Environment and Climate Change Canada, under its <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">data licence</a>.</p>
+  <p class="kit-lede">A daily pipeline fetches hourly air-quality readings for seven western Canadian cities, checks each day against a written data contract, and reports on its own health. The readings are real-time and unverified, and the record begins on 4 August 2026.</p>
+  <p class="kit-credit">Data Source: Environment and Climate Change Canada, under its <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">data licence</a>.</p>
 
   <section class="kit-stage kit-wide almanac" data-kit-stage aria-label="Almanac: the answer and the pipeline’s health">
     <canvas id="preview" class="preview" hidden role="img" aria-label="An almanac sheet: the total of high-risk hours, the pipeline's run calendar under weekday heads, mostly full discs (passed) with some half discs (warnings), re-inked day by day, and an orange hatched chart of daily high-risk hours in a ruled frame."></canvas>

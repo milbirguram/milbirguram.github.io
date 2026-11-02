@@ -16,7 +16,8 @@
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1 class="stencil-title">Stencil</h1>
-  <p class="kit-lede">A small U-Net outlines cell nuclei in microscope images it never saw in training, and every score is recomputed from the pixels as you move a control. The caveat: this model is confident, so across the threshold slider pixel accuracy and Dice both move only a little and agree on the best cut. The gap shows when you press “Predict nothing”: pixel accuracy still reads 0.70–0.96, because most of each image is background, and Dice falls to zero. Images: BBBC039v1 (Caicedo et al.), Broad Bioimage Benchmark Collection, CC0.</p>
+  <p class="kit-lede">A small U-Net outlines cell nuclei in microscope images it never saw in training, and every score is recomputed as you move the threshold. Press “Predict nothing” and pixel accuracy still reads 0.70–0.96, because most of each image is background, while Dice falls to zero.</p>
+  <p class="kit-credit">Images: BBBC039v1 (Caicedo et al.), Broad Bioimage Benchmark Collection, CC0.</p>
 
   <section class="kit-stage kit-wide stencil-stage" data-kit-stage aria-label="Segmentation viewer">
     <header class="readout-head" aria-label="Acquisition">
