@@ -46,6 +46,8 @@
         <span><i class="ut-g ut-g-first ut-g-old"></i>faded: near its timeout</span>
         <span><i class="ut-g ut-g-dead"></i>client gave up</span>
         <span><i class="ut-g ut-g-good"></i>reply in time</span>
+        <span><i class="ut-g ut-g-contour"></i>contour: waits past the timeout</span>
+        <span><span class="ut-sounding">1<sub>2</sub></span>soundings: seconds waited (1.2 s)</span>
       </div>
       <div class="ut-transport">
         <button type="button" class="kit-button" id="ut-play">Pause</button>
@@ -64,15 +66,15 @@
 
     <div class="ut-charts">
       <figure class="ut-chart">
-        <figcaption>Requests per second: <span class="ut-key ut-key-offered">offered</span> <span class="ut-key ut-key-sent">sent, with retries</span> <span class="ut-key ut-key-good">goodput</span> <span class="ut-key ut-key-lost">not served in time</span></figcaption>
-        <canvas id="ut-c-rate" role="img" aria-label="Chart of offered load, requests sent and goodput over time"></canvas>
+        <figcaption><span class="ut-cap">Tide gauge.</span> Requests per second: <span class="ut-key ut-key-offered">offered</span> <span class="ut-key ut-key-sent">sent, with retries</span> <span class="ut-key ut-key-good">goodput</span> <span class="ut-key ut-key-lost">not served in time</span></figcaption>
+        <canvas id="ut-c-rate" role="img" aria-label="Chart of offered load, requests sent and goodput over time, with a tide staff showing the current goodput"></canvas>
       </figure>
       <figure class="ut-chart">
-        <figcaption>Queue length <span class="ut-muted">(holds 200)</span></figcaption>
+        <figcaption><span class="ut-cap">Queue length</span> <span class="ut-muted">(holds 200)</span></figcaption>
         <canvas id="ut-c-queue" role="img" aria-label="Chart of queue length over time"></canvas>
       </figure>
       <figure class="ut-chart">
-        <figcaption>p99 reply time <span class="ut-muted">(dashed: the timeout)</span></figcaption>
+        <figcaption><span class="ut-cap">p99 reply time</span> <span class="ut-muted">(dashed: the timeout)</span></figcaption>
         <canvas id="ut-c-p99" role="img" aria-label="Chart of 99th percentile reply time over time"></canvas>
       </figure>
     </div>
