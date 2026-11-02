@@ -4,16 +4,52 @@
   var S = window.Stereo;
   var Kit = window.Kit || { preview: false, embedded: false, reducedMotion: false, playing: true, onPlay: function (cb) { cb(true); } };
   var N = S.N_DAYS, DAY = S.DAY, HOUR = S.HOUR;
+  // An anaglyph: every layer is drawn twice, the record in red and the truth in cyan, added
+  // together on a dark slate field. Where the two agree they sum to white; where they part,
+  // each shows in its own colour. The same tokens are in style.css.
   var COL = {
-    ink: '#252821', text: '#343630', muted: '#686d62', line: '#dedfd7', lineStrong: '#b5bdaf', truth: '#7d8377',
-    fault: '#a14a2f', faultWash: 'rgba(161,74,47,0.26)', faultGlow: 'rgba(161,74,47,0.30)',
-    signal: '#58705a', signalWash: 'rgba(88,112,90,0.13)', signalGlow: 'rgba(88,112,90,0.30)',
-    wash: '#f3f3ed', bg: '#faf9f6', water: '#e3e9e6', route: '#e6e6de'
+    field: '#20242a', deep: '#191c21',
+    red: '#ff4b3e', cyan: '#2ec4d6', white: '#f1efe8', buff: '#d8c8a2',
+    dim: '#a9a79f',                          // secondary text, 6:1 on the field
+    rule: 'rgba(241,239,232,0.13)', ruleStrong: 'rgba(241,239,232,0.30)',
+    context: 'rgba(241,239,232,0.6)',        // lines that are neither record nor truth (the weather)
+    wash: 'rgba(241,239,232,0.07)',          // days on which the world itself moved
+    water: 'rgba(46,196,214,0.13)'
   };
   function easeInOut(p) { return p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; }
   function easeOut(p) { return 1 - Math.pow(1 - p, 3); }
-  var FONT = (getComputedStyle(document.documentElement).getPropertyValue('--font') || '').trim() || 'system-ui, sans-serif';
-  var MONO = (getComputedStyle(document.documentElement).getPropertyValue('--mono') || '').trim() || 'monospace';
+  var FONT = '"Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
+  var MONO = '"Space Mono", ui-monospace, Menlo, Consolas, monospace';
+  // Canvas text does not wait for a web font: ask for the faces, then draw again once they are in.
+  function whenFonts(faces, cb) {
+    if (!document.fonts || !document.fonts.load) return;
+    Promise.all(faces.map(function (f) { return document.fonts.load(f); })).then(cb, function () { /* system fallback is fine */ });
+  }
+  // The gap between record and truth: red and cyan hatching, the two images out of register.
+  var hatchTile = null;
+  function hatch(ctx) {
+    if (!hatchTile) {
+      hatchTile = document.createElement('canvas');
+      hatchTile.width = hatchTile.height = 8;
+      var x = hatchTile.getContext('2d');
+      x.lineWidth = 1.3;
+      [[0, 'rgba(255,75,62,0.55)'], [4, 'rgba(46,196,214,0.55)']].forEach(function (s) {
+        x.strokeStyle = s[1];
+        x.beginPath();
+        for (var k = -8; k <= 8; k += 8) { x.moveTo(s[0] + k - 1, 9); x.lineTo(s[0] + k + 9, -1); }
+        x.stroke();
+      });
+    }
+    return ctx.createPattern(hatchTile, 'repeat');
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
 
   // ---------- small helpers ----------
   function $(id) { return document.getElementById(id); }
@@ -51,8 +87,13 @@
   function xOf(g, d) { return g.x0 + (d + 0.5) / N * (g.x1 - g.x0); }
 
   // Each row: obs (what this layer records), optional tru (the same quantity in the true world),
-  // optional dots (actual rides under a forecast). o.tint marks where the record parts from the
-  // truth (a fault) or where the world itself moved (a real change), and colours the line there.
+  // optional dots (actual rides under a forecast). A row with tru is drawn as a stereo pair: the
+  // record in red, the truth in cyan, added together, so days on which they agree come out white
+  // and days on which they part show as two lines (the truth dashed there, so the pair does not
+  // rest on colour alone). Rows marked truth (the world) are the cyan image only; rows marked
+  // weather are context. A row without tru (the truth hidden) is the red image alone.
+  // o.tint marks where the world itself moved (a real change) and thickens the line there.
+  function rowInk(row) { return row.weather ? COL.context : row.truth ? COL.cyan : row.tru ? COL.white : COL.red; }
   function drawRows(ctx, w, rows, o) {
     var g = stripGeom(w, o.gutter), y = 0, di = clampDay(o.day);
     var reveal = o.reveal == null ? N - 1 : o.reveal;
@@ -60,7 +101,7 @@
     rows.forEach(function (row, ri) {
       var h = row.h || 30, top = y + 6, bot = y + h - 5;
       if (o.heat) {
-        ctx.fillStyle = COL.signalWash;
+        ctx.fillStyle = COL.wash;
         ctx.fillRect(xOf(g, o.heat[0] - 0.5), y + 1, xOf(g, o.heat[1] + 0.5) - xOf(g, o.heat[0] - 0.5), h - 2);
       }
       var vals = [], d;
@@ -75,27 +116,27 @@
       if (hi - lo < 1e-9) hi = lo + 1;
       var padv = (hi - lo) * 0.06; if (!row.zero) lo -= padv; hi += padv;
       var Y = function (v) { return bot - (v - lo) / (hi - lo) * (bot - top); };
-      var hot = null;
+      var hot = null, ink = rowInk(row);
+      var same = function (dd) { return !row.tru || (finite(row.obs[dd]) && finite(row.tru[dd]) && row.obs[dd] === row.tru[dd]); };
       if (row.kind === 'bars') {
+        // how much of the record is not as it was: each bar split into a red half and a cyan half,
+        // the two images side by side and never fused
         var bw = Math.max(1.5, (g.x1 - g.x0) / N * 0.62);
-        ctx.fillStyle = COL.line;
+        ctx.fillStyle = COL.rule;
         ctx.fillRect(g.x0, bot, g.x1 - g.x0, 1);
-        ctx.fillStyle = row.color || COL.ink;
         for (d = 0; d <= reveal; d++) {
           if (!(row.obs[d] > 0)) continue;
           var yy = Math.min(Y(row.obs[d]), bot - 1.5);
-          ctx.fillRect(xOf(g, d) - bw / 2, yy, bw, bot - yy + 1);
+          ctx.fillStyle = COL.red; ctx.fillRect(xOf(g, d) - bw / 2, yy, bw / 2, bot - yy + 1);
+          ctx.fillStyle = COL.cyan; ctx.fillRect(xOf(g, d), yy, bw / 2, bot - yy + 1);
         }
       } else {
-        if (o.tint && !(row.weather && !o.tint.weather)) {
+        if (o.tint && o.tint.days && !(row.weather && !o.tint.weather)) {
           hot = new Array(N);
-          for (d = 0; d < N; d++) {
-            hot[d] = o.tint.days ? !!o.tint.days[d]
-              : !!(row.tru && finite(row.obs[d]) && finite(row.tru[d]) && row.obs[d] !== row.tru[d]);
-          }
+          for (d = 0; d < N; d++) hot[d] = !!o.tint.days[d];
         }
         if (row.tru) {
-          // the gap between what this layer sees and the truth
+          // the gap between what this layer sees and the truth, hatched in both inks
           var pts = [];
           for (d = 0; d <= reveal; d++) if (finite(row.obs[d]) && finite(row.tru[d])) pts.push(d);
           if (pts.length > 1) {
@@ -103,31 +144,44 @@
             pts.forEach(function (dd, i) { var x = xOf(g, dd), v = Y(row.obs[dd]); if (i) ctx.lineTo(x, v); else ctx.moveTo(x, v); });
             for (var k = pts.length - 1; k >= 0; k--) ctx.lineTo(xOf(g, pts[k]), Y(row.tru[pts[k]]));
             ctx.closePath();
-            ctx.fillStyle = COL.faultWash;
+            ctx.fillStyle = hatch(ctx);
             ctx.fill();
           }
-          line(ctx, g, row.tru, Y, COL.truth, 1.3, [4, 3], reveal);
         }
         if (row.dots) {
-          // the actual rides under the forecast: muted grey (5:1 on the page), clear of the line
-          ctx.fillStyle = COL.muted;
+          // the actual rides under the forecast: small grey dots, clear of the lines
+          ctx.fillStyle = COL.dim;
           for (d = 0; d <= reveal; d++) if (finite(row.dots[d])) { ctx.beginPath(); ctx.arc(xOf(g, d), Y(row.dots[d]), 1.9, 0, 6.283); ctx.fill(); }
         }
-        line(ctx, g, row.obs, Y, row.color || COL.ink, 1.5, null, reveal);
-        if (hot) hotLine(ctx, g, row.obs, Y, o.tint.color, 2.1, reveal, hot);
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        if (row.tru) {
+          line(ctx, g, row.tru, Y, COL.cyan, 1.6, null, reveal, function (dd) { return same(dd - 1) && same(dd); });
+          line(ctx, g, row.tru, Y, COL.cyan, 1.6, [4, 3], reveal, function (dd) { return !(same(dd - 1) && same(dd)); });
+          line(ctx, g, row.obs, Y, COL.red, 1.6, null, reveal);
+        } else {
+          line(ctx, g, row.obs, Y, row.weather ? COL.context : row.truth ? COL.cyan : COL.red, row.weather ? 1.3 : 1.6, null, reveal);
+        }
+        ctx.restore();
+        if (hot) hotLine(ctx, g, row.obs, Y, ink, 2.6, reveal, hot);
         if (row.rain) {
-          ctx.fillStyle = COL.muted;
+          ctx.fillStyle = COL.dim;
           for (d = 0; d <= reveal; d++) if (row.rain[d]) ctx.fillRect(xOf(g, d) - 1, bot + 1, 2, 3);
         }
-        // where the cursor meets this row's line
+        // where the cursor meets this row: one white dot where record and truth agree, a red and a cyan one where they part
         if (showCursor && di <= reveal) {
           var v = valueAt(row.obs, o.day);
           if (finite(v)) {
-            var px = xOf(g, o.day), py = Y(v);
-            ctx.fillStyle = COL.bg;
-            ctx.beginPath(); ctx.arc(px, py, 4.2, 0, 6.283); ctx.fill();
-            ctx.fillStyle = hot && hot[di] ? o.tint.color : COL.ink;
-            ctx.beginPath(); ctx.arc(px, py, 2.7, 0, 6.283); ctx.fill();
+            var px = xOf(g, o.day), py = Y(v), split = row.tru && !same(di);
+            var tv0 = split ? valueAt(row.tru, o.day) : NaN;
+            ctx.fillStyle = COL.field;
+            ctx.beginPath(); ctx.arc(px, py, 4.4, 0, 6.283); ctx.fill();
+            if (finite(tv0)) { ctx.beginPath(); ctx.arc(px, Y(tv0), 4.4, 0, 6.283); ctx.fill(); }
+            ctx.save(); ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = split ? COL.red : ink;
+            ctx.beginPath(); ctx.arc(px, py, 2.8, 0, 6.283); ctx.fill();
+            if (finite(tv0)) { ctx.fillStyle = COL.cyan; ctx.beginPath(); ctx.arc(px, Y(tv0), 2.8, 0, 6.283); ctx.fill(); }
+            ctx.restore();
           }
         }
       }
@@ -135,28 +189,29 @@
         // label on the left, today's value on the right of the gutter, the truth after it if they differ
         var my = y + h / 2 + 0.5, right = g.x0 - 8;
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = COL.muted; ctx.font = '11px ' + FONT;
+        ctx.fillStyle = COL.dim; ctx.font = '11.5px ' + FONT;
         ctx.fillText(row.label, 0, my);
         var lw = ctx.measureText(row.label).width;
         if (row.fmt) {
           var oTxt = row.fmt(row.obs[di]);
           var dif = row.kind !== 'bars' && row.tru && finite(row.tru[di]) && row.tru[di] !== row.obs[di];
-          var tTxt = dif ? ' ≠ ' + row.fmt(row.tru[di]).replace(/ min$/, '') : '';
+          var tTxt = dif ? ' ≠' + row.fmt(row.tru[di]).replace(/ min$/, '') : '';
+          ctx.font = '11px ' + MONO;
           var tw = tTxt ? ctx.measureText(tTxt).width : 0;
-          ctx.font = (row.lead ? '500 13px ' : '12px ') + FONT;
+          ctx.font = (row.lead ? '700 13px ' : '12px ') + MONO;
           var vw = ctx.measureText(oTxt).width;
           if (tw && lw + 8 + vw + tw > right) { tw = 0; tTxt = ''; }
           if (lw + 8 + vw <= right) {
             ctx.textAlign = 'right';
-            ctx.fillStyle = dif ? COL.fault : COL.ink;
+            ctx.fillStyle = dif ? COL.red : row.truth ? COL.cyan : COL.white;
             ctx.fillText(oTxt, right - tw, my);
-            if (tTxt) { ctx.font = '11px ' + FONT; ctx.fillStyle = COL.muted; ctx.fillText(tTxt, right, my); }
+            if (tTxt) { ctx.font = '11px ' + MONO; ctx.fillStyle = COL.cyan; ctx.fillText(tTxt, right, my); }
             ctx.textAlign = 'left';
           }
         }
       } else if (!o.noLabels) {
         ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = COL.muted;
+        ctx.fillStyle = COL.dim;
         ctx.font = '11px ' + FONT;
         ctx.fillText(row.label, 0, y + (h < 30 ? 12 : 13));
         if (h >= 26 && row.fmt) {
@@ -164,29 +219,34 @@
           var vy = y + (big ? 30 : Math.min(27, h - 3));
           var obsTxt = row.fmt(row.obs[di]);
           var differs = row.kind !== 'bars' && row.tru && finite(row.tru[di]) && row.tru[di] !== row.obs[di];
-          ctx.font = (big ? '500 14px ' : '12px ') + FONT;
-          ctx.fillStyle = differs ? COL.fault : COL.ink;
+          ctx.font = (big ? '700 13px ' : '12px ') + MONO;
+          ctx.fillStyle = differs ? COL.red : row.truth ? COL.cyan : COL.white;
           ctx.fillText(obsTxt, 0, vy);
           if (differs) {
             var ow = ctx.measureText(obsTxt).width;
-            ctx.font = '11px ' + FONT;
-            var tt = ' ≠ ' + row.fmt(row.tru[di]).replace(/ min$/, '');
-            if (ow + ctx.measureText(tt).width <= g.x0 - 8) { ctx.fillStyle = COL.muted; ctx.fillText(tt, ow, vy); }
+            ctx.font = '11px ' + MONO;
+            var tt = '≠' + row.fmt(row.tru[di]).replace(/ min$/, '');
+            if (ow + 3 + ctx.measureText(tt).width <= g.x0 - 6) { ctx.fillStyle = COL.cyan; ctx.fillText(tt, ow + 3, vy); }
           }
         }
       }
       if (ri < rows.length - 1 && !o.noSeparators) {
-        ctx.fillStyle = COL.line;
+        ctx.fillStyle = COL.rule;
         ctx.fillRect(g.x0, y + h - 0.5, g.x1 - g.x0, 1);
       }
       y += h;
     });
     if (o.marker != null) {
+      // the day of the change: a fault's marker is a red and a cyan line out of register; a real change's is white
       ctx.save();
-      ctx.strokeStyle = o.markerColor || COL.fault;
       ctx.lineWidth = 1.2; ctx.setLineDash([2, 3]);
       var mx = Math.round(xOf(g, o.marker - 0.5)) + 0.5;
-      ctx.beginPath(); ctx.moveTo(mx, 0); ctx.lineTo(mx, y); ctx.stroke();
+      if (o.markerFault) {
+        ctx.strokeStyle = COL.red; ctx.beginPath(); ctx.moveTo(mx - 1.5, 0); ctx.lineTo(mx - 1.5, y); ctx.stroke();
+        ctx.strokeStyle = COL.cyan; ctx.beginPath(); ctx.moveTo(mx + 1.5, 0); ctx.lineTo(mx + 1.5, y); ctx.stroke();
+      } else {
+        ctx.strokeStyle = COL.white; ctx.beginPath(); ctx.moveTo(mx, 0); ctx.lineTo(mx, y); ctx.stroke();
+      }
       ctx.restore();
     }
     if (showCursor) {
@@ -194,15 +254,15 @@
       var cx = Math.round(xOf(g, o.day)) + 0.5;
       ctx.save();
       ctx.globalCompositeOperation = 'destination-over';
-      ctx.fillStyle = 'rgba(37,40,33,0.5)';
+      ctx.fillStyle = 'rgba(241,239,232,0.38)';
       ctx.fillRect(cx - 0.5, 0, 1, y);
       ctx.restore();
     }
     if (o.axis) {
       // weekly ticks on Mondays, and three dates
-      ctx.fillStyle = COL.lineStrong;
+      ctx.fillStyle = COL.ruleStrong;
       for (var dd = 0; dd < N; dd += 7) ctx.fillRect(Math.round(xOf(g, dd - 0.5)), y + 1, 1, 4);
-      ctx.fillStyle = COL.muted; ctx.font = '11px ' + FONT; ctx.textBaseline = 'top';
+      ctx.fillStyle = COL.dim; ctx.font = '11px ' + MONO; ctx.textBaseline = 'top';
       [[0, '2 Jun', 'left'], [29, '1 Jul', 'center'], [N - 1, '31 Jul', 'right']].forEach(function (a) {
         ctx.textAlign = a[2];
         ctx.fillText(a[1], a[2] === 'left' ? xOf(g, -0.5) : a[2] === 'right' ? xOf(g, N - 0.5) : xOf(g, a[0] - 0.5), y + 6);
@@ -219,21 +279,25 @@
     if (!finite(arr[a]) || !finite(arr[a + 1])) return arr[a];
     return arr[a] + (arr[a + 1] - arr[a]) * f;
   }
-  function line(ctx, g, arr, Y, color, width, dash, reveal) {
+  // A series as a line; with `keep`, only the segments (d-1 → d) for which keep(d) holds.
+  function line(ctx, g, arr, Y, color, width, dash, reveal, keep) {
     ctx.save();
-    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = dash ? 'butt' : 'round';
     if (dash) ctx.setLineDash(dash);
     ctx.beginPath();
     var on = false;
     for (var d = 0; d <= reveal; d++) {
       if (!finite(arr[d])) { on = false; continue; }
       var x = xOf(g, d), v = Y(arr[d]);
-      if (on) ctx.lineTo(x, v); else { ctx.moveTo(x, v); on = true; }
+      if (keep && d > 0 && !keep(d)) { on = false; }
+      if (on) ctx.lineTo(x, v);
+      else if (keep && d > 0 && keep(d) && finite(arr[d - 1])) { ctx.moveTo(xOf(g, d - 1), Y(arr[d - 1])); ctx.lineTo(x, v); on = true; }
+      else if (!keep) { ctx.moveTo(x, v); on = true; }
     }
     ctx.stroke();
     ctx.restore();
   }
-  // Overdraw the stretches of a line where `hot` is set, in the tint colour.
+  // Overdraw the stretches of a line where `hot` is set, heavier, in the row's own ink.
   function hotLine(ctx, g, arr, Y, color, width, reveal, hot) {
     ctx.save();
     ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -316,69 +380,97 @@
       var w = cv.clientWidth || 320, h = cv.clientHeight || 200;
       var ctx = sizeCanvas(cv, w, h);
       cv.style.height = '100%';
-      var big = w >= 420, fs = big ? 13 : 12;
+      var big = w >= 420, fs = big ? 12 : 11;
       var padX = big ? 18 : 12, padY = big ? 16 : 10;
+      var spaced = 'letterSpacing' in ctx;
       ctx.font = '500 ' + fs + 'px ' + FONT;
-      var gutter = Math.ceil(ctx.measureText('Dashboard').width) + 22;
-      var x0 = padX + gutter, x1 = w - padX;
+      if (spaced) ctx.letterSpacing = '0.9px';
+      var labW = 0;
+      bands.forEach(function (b) { labW = Math.max(labW, ctx.measureText(b.name.toUpperCase()).width); });
+      if (spaced) ctx.letterSpacing = '0px';
+      var tabW = Math.ceil(labW) + 14, tabH = big ? 21 : 19;
+      var x0 = padX + tabW + (big ? 16 : 12), x1 = w - padX;
       var bandH = (h - 2 * padY) / bands.length;
       var X = function (d) { return x0 + (d + 0.5) / N * (x1 - x0); };
       var ph = phase(t), fx = Math.round(X(F - 0.5)) + 0.5;
       // the pulse head climbs from the log band to the top of the model band
       var ySrc = padY + SRC * bandH + bandH * 0.62, yTop = padY + 5;
       var yHead = ph.rise < 0 ? Infinity : ySrc + (yTop - ySrc) * ph.rise;
+      var lw = big ? 1.8 : 1.6;
       ctx.globalAlpha = ph.alpha;
       bands.forEach(function (b, i) {
         var top = padY + i * bandH, iTop = top + 7, iBot = top + bandH - 7;
         var reached = b.hit && yHead <= top + bandH - 4;
-        // edge bar and name
-        ctx.fillStyle = reached ? COL.fault : COL.line;
-        ctx.fillRect(padX, top + 5, 3, bandH - 10);
-        ctx.fillStyle = COL.ink; ctx.font = '500 ' + fs + 'px ' + FONT; ctx.textBaseline = 'middle';
-        ctx.fillText(b.name, padX + 11, top + bandH / 2);
-        if (i < bands.length - 1) { ctx.fillStyle = COL.line; ctx.fillRect(padX, Math.round(top + bandH) - 0.5, w - 2 * padX, 1); }
+        if (i < bands.length - 1) { ctx.fillStyle = COL.rule; ctx.fillRect(padX, Math.round(top + bandH) - 0.5, w - 2 * padX, 1); }
+        // the layer's name on its mount; once the fault reaches it, the mount slips out of register
+        var ty = Math.round(top + (bandH - tabH) / 2);
+        if (reached) {
+          ctx.save(); ctx.globalCompositeOperation = 'lighter';
+          ctx.fillStyle = COL.red; roundRect(ctx, padX - 2.5, ty, tabW, tabH, 3); ctx.fill();
+          ctx.fillStyle = COL.cyan; roundRect(ctx, padX + 2.5, ty, tabW, tabH, 3); ctx.fill();
+          ctx.restore();
+        }
+        ctx.fillStyle = COL.buff; roundRect(ctx, padX, ty, tabW, tabH, 3); ctx.fill();
+        ctx.strokeStyle = 'rgba(32,36,42,0.3)'; ctx.lineWidth = 1; roundRect(ctx, padX + 2.5, ty + 2.5, tabW - 5, tabH - 5, 1.5); ctx.stroke();
+        ctx.fillStyle = COL.field; ctx.font = '500 ' + fs + 'px ' + FONT; ctx.textBaseline = 'middle';
+        if (spaced) ctx.letterSpacing = '0.9px';
+        ctx.fillText(b.name.toUpperCase(), padX + 7, ty + tabH / 2 + 0.5);
+        if (spaced) ctx.letterSpacing = '0px';
         var Y = function (v) { return iBot - (v - b.lo) / (b.hi - b.lo) * (iBot - iTop); };
         var po = pts(b.obs, ph.r, X, Y), pt = b.tru ? pts(b.tru, ph.r, X, Y) : null;
-        ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-        if (reached && pt && ph.r > F) {
+        var split = reached && pt && ph.r > F;
+        ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = lw;
+        if (split) {
           // the gap: from the fault day on, between the record and the truth
           var go = po.filter(function (p) { return p[2] >= F - 1; }), gt = pt.filter(function (p) { return p[2] >= F - 1; });
           if (go.length > 1 && gt.length > 1) {
             ctx.beginPath();
             go.forEach(function (p, k) { if (k) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); });
             for (var k = gt.length - 1; k >= 0; k--) ctx.lineTo(gt[k][0], gt[k][1]);
-            ctx.closePath(); ctx.fillStyle = COL.faultWash; ctx.fill();
+            ctx.closePath(); ctx.fillStyle = hatch(ctx); ctx.fill();
           }
-          ctx.save(); ctx.setLineDash([4, 3]); ctx.strokeStyle = COL.truth; ctx.lineWidth = 1.3;
-          stroke(ctx, pt, F - 1, N); ctx.restore();
         }
-        ctx.strokeStyle = COL.ink; ctx.lineWidth = big ? 1.8 : 1.6;
-        stroke(ctx, po, 0, reached ? F - 1 : N);
-        if (reached) { ctx.strokeStyle = COL.fault; ctx.lineWidth = big ? 2.4 : 2.1; stroke(ctx, po, F - 1, N); }
-        // the pen: a dot at the end of each line while it draws
+        // the world is the true image alone (cyan); every other layer is record and truth fused (white) until they part
+        ctx.strokeStyle = b.hit ? COL.white : COL.cyan;
+        stroke(ctx, po, 0, split ? F - 1 : N);
+        if (split) {
+          ctx.save(); ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = COL.cyan; stroke(ctx, pt, F - 1, N);
+          ctx.strokeStyle = COL.red; stroke(ctx, po, F - 1, N);
+          ctx.restore();
+        }
+        // the pen: a dot at the end of each line while it draws (two, once the images have parted)
         if (ph.pen && po.length) {
-          var last = po[po.length - 1];
-          ctx.fillStyle = reached && last[2] > F ? COL.fault : COL.ink;
-          ctx.beginPath(); ctx.arc(last[0], last[1], big ? 2.8 : 2.4, 0, 6.283); ctx.fill();
+          var last = po[po.length - 1], lt = split && pt.length ? pt[pt.length - 1] : null, r0 = big ? 2.8 : 2.4;
+          ctx.fillStyle = lt && last[2] > F ? COL.red : b.hit ? COL.white : COL.cyan;
+          ctx.beginPath(); ctx.arc(last[0], last[1], r0, 0, 6.283); ctx.fill();
+          if (lt && last[2] > F) { ctx.fillStyle = COL.cyan; ctx.beginPath(); ctx.arc(lt[0], lt[1], r0, 0, 6.283); ctx.fill(); }
         }
       });
-      // the fault: a line rising from the log, with a soft glow at its head
+      // the fault: a red and a cyan line rising together from the log, out of register
       if (ph.rise >= 0) {
-        var yH = Math.max(yTop, yHead);
-        ctx.strokeStyle = COL.fault; ctx.lineWidth = big ? 2 : 1.7; ctx.setLineDash(ph.rise >= 1 ? [2, 3] : []);
-        ctx.beginPath(); ctx.moveTo(fx, ySrc); ctx.lineTo(fx, yH); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle = COL.fault; ctx.beginPath(); ctx.arc(fx, ySrc, big ? 3.6 : 3.2, 0, 6.283); ctx.fill();
-        if (ph.rise < 1) {
-          var gr = ctx.createRadialGradient(fx, yH, 0, fx, yH, big ? 16 : 13);
-          gr.addColorStop(0, COL.faultGlow); gr.addColorStop(1, 'rgba(250,249,246,0)');
-          ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(fx, yH, big ? 16 : 13, 0, 6.283); ctx.fill();
-          ctx.fillStyle = COL.fault; ctx.beginPath(); ctx.arc(fx, yH, big ? 5 : 4.2, 0, 6.283); ctx.fill();
-        }
+        var yH = Math.max(yTop, yHead), off = big ? 1.6 : 1.4;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        ctx.lineWidth = big ? 1.8 : 1.6; ctx.setLineDash(ph.rise >= 1 ? [2, 3] : []);
+        ctx.strokeStyle = COL.red; ctx.beginPath(); ctx.moveTo(fx - off, ySrc); ctx.lineTo(fx - off, yH); ctx.stroke();
+        ctx.strokeStyle = COL.cyan; ctx.beginPath(); ctx.moveTo(fx + off, ySrc); ctx.lineTo(fx + off, yH); ctx.stroke();
+        ctx.setLineDash([]);
+        var pair = function (y, r) {
+          ctx.fillStyle = COL.red; ctx.beginPath(); ctx.arc(fx - off, y, r, 0, 6.283); ctx.fill();
+          ctx.fillStyle = COL.cyan; ctx.beginPath(); ctx.arc(fx + off, y, r, 0, 6.283); ctx.fill();
+        };
+        pair(ySrc, big ? 3.6 : 3.2);
+        if (ph.rise < 1) pair(yH, big ? 4.8 : 4.2);
+        ctx.restore();
         // name the fault just before its source, below the line (which runs higher before the fault)
-        ctx.font = (big ? '500 12px ' : '500 11px ') + FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'right';
-        ctx.lineWidth = 4; ctx.strokeStyle = COL.bg; ctx.lineJoin = 'round';
-        var lx = fx - 7, ly = Math.min(ySrc + bandH * 0.12, padY + (SRC + 1) * bandH - 8);
-        ctx.strokeText('dock fault', lx, ly); ctx.fillStyle = COL.fault; ctx.fillText('dock fault', lx, ly);
+        ctx.font = '500 ' + (big ? 13 : 12) + 'px ' + FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'right';
+        ctx.lineWidth = 5; ctx.strokeStyle = COL.field; ctx.lineJoin = 'round';
+        var lx = fx - 8, ly = Math.min(ySrc + bandH * 0.12, padY + (SRC + 1) * bandH - 8);
+        ctx.strokeText('dock fault', lx, ly);
+        // printed out of register: a red and a cyan copy either side of the white
+        ctx.fillStyle = COL.red; ctx.fillText('dock fault', lx - 1.2, ly);
+        ctx.fillStyle = COL.cyan; ctx.fillText('dock fault', lx + 1.2, ly);
+        ctx.fillStyle = COL.white; ctx.fillText('dock fault', lx, ly);
         ctx.textAlign = 'left';
       }
       ctx.globalAlpha = 1;
@@ -399,6 +491,7 @@
       else { if (raf) cancelAnimationFrame(raf); raf = 0; draw(null); }
     });
     window.addEventListener('resize', function () { if (!playing) draw(null); });
+    whenFonts(['500 12px "Space Grotesk"'], function () { if (!playing) draw(null); });
   }
 
   // =====================================================================================
@@ -582,14 +675,14 @@
         rows.push({ label: 'trips out', h: 38, lead: true, obs: slice(o.pipe.tripsOut), tru: tv ? slice(t.pipe.tripsOut) : null, fmt: fmtInt });
         rows.push({ label: 'rows removed', obs: slice(o.pipe.removed), tru: tv ? slice(t.pipe.removed) : null, fmt: fmtInt, zero: true });
         // output rows lost, added, moved to another date or given another length, per nightly run
-        if (tv) rows.push({ label: 'not as it was', kind: 'bars', obs: slice(cur.cmp.pipeline.perPart), zero: true, color: COL.fault, fmt: fmtInt });
+        if (tv) rows.push({ label: 'not as it was', kind: 'bars', obs: slice(cur.cmp.pipeline.perPart), zero: true, fmt: fmtInt });
       } else if (layer === 'log') {
         rows.push({ label: 'events', h: 38, lead: true, obs: slice(o.log.perPart.events), tru: tv ? slice(t.log.perPart.events) : null, fmt: fmtInt });
-        if (tv) rows.push({ label: 'not as it was', kind: 'bars', obs: slice(cur.cmp.log.perPart), zero: true, color: COL.fault, fmt: fmtInt });
+        if (tv) rows.push({ label: 'not as it was', kind: 'bars', obs: slice(cur.cmp.log.perPart), zero: true, fmt: fmtInt });
       } else {
         if (tv) {
-          rows.push({ label: 'rides', h: 38, lead: true, obs: o.world.truth.rides, fmt: fmtInt });
-          rows.push({ label: 'turned away', obs: o.world.truth.unmet, fmt: fmtInt, zero: true });
+          rows.push({ label: 'rides', h: 38, lead: true, truth: true, obs: o.world.truth.rides, fmt: fmtInt });
+          rows.push({ label: 'turned away', truth: true, obs: o.world.truth.unmet, fmt: fmtInt, zero: true });
         }
         rows.push({ label: '°C, rain ticks', weather: true, obs: o.world.weather.map(function (w) { return w.temp; }),
                     rain: o.world.weather.map(function (w) { return w.rain; }), fmt: function (v) { return fmt1(v) + '°C'; } });
@@ -619,25 +712,24 @@
           inline: inlineRows(w),
           day: state.dayF, axis: layer === 'world', heat: layer === 'world' || (hit === 'signal') ? heat : null,
           marker: hit ? cur.marker : (layer === 'world' && cur.obs.world.newStation ? S.OPEN_DAY : null),
-          markerColor: hit === 'fault' ? COL.fault : COL.signal,
+          markerFault: hit === 'fault',
           tint: tintFor(hit)
         });
       });
       layoutTime();
     }
-    // Where to colour a layer's line: rust where its record parts from the truth,
-    // sage where the world itself moved (a heatwave, a new station).
+    // Where to weight a layer's line: on the days the world itself moved (a heatwave, a new station).
+    // A fault needs no tint: its record and truth part on their own, into red and cyan.
     var signalDays = {};
     function tintFor(hit) {
-      if (!hit || hit === 'absorbed') return null;
-      if (hit === 'fault') return { color: COL.fault };
+      if (!hit || hit === 'absorbed' || hit === 'fault') return null;
       var w = cur.obs.world, key = (w.heatwave ? 'H' : '') + (w.newStation ? 'N' : '');
       if (!signalDays[key]) {
         var days = new Array(N);
         for (var d = 0; d < N; d++) days[d] = (w.heatwave && d >= S.HEAT_FROM && d <= S.HEAT_TO) || (w.newStation && d >= S.OPEN_DAY);
         signalDays[key] = days;
       }
-      return { color: COL.signal, days: signalDays[key], weather: !!w.heatwave };
+      return { days: signalDays[key], weather: !!w.heatwave };
     }
 
     // ---------- chips: each layer against its own truth ----------
@@ -747,7 +839,7 @@
     }
     function flash(l) {
       var el = bands[l].el;
-      el.style.setProperty('--st-pulse-wash', rise.real || layerHit(l) !== 'fault' ? 'rgba(88,112,90,0.14)' : 'rgba(161,74,47,0.13)');
+      el.style.setProperty('--st-pulse-wash', rise.real || layerHit(l) !== 'fault' ? 'rgba(241,239,232,0.07)' : 'rgba(255,75,62,0.07)');
       el.classList.remove('is-pulse'); void el.offsetWidth; el.classList.add('is-pulse');
       rise.timers.push(setTimeout(function () { el.classList.remove('is-pulse'); }, 1300));
     }
@@ -768,25 +860,28 @@
       var alpha = t < climb + hold ? 1 : Math.max(0, 1 - (t - climb - hold) / fade);
       parts.forEach(function (p) { if (!rise.fired[p.l] && yh <= p.bot - 2) { rise.fired[p.l] = true; flash(p.l); } });
       var ctx = sizeCanvas(riseCv, W, H);
-      var col = rise.real ? COL.signal : COL.fault, glow = rise.real ? COL.signalGlow : COL.faultGlow;
-      ctx.globalAlpha = alpha;
-      // faint where it crosses a band's heading, solid inside the strips
-      ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineCap = 'round';
-      ctx.globalAlpha = alpha * 0.35;
-      ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, yh); ctx.stroke();
-      ctx.globalAlpha = alpha;
-      parts.forEach(function (p) {
-        var a = Math.max(yh, p.top), b = Math.min(y0, p.bot);
-        if (b > a) { ctx.beginPath(); ctx.moveTo(x, b); ctx.lineTo(x, a); ctx.stroke(); }
+      // A real change rises as one white line: record and truth move together. A fault rises as a
+      // red and a cyan line side by side, the two images out of register.
+      var inks = rise.real ? [[COL.white, 0]] : [[COL.red, -1.5], [COL.cyan, 1.5]];
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineWidth = rise.real ? 2 : 1.6; ctx.lineCap = 'round';
+      inks.forEach(function (k) {
+        var xk = x + k[1];
+        ctx.strokeStyle = k[0];
+        // faint where it crosses a band's heading, solid inside the strips
+        ctx.globalAlpha = alpha * 0.35;
+        ctx.beginPath(); ctx.moveTo(xk, y0); ctx.lineTo(xk, yh); ctx.stroke();
+        ctx.globalAlpha = alpha;
+        parts.forEach(function (p) {
+          var a = Math.max(yh, p.top), b = Math.min(y0, p.bot);
+          if (b > a) { ctx.beginPath(); ctx.moveTo(xk, b); ctx.lineTo(xk, a); ctx.stroke(); }
+        });
+        // the source, and the head
+        ctx.fillStyle = k[0];
+        ctx.beginPath(); ctx.arc(xk, y0, 3.2, 0, 6.283); ctx.fill();
+        ctx.beginPath(); ctx.arc(xk, yh, 4.6, 0, 6.283); ctx.fill();
       });
-      // the source, and the head with a soft glow
-      ctx.fillStyle = col;
-      ctx.beginPath(); ctx.arc(x, y0, 3.2, 0, 6.283); ctx.fill();
-      var gr = ctx.createRadialGradient(x, yh, 0, x, yh, 14);
-      gr.addColorStop(0, glow); gr.addColorStop(1, 'rgba(250,249,246,0)');
-      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, yh, 14, 0, 6.283); ctx.fill();
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, yh, 4.5, 0, 6.283); ctx.fill();
-      ctx.fillStyle = COL.bg; ctx.beginPath(); ctx.arc(x, yh, 1.6, 0, 6.283); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
       if (t < total) rise.raf = requestAnimationFrame(riseFrame);
       else stopRise();
@@ -907,7 +1002,7 @@
       html += '<table class="st-table"><thead><tr><th>Event</th><th class="num">Logged</th>' + (tv ? '<th class="num">Truth</th>' : '') + '</tr></thead><tbody>';
       [['checkout', 'Checkouts (phone)'], ['return', 'Returns (dock)'], ['nobike', '‘No bike’ (phone)'], ['maintenance', 'Maintenance']].forEach(function (k) {
         var a = o.perPart[k[0]][d], b = t.perPart[k[0]][d];
-        html += '<tr><td>' + k[1] + '</td><td class="num' + (tv && a !== b ? ' is-ne' : '') + '">' + fmtInt(a) + '</td>' + (tv ? '<td class="num">' + fmtInt(b) + '</td>' : '') + '</tr>';
+        html += '<tr><td>' + k[1] + '</td><td class="num' + (tv && a !== b ? ' is-ne' : '') + '">' + fmtInt(a) + '</td>' + (tv ? '<td class="num is-tru">' + fmtInt(b) + '</td>' : '') + '</tr>';
       });
       html += '</tbody></table>';
       html += '<h4>Stream at the time below</h4>' + todBar() + '<ol class="st-ticker" aria-label="Most recent events"></ol>';
@@ -946,7 +1041,7 @@
         '<li class="is-lane">‘No bike’ events</li>' + dagRow('joinNb', d) + dagRow('groupNb', d) + '</ol>' +
         (tv ? '<p class="st-sub">A red edge means this step’s counts differ from the truth. That can be inherited from below: look for the first step that drops or adds rows it should not.</p>' : '');
       html += '<h4>Rides by hour on ' + S.dateLabel(d) + ', as the pipeline dated them</h4><canvas class="st-hours" role="img"></canvas>' +
-        '<div class="st-legend"><span><span class="st-key is-fill"></span>pipeline</span>' + (tv ? '<span><span class="st-key is-box"></span>truth</span>' : '') + '</div>';
+        '<div class="st-legend"><span><span class="st-key is-fill"></span>pipeline</span>' + (tv ? '<span><span class="st-key is-box"></span>truth</span><span><span class="st-key is-both"></span>both agree</span>' : '') + '</div>';
       html += '<h4>Stations table</h4><p>' + P.table.map(function (r) { return esc(r.name); }).join(', ') + ' (' + P.table.length + ' rows).</p>';
       if (state.mode === 'detective' || cur.change) html += evidenceHtml('pipeline');
       return html;
@@ -970,7 +1065,7 @@
     function effectRow(label, a, b, fmtf) {
       var tv = truthVisible() && b != null;
       var ne = tv && Math.abs(a - b) > 0.02 * Math.max(1, Math.abs(b));
-      return '<tr><td>' + label + '</td><td class="num' + (ne ? ' is-ne' : '') + '">' + fmtf(a) + '</td>' + (tv ? '<td class="num">' + fmtf(b) + '</td>' : '') + '</tr>';
+      return '<tr><td>' + label + '</td><td class="num' + (ne ? ' is-ne' : '') + '">' + fmtf(a) + '</td>' + (tv ? '<td class="num is-tru">' + fmtf(b) + '</td>' : '') + '</tr>';
     }
     function signedPct(x) { return (x >= 0 ? '+' : '−') + pct(x); }
     function inspModel(d) {
@@ -1060,7 +1155,7 @@
       var pl = Q(RIVER[RIVER.length - 1][0], RIVER[RIVER.length - 1][1]);
       ctx.lineTo(pl[0], pl[1]);
       ctx.stroke();
-      ctx.strokeStyle = 'rgba(181,189,175,0.5)'; ctx.lineWidth = 1.2;
+      ctx.strokeStyle = COL.rule; ctx.lineWidth = 1.2;
       ROUTES.forEach(function (r) {
         if (!open[r[0]] || !open[r[1]]) return;
         var a = P(r[0]), b = P(r[1]);
@@ -1068,7 +1163,7 @@
       });
       ctx.restore();
 
-      // bikes in use: a dot with a short trail behind it
+      // bikes in use: a dot with a short trail behind it, in the true image's cyan
       var inUse = 0;
       ctx.lineCap = 'round';
       [d - 1, d].forEach(function (dd) {
@@ -1084,10 +1179,10 @@
           else {
             x = q0[0] + (q1[0] - q0[0]) * f; y = q0[1] + (q1[1] - q0[1]) * f;
             var fb = Math.max(0, f - 0.12), bx = q0[0] + (q1[0] - q0[0]) * fb, by = q0[1] + (q1[1] - q0[1]) * fb;
-            ctx.strokeStyle = 'rgba(37,40,33,0.22)'; ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(46,196,214,0.32)'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(x, y); ctx.stroke();
           }
-          ctx.fillStyle = 'rgba(37,40,33,0.8)';
+          ctx.fillStyle = COL.cyan;
           ctx.beginPath(); ctx.arc(x, y, 2.3, 0, 6.283); ctx.fill();
         }
       });
@@ -1103,23 +1198,24 @@
       S.STATIONS.forEach(function (st, s) {
         if (!open[s]) return;
         var p = P(s), R = 8 + Math.sqrt(st.bikes) * 1.4, frac = Math.max(0, Math.min(1, inv[s] / st.bikes));
-        ctx.fillStyle = COL.bg; ctx.strokeStyle = inv[s] > 0 ? COL.lineStrong : COL.fault; ctx.lineWidth = inv[s] > 0 ? 1 : 1.6;
-        ctx.beginPath(); ctx.arc(p[0], p[1], R, 0, 6.283); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = COL.field; ctx.strokeStyle = inv[s] > 0 ? COL.ruleStrong : COL.white; ctx.lineWidth = inv[s] > 0 ? 1 : 1.6;
+        if (!(inv[s] > 0)) ctx.setLineDash([3, 2.5]);
+        ctx.beginPath(); ctx.arc(p[0], p[1], R, 0, 6.283); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
         if (inv[s] > 0) {
-          ctx.strokeStyle = COL.signal; ctx.lineWidth = 3.5; ctx.lineCap = 'butt';
+          ctx.strokeStyle = COL.cyan; ctx.lineWidth = 3.5; ctx.lineCap = 'butt';
           ctx.beginPath(); ctx.arc(p[0], p[1], R - 3, -Math.PI / 2, -Math.PI / 2 + frac * 6.283); ctx.stroke();
         } else empty.push(st.name);
         if (recent[s]) {
-          ctx.strokeStyle = COL.fault; ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
+          ctx.strokeStyle = COL.white; ctx.lineWidth = 1; ctx.setLineDash([1.5, 2.5]);
           ctx.beginPath(); ctx.arc(p[0], p[1], R + 4, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
         }
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = inv[s] > 0 ? COL.ink : COL.fault; ctx.font = '500 11px ' + FONT;
+        ctx.fillStyle = COL.white; ctx.font = '700 11px ' + MONO;
         ctx.fillText(String(inv[s]), p[0], p[1] + 0.5);
-        ctx.textBaseline = 'top'; ctx.font = '11px ' + FONT; ctx.fillStyle = inv[s] > 0 ? COL.text : COL.fault;
+        ctx.textBaseline = 'top'; ctx.font = '11.5px ' + FONT; ctx.fillStyle = inv[s] > 0 ? COL.dim : COL.white;
         ctx.fillText(st.name + (inv[s] > 0 ? '' : ', empty'), p[0], p[1] + R + (recent[s] ? 6 : 3));
       });
-      ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = COL.ink; ctx.font = '500 13px ' + FONT;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = COL.white; ctx.font = '700 13px ' + MONO;
       ctx.fillText(clockOf(tod), 9, 8);
       mapCanvas.setAttribute('aria-label', 'Map of the stations at ' + clockOf(tod) + ' on ' + S.dateLabel(d) + '. ' + inUse + ' bikes in use. ' +
         (empty.length ? 'Empty: ' + empty.join(', ') + '.' : 'No station is empty.') + ' ' + turned + ' riders turned away so far today.');
@@ -1171,22 +1267,26 @@
       var max = 1;
       for (var k = 0; k < 24; k++) max = Math.max(max, a[k], tv ? b[k] : 0);
       var left = 2, bottom = h - 16, top = 6, bw = (w - left - 2) / 24;
+      // the pipeline's hours in red and the true hours in cyan, added: equal hours come out white,
+      // and where they differ the taller one shows its own colour above the white, with a tick at the truth's height
+      ctx.globalCompositeOperation = 'lighter';
       for (k = 0; k < 24; k++) {
         var x = left + k * bw, ha = (bottom - top) * a[k] / max;
-        ctx.fillStyle = COL.ink; ctx.globalAlpha = 0.75;
+        ctx.fillStyle = COL.red;
         ctx.fillRect(x + 1, bottom - ha, bw - 2, ha);
-        ctx.globalAlpha = 1;
         if (tv) {
           var hb = (bottom - top) * b[k] / max;
-          ctx.strokeStyle = a[k] !== b[k] ? COL.fault : COL.truth; ctx.lineWidth = 1.2;
-          ctx.strokeRect(x + 1.5, bottom - hb + 0.5, bw - 3, hb);
+          ctx.fillStyle = COL.cyan;
+          ctx.fillRect(x + 1, bottom - hb, bw - 2, hb);
+          if (a[k] !== b[k]) ctx.fillRect(x, bottom - hb - 1, bw, 2);
         }
       }
-      ctx.fillStyle = COL.muted; ctx.font = '11px ' + FONT; ctx.textBaseline = 'top';
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = COL.dim; ctx.font = '11px ' + MONO; ctx.textBaseline = 'top';
       [0, 6, 12, 18].forEach(function (hh) { ctx.fillText(pad2(hh) + ':00', left + hh * bw, bottom + 3); });
       var peak = 0; for (k = 1; k < 24; k++) if (a[k] > a[peak]) peak = k;
       hourCanvas.setAttribute('aria-label', 'Rides by hour on ' + S.dateLabel(d) + ' as dated by the pipeline. Busiest hour ' + pad2(peak) + ':00 with ' + a[peak] + ' rides.' +
-        (tv ? ' Outlines show the truth.' : ''));
+        (tv ? ' The truth is drawn over it; where the two agree the bar is white.' : ''));
     }
 
     // ---------- detective mode ----------
@@ -1482,11 +1582,11 @@
     function refreshAll() {
       if (!cur) return;
       var legend = '<span class="st-legend-inline" aria-hidden="true"><span><span class="st-key"></span>recorded</span>' +
-        '<span><span class="st-key is-truth"></span>truth</span><span><span class="st-key is-gap"></span>the gap</span>' +
+        '<span><span class="st-key is-truth"></span>truth</span><span><span class="st-key is-fused"></span>the two agree</span><span><span class="st-key is-gap"></span>the gap</span>' +
         '<span><span class="st-key is-dot"></span>actual rides, under the forecast</span></span>';
       $('st-hint').innerHTML = state.mode === 'forward'
         ? 'Break one layer and watch the fault rise through the layers above it. Drag along any strip to move through the season; open a layer for its details. ' +
-          (state.truth ? legend + '<span class="st-vh">Solid lines are what each layer records; dashed lines are the truth, with the gap between them shaded; dots under the forecast are the actual rides.</span>' : '')
+          (state.truth ? legend + '<span class="st-vh">Red lines are what each layer records and cyan lines the truth, dashed where the two part, with the gap between them hatched; where they agree they fuse into one white line. Dots under the forecast are the actual rides.</span>' : '')
         : 'Each ticket starts at the dashboard. Examine the layers beneath for evidence, then name the cause. There is no truth line here, as in real life; it appears once you answer.';
       $('st-story').innerHTML = storyHtml();
       Array.prototype.forEach.call($('st-story').querySelectorAll('.st-try'), function (b) {
@@ -1524,6 +1624,10 @@
       var ro = new ResizeObserver(function () { onResize(); });
       ro.observe(stack);
     } else window.addEventListener('resize', onResize);
+    // the canvases name their rows in the stage's faces: draw again once those have arrived
+    whenFonts(['11px "Space Grotesk"', '500 12px "Space Grotesk"', '12px "Space Mono"', '700 13px "Space Mono"'], function () {
+      if (cur) { drawStrips(); drawMap(); drawHours(); }
+    });
 
     // ---------- start ----------
     $('st-story').textContent = 'Building the city…';
