@@ -1,0 +1,1666 @@
+{
+ "about": "Computed by pipeline/evaluate.py on the held-out test split. Exact match is case- and space-insensitive.",
+ "data": {
+  "source": "Sproat & Jaitly English text-normalization data (Google; Kestrel references), Wikipedia text",
+  "licence": "CC BY-SA 4.0",
+  "shards": [
+   "output-00003-of-00100",
+   "output-00058-of-00100"
+  ],
+  "split_seed": 2018,
+  "sentences": {
+   "test": 70535,
+   "dev": 17633,
+   "train": 1675219
+  },
+  "tokens": {
+   "test": 845161,
+   "dev": 212316,
+   "train": 20082108
+  }
+ },
+ "test": {
+  "tokens": 845161,
+  "nontrivial_tokens": 63375,
+  "plain_punct_share": 0.9250142872186483,
+  "class_counts": {
+   "PLAIN": 616052,
+   "PUNCT": 165734,
+   "DATE": 27401,
+   "LETTERS": 12951,
+   "CARDINAL": 10908,
+   "VERBATIM": 7121,
+   "MEASURE": 1219,
+   "ORDINAL": 1012,
+   "DECIMAL": 801,
+   "MONEY": 505,
+   "ELECTRONIC": 444,
+   "DIGIT": 436,
+   "TELEPHONE": 312,
+   "TIME": 115,
+   "FRACTION": 115,
+   "ADDRESS": 35
+  },
+  "unseen_nontrivial": 4712,
+  "seen_nontrivial": 58663,
+  "unseen_all": 19136
+ },
+ "original": {
+  "claimed_val_acc": 99.51,
+  "claimed_note": "Keras per-slot accuracy over 20 output slots, padding counted, all tokens (conTEXT README)",
+  "poster_conTEXT": 98.2,
+  "poster_xgboost": 97.4,
+  "kestrel_cited": 91.3,
+  "output_vocab": 346,
+  "slots": 20,
+  "year": 2018
+ },
+ "systems": [
+  "copy",
+  "lookup",
+  "rules",
+  "neural",
+  "gated"
+ ],
+ "scores": {
+  "10": {
+   "copy": {
+    "n": 845161,
+    "exact": 0.922227835879791,
+    "padded": 0.9878617801815276
+   },
+   "lookup": {
+    "n": 845161,
+    "exact": 0.992444043205969,
+    "padded": 0.9980682970463616
+   },
+   "rules": {
+    "n": 845161,
+    "exact": 0.9929942342346606,
+    "padded": 0.9989627420101023
+   },
+   "neural": {
+    "n": 845161,
+    "exact": 0.9953298838919449,
+    "padded": 0.9995402651092514
+   },
+   "gated": {
+    "n": 845161,
+    "exact": 0.9910715236505234,
+    "padded": 0.9986948640554877
+   }
+  },
+  "11": {
+   "copy": {
+    "n": 19136,
+    "exact": 0.7527696488294314,
+    "padded": 0.9213027801003344
+   },
+   "lookup": {
+    "n": 19136,
+    "exact": 0.7527696488294314,
+    "padded": 0.9213027801003344
+   },
+   "rules": {
+    "n": 19136,
+    "exact": 0.9492579431438127,
+    "padded": 0.9860864339464883
+   },
+   "neural": {
+    "n": 19136,
+    "exact": 0.980194397993311,
+    "padded": 0.9915264423076923
+   },
+   "gated": {
+    "n": 19136,
+    "exact": 0.9417328595317725,
+    "padded": 0.9814250627090301
+   }
+  },
+  "00": {
+   "copy": {
+    "n": 63375,
+    "exact": 0.011376725838264299,
+    "padded": 0.8405601577909271
+   },
+   "lookup": {
+    "n": 63375,
+    "exact": 0.9163076923076923,
+    "padded": 0.9751313609467456
+   },
+   "rules": {
+    "n": 63375,
+    "exact": 0.955534516765286,
+    "padded": 0.9913940828402367
+   },
+   "neural": {
+    "n": 63375,
+    "exact": 0.9862564102564103,
+    "padded": 0.9963029585798816
+   },
+   "gated": {
+    "n": 63375,
+    "exact": 0.9557080867850098,
+    "padded": 0.9900615384615384
+   }
+  },
+  "01": {
+   "copy": {
+    "n": 4712,
+    "exact": 0.0,
+    "padded": 0.6806345500848896
+   },
+   "lookup": {
+    "n": 4712,
+    "exact": 0.0,
+    "padded": 0.6806345500848896
+   },
+   "rules": {
+    "n": 4712,
+    "exact": 0.8206706281833617,
+    "padded": 0.9489388794567063
+   },
+   "neural": {
+    "n": 4712,
+    "exact": 0.9235993208828522,
+    "padded": 0.9658213073005093
+   },
+   "gated": {
+    "n": 4712,
+    "exact": 0.7901103565365025,
+    "padded": 0.9300084889643464
+   }
+  }
+ },
+ "per_class": {
+  "copy": {
+   "DATE": {
+    "n": 27401,
+    "c": 0,
+    "seen_n": 25915,
+    "seen_c": 0,
+    "unseen_n": 1486,
+    "unseen_c": 0
+   },
+   "LETTERS": {
+    "n": 12951,
+    "c": 711,
+    "seen_n": 11857,
+    "seen_c": 711,
+    "unseen_n": 1094,
+    "unseen_c": 0
+   },
+   "CARDINAL": {
+    "n": 10908,
+    "c": 0,
+    "seen_n": 10486,
+    "seen_c": 0,
+    "unseen_n": 422,
+    "unseen_c": 0
+   },
+   "VERBATIM": {
+    "n": 7121,
+    "c": 10,
+    "seen_n": 6998,
+    "seen_c": 10,
+    "unseen_n": 123,
+    "unseen_c": 0
+   },
+   "MEASURE": {
+    "n": 1219,
+    "c": 0,
+    "seen_n": 809,
+    "seen_c": 0,
+    "unseen_n": 410,
+    "unseen_c": 0
+   },
+   "ORDINAL": {
+    "n": 1012,
+    "c": 0,
+    "seen_n": 1004,
+    "seen_c": 0,
+    "unseen_n": 8,
+    "unseen_c": 0
+   },
+   "DECIMAL": {
+    "n": 801,
+    "c": 0,
+    "seen_n": 614,
+    "seen_c": 0,
+    "unseen_n": 187,
+    "unseen_c": 0
+   },
+   "MONEY": {
+    "n": 505,
+    "c": 0,
+    "seen_n": 260,
+    "seen_c": 0,
+    "unseen_n": 245,
+    "unseen_c": 0
+   },
+   "ELECTRONIC": {
+    "n": 444,
+    "c": 0,
+    "seen_n": 179,
+    "seen_c": 0,
+    "unseen_n": 265,
+    "unseen_c": 0
+   },
+   "DIGIT": {
+    "n": 436,
+    "c": 0,
+    "seen_n": 371,
+    "seen_c": 0,
+    "unseen_n": 65,
+    "unseen_c": 0
+   },
+   "TELEPHONE": {
+    "n": 312,
+    "c": 0,
+    "seen_n": 39,
+    "seen_c": 0,
+    "unseen_n": 273,
+    "unseen_c": 0
+   },
+   "TIME": {
+    "n": 115,
+    "c": 0,
+    "seen_n": 52,
+    "seen_c": 0,
+    "unseen_n": 63,
+    "unseen_c": 0
+   },
+   "FRACTION": {
+    "n": 115,
+    "c": 0,
+    "seen_n": 57,
+    "seen_c": 0,
+    "unseen_n": 58,
+    "unseen_c": 0
+   },
+   "ADDRESS": {
+    "n": 35,
+    "c": 0,
+    "seen_n": 22,
+    "seen_c": 0,
+    "unseen_n": 13,
+    "unseen_c": 0
+   }
+  },
+  "lookup": {
+   "DATE": {
+    "n": 27401,
+    "c": 25915,
+    "seen_n": 25915,
+    "seen_c": 25915,
+    "unseen_n": 1486,
+    "unseen_c": 0
+   },
+   "LETTERS": {
+    "n": 12951,
+    "c": 11776,
+    "seen_n": 11857,
+    "seen_c": 11776,
+    "unseen_n": 1094,
+    "unseen_c": 0
+   },
+   "CARDINAL": {
+    "n": 10908,
+    "c": 10249,
+    "seen_n": 10486,
+    "seen_c": 10249,
+    "unseen_n": 422,
+    "unseen_c": 0
+   },
+   "VERBATIM": {
+    "n": 7121,
+    "c": 6990,
+    "seen_n": 6998,
+    "seen_c": 6990,
+    "unseen_n": 123,
+    "unseen_c": 0
+   },
+   "MEASURE": {
+    "n": 1219,
+    "c": 808,
+    "seen_n": 809,
+    "seen_c": 808,
+    "unseen_n": 410,
+    "unseen_c": 0
+   },
+   "ORDINAL": {
+    "n": 1012,
+    "c": 893,
+    "seen_n": 1004,
+    "seen_c": 893,
+    "unseen_n": 8,
+    "unseen_c": 0
+   },
+   "DECIMAL": {
+    "n": 801,
+    "c": 614,
+    "seen_n": 614,
+    "seen_c": 614,
+    "unseen_n": 187,
+    "unseen_c": 0
+   },
+   "MONEY": {
+    "n": 505,
+    "c": 260,
+    "seen_n": 260,
+    "seen_c": 260,
+    "unseen_n": 245,
+    "unseen_c": 0
+   },
+   "ELECTRONIC": {
+    "n": 444,
+    "c": 179,
+    "seen_n": 179,
+    "seen_c": 179,
+    "unseen_n": 265,
+    "unseen_c": 0
+   },
+   "DIGIT": {
+    "n": 436,
+    "c": 217,
+    "seen_n": 371,
+    "seen_c": 217,
+    "unseen_n": 65,
+    "unseen_c": 0
+   },
+   "TELEPHONE": {
+    "n": 312,
+    "c": 39,
+    "seen_n": 39,
+    "seen_c": 39,
+    "unseen_n": 273,
+    "unseen_c": 0
+   },
+   "TIME": {
+    "n": 115,
+    "c": 52,
+    "seen_n": 52,
+    "seen_c": 52,
+    "unseen_n": 63,
+    "unseen_c": 0
+   },
+   "FRACTION": {
+    "n": 115,
+    "c": 57,
+    "seen_n": 57,
+    "seen_c": 57,
+    "unseen_n": 58,
+    "unseen_c": 0
+   },
+   "ADDRESS": {
+    "n": 35,
+    "c": 22,
+    "seen_n": 22,
+    "seen_c": 22,
+    "unseen_n": 13,
+    "unseen_c": 0
+   }
+  },
+  "rules": {
+   "DATE": {
+    "n": 27401,
+    "c": 27193,
+    "seen_n": 25915,
+    "seen_c": 25876,
+    "unseen_n": 1486,
+    "unseen_c": 1317
+   },
+   "LETTERS": {
+    "n": 12951,
+    "c": 11354,
+    "seen_n": 11857,
+    "seen_c": 10696,
+    "unseen_n": 1094,
+    "unseen_c": 658
+   },
+   "CARDINAL": {
+    "n": 10908,
+    "c": 10542,
+    "seen_n": 10486,
+    "seen_c": 10136,
+    "unseen_n": 422,
+    "unseen_c": 406
+   },
+   "VERBATIM": {
+    "n": 7121,
+    "c": 6972,
+    "seen_n": 6998,
+    "seen_c": 6864,
+    "unseen_n": 123,
+    "unseen_c": 108
+   },
+   "MEASURE": {
+    "n": 1219,
+    "c": 1172,
+    "seen_n": 809,
+    "seen_c": 804,
+    "unseen_n": 410,
+    "unseen_c": 368
+   },
+   "ORDINAL": {
+    "n": 1012,
+    "c": 967,
+    "seen_n": 1004,
+    "seen_c": 959,
+    "unseen_n": 8,
+    "unseen_c": 8
+   },
+   "DECIMAL": {
+    "n": 801,
+    "c": 798,
+    "seen_n": 614,
+    "seen_c": 611,
+    "unseen_n": 187,
+    "unseen_c": 187
+   },
+   "MONEY": {
+    "n": 505,
+    "c": 471,
+    "seen_n": 260,
+    "seen_c": 252,
+    "unseen_n": 245,
+    "unseen_c": 219
+   },
+   "ELECTRONIC": {
+    "n": 444,
+    "c": 387,
+    "seen_n": 179,
+    "seen_c": 160,
+    "unseen_n": 265,
+    "unseen_c": 227
+   },
+   "DIGIT": {
+    "n": 436,
+    "c": 210,
+    "seen_n": 371,
+    "seen_c": 195,
+    "unseen_n": 65,
+    "unseen_c": 15
+   },
+   "TELEPHONE": {
+    "n": 312,
+    "c": 267,
+    "seen_n": 39,
+    "seen_c": 29,
+    "unseen_n": 273,
+    "unseen_c": 238
+   },
+   "TIME": {
+    "n": 115,
+    "c": 112,
+    "seen_n": 52,
+    "seen_c": 51,
+    "unseen_n": 63,
+    "unseen_c": 61
+   },
+   "FRACTION": {
+    "n": 115,
+    "c": 112,
+    "seen_n": 57,
+    "seen_c": 57,
+    "unseen_n": 58,
+    "unseen_c": 55
+   },
+   "ADDRESS": {
+    "n": 35,
+    "c": 0,
+    "seen_n": 22,
+    "seen_c": 0,
+    "unseen_n": 13,
+    "unseen_c": 0
+   }
+  },
+  "neural": {
+   "DATE": {
+    "n": 27401,
+    "c": 27365,
+    "seen_n": 25915,
+    "seen_c": 25907,
+    "unseen_n": 1486,
+    "unseen_c": 1458
+   },
+   "LETTERS": {
+    "n": 12951,
+    "c": 12896,
+    "seen_n": 11857,
+    "seen_c": 11824,
+    "unseen_n": 1094,
+    "unseen_c": 1072
+   },
+   "CARDINAL": {
+    "n": 10908,
+    "c": 10690,
+    "seen_n": 10486,
+    "seen_c": 10278,
+    "unseen_n": 422,
+    "unseen_c": 412
+   },
+   "VERBATIM": {
+    "n": 7121,
+    "c": 7094,
+    "seen_n": 6998,
+    "seen_c": 6982,
+    "unseen_n": 123,
+    "unseen_c": 112
+   },
+   "MEASURE": {
+    "n": 1219,
+    "c": 1193,
+    "seen_n": 809,
+    "seen_c": 807,
+    "unseen_n": 410,
+    "unseen_c": 386
+   },
+   "ORDINAL": {
+    "n": 1012,
+    "c": 932,
+    "seen_n": 1004,
+    "seen_c": 924,
+    "unseen_n": 8,
+    "unseen_c": 8
+   },
+   "DECIMAL": {
+    "n": 801,
+    "c": 801,
+    "seen_n": 614,
+    "seen_c": 614,
+    "unseen_n": 187,
+    "unseen_c": 187
+   },
+   "MONEY": {
+    "n": 505,
+    "c": 483,
+    "seen_n": 260,
+    "seen_c": 260,
+    "unseen_n": 245,
+    "unseen_c": 223
+   },
+   "ELECTRONIC": {
+    "n": 444,
+    "c": 291,
+    "seen_n": 179,
+    "seen_c": 161,
+    "unseen_n": 265,
+    "unseen_c": 130
+   },
+   "DIGIT": {
+    "n": 436,
+    "c": 271,
+    "seen_n": 371,
+    "seen_c": 229,
+    "unseen_n": 65,
+    "unseen_c": 42
+   },
+   "TELEPHONE": {
+    "n": 312,
+    "c": 254,
+    "seen_n": 39,
+    "seen_c": 37,
+    "unseen_n": 273,
+    "unseen_c": 217
+   },
+   "TIME": {
+    "n": 115,
+    "c": 103,
+    "seen_n": 52,
+    "seen_c": 51,
+    "unseen_n": 63,
+    "unseen_c": 52
+   },
+   "FRACTION": {
+    "n": 115,
+    "c": 99,
+    "seen_n": 57,
+    "seen_c": 56,
+    "unseen_n": 58,
+    "unseen_c": 43
+   },
+   "ADDRESS": {
+    "n": 35,
+    "c": 32,
+    "seen_n": 22,
+    "seen_c": 22,
+    "unseen_n": 13,
+    "unseen_c": 10
+   }
+  },
+  "gated": {
+   "DATE": {
+    "n": 27401,
+    "c": 27219,
+    "seen_n": 25915,
+    "seen_c": 25886,
+    "unseen_n": 1486,
+    "unseen_c": 1333
+   },
+   "LETTERS": {
+    "n": 12951,
+    "c": 11400,
+    "seen_n": 11857,
+    "seen_c": 10745,
+    "unseen_n": 1094,
+    "unseen_c": 655
+   },
+   "CARDINAL": {
+    "n": 10908,
+    "c": 10596,
+    "seen_n": 10486,
+    "seen_c": 10199,
+    "unseen_n": 422,
+    "unseen_c": 397
+   },
+   "VERBATIM": {
+    "n": 7121,
+    "c": 7044,
+    "seen_n": 6998,
+    "seen_c": 6936,
+    "unseen_n": 123,
+    "unseen_c": 108
+   },
+   "MEASURE": {
+    "n": 1219,
+    "c": 1167,
+    "seen_n": 809,
+    "seen_c": 803,
+    "unseen_n": 410,
+    "unseen_c": 364
+   },
+   "ORDINAL": {
+    "n": 1012,
+    "c": 924,
+    "seen_n": 1004,
+    "seen_c": 916,
+    "unseen_n": 8,
+    "unseen_c": 8
+   },
+   "DECIMAL": {
+    "n": 801,
+    "c": 801,
+    "seen_n": 614,
+    "seen_c": 614,
+    "unseen_n": 187,
+    "unseen_c": 187
+   },
+   "MONEY": {
+    "n": 505,
+    "c": 469,
+    "seen_n": 260,
+    "seen_c": 252,
+    "unseen_n": 245,
+    "unseen_c": 217
+   },
+   "ELECTRONIC": {
+    "n": 444,
+    "c": 270,
+    "seen_n": 179,
+    "seen_c": 145,
+    "unseen_n": 265,
+    "unseen_c": 125
+   },
+   "DIGIT": {
+    "n": 436,
+    "c": 245,
+    "seen_n": 371,
+    "seen_c": 212,
+    "unseen_n": 65,
+    "unseen_c": 33
+   },
+   "TELEPHONE": {
+    "n": 312,
+    "c": 231,
+    "seen_n": 39,
+    "seen_c": 30,
+    "unseen_n": 273,
+    "unseen_c": 201
+   },
+   "TIME": {
+    "n": 115,
+    "c": 103,
+    "seen_n": 52,
+    "seen_c": 51,
+    "unseen_n": 63,
+    "unseen_c": 52
+   },
+   "FRACTION": {
+    "n": 115,
+    "c": 99,
+    "seen_n": 57,
+    "seen_c": 56,
+    "unseen_n": 58,
+    "unseen_c": 43
+   },
+   "ADDRESS": {
+    "n": 35,
+    "c": 0,
+    "seen_n": 22,
+    "seen_c": 0,
+    "unseen_n": 13,
+    "unseen_c": 0
+   }
+  }
+ },
+ "silly": {
+  "copy": {
+   "unread": 62654,
+   "spelling": 0,
+   "repeat": 0,
+   "unit": 0,
+   "month": 0,
+   "number": 0,
+   "other": 0
+  },
+  "lookup": {
+   "unread": 4846,
+   "spelling": 23,
+   "repeat": 0,
+   "unit": 1,
+   "month": 0,
+   "number": 425,
+   "other": 9
+  },
+  "rules": {
+   "unread": 2098,
+   "spelling": 73,
+   "repeat": 0,
+   "unit": 7,
+   "month": 13,
+   "number": 515,
+   "other": 112
+  },
+  "neural": {
+   "unread": 9,
+   "spelling": 207,
+   "repeat": 28,
+   "unit": 23,
+   "month": 8,
+   "number": 542,
+   "other": 54
+  },
+  "gated": {
+   "unread": 2100,
+   "spelling": 144,
+   "repeat": 18,
+   "unit": 15,
+   "month": 4,
+   "number": 499,
+   "other": 27
+  }
+ },
+ "silly_unseen": {
+  "copy": {
+   "unread": 4712,
+   "spelling": 0,
+   "repeat": 0,
+   "unit": 0,
+   "month": 0,
+   "number": 0,
+   "other": 0
+  },
+  "lookup": {
+   "unread": 4712,
+   "spelling": 0,
+   "repeat": 0,
+   "unit": 0,
+   "month": 0,
+   "number": 0,
+   "other": 0
+  },
+  "rules": {
+   "unread": 747,
+   "spelling": 6,
+   "repeat": 0,
+   "unit": 7,
+   "month": 13,
+   "number": 54,
+   "other": 18
+  },
+  "neural": {
+   "unread": 1,
+   "spelling": 156,
+   "repeat": 27,
+   "unit": 22,
+   "month": 8,
+   "number": 112,
+   "other": 34
+  },
+  "gated": {
+   "unread": 747,
+   "spelling": 111,
+   "repeat": 18,
+   "unit": 14,
+   "month": 4,
+   "number": 86,
+   "other": 9
+  }
+ },
+ "examples": {
+  "copy|unread": [
+   [
+    "27 January 1964",
+    "27 January 1964",
+    "the twenty seventh of january nineteen sixty four"
+   ],
+   [
+    "72",
+    "72",
+    "seventy two"
+   ],
+   [
+    "239",
+    "239",
+    "two hundred thirty nine"
+   ],
+   [
+    "2011",
+    "2011",
+    "twenty eleven"
+   ],
+   [
+    "PhD",
+    "PhD",
+    "p h d"
+   ],
+   [
+    "DSc",
+    "DSc",
+    "d s c"
+   ]
+  ],
+  "lookup|unread": [
+   [
+    "27 January 1964",
+    "27 January 1964",
+    "the twenty seventh of january nineteen sixty four"
+   ],
+   [
+    "$20,754",
+    "$20,754",
+    "twenty thousand seven hundred fifty four dollars"
+   ],
+   [
+    "February 9, 1976",
+    "February 9, 1976",
+    "february ninth nineteen seventy six"
+   ],
+   [
+    "3.8 million",
+    "3.8 million",
+    "three point eight million"
+   ],
+   [
+    "the 27th October 1994",
+    "the 27th October 1994",
+    "the twenty seventh of october nineteen ninety four"
+   ],
+   [
+    "15 November, 1924",
+    "15 November, 1924",
+    "the fifteenth of november nineteen twenty four"
+   ]
+  ],
+  "rules|unread": [
+   [
+    "é",
+    "é",
+    "e acute"
+   ],
+   [
+    "é",
+    "é",
+    "e acute"
+   ],
+   [
+    "the 27th October 1994",
+    "the 27th October 1994",
+    "the twenty seventh of october nineteen ninety four"
+   ],
+   [
+    "T&W",
+    "T&W",
+    "t and w"
+   ],
+   [
+    "Bota",
+    "Bota",
+    "b o t a"
+   ],
+   [
+    "Hebr",
+    "Hebr",
+    "h e b r"
+   ]
+  ],
+  "gated|unread": [
+   [
+    "é",
+    "é",
+    "e acute"
+   ],
+   [
+    "é",
+    "é",
+    "e acute"
+   ],
+   [
+    "the 27th October 1994",
+    "the 27th October 1994",
+    "the twenty seventh of october nineteen ninety four"
+   ],
+   [
+    "T&W",
+    "T&W",
+    "t and w"
+   ],
+   [
+    "Bota",
+    "Bota",
+    "b o t a"
+   ],
+   [
+    "Hebr",
+    "Hebr",
+    "h e b r"
+   ]
+  ],
+  "lookup|number": [
+   [
+    "1961",
+    "nineteen sixty one",
+    "one nine six one"
+   ],
+   [
+    "2003",
+    "two thousand three",
+    "two o o three"
+   ],
+   [
+    "1917",
+    "nineteen seventeen",
+    "one nine one seven"
+   ],
+   [
+    "09",
+    "o nine",
+    "nine"
+   ],
+   [
+    "XV",
+    "fifteen",
+    "the fifteenth"
+   ],
+   [
+    "237",
+    "two hundred thirty seven",
+    "two three seven"
+   ]
+  ],
+  "rules|number": [
+   [
+    "1961",
+    "nineteen sixty one",
+    "one nine six one"
+   ],
+   [
+    "2003",
+    "two thousand three",
+    "two o o three"
+   ],
+   [
+    "1917",
+    "nineteen seventeen",
+    "one nine one seven"
+   ],
+   [
+    "XIX",
+    "the nineteenth",
+    "nineteen"
+   ],
+   [
+    "II",
+    "the second",
+    "two"
+   ],
+   [
+    "II",
+    "the second",
+    "two"
+   ]
+  ],
+  "neural|number": [
+   [
+    "1961",
+    "nineteen sixty one",
+    "one nine six one"
+   ],
+   [
+    "2003",
+    "two thousand three",
+    "two o o three"
+   ],
+   [
+    "1917",
+    "nineteen seventeen",
+    "one nine one seven"
+   ],
+   [
+    "801",
+    "eight o one",
+    "eight hundred one"
+   ],
+   [
+    "VII",
+    "the seventh",
+    "seven"
+   ],
+   [
+    "73058583",
+    "seventy three million fifty eight thousand five hundred thirty three",
+    "seven three o five eight five eight three"
+   ]
+  ],
+  "gated|number": [
+   [
+    "1961",
+    "nineteen sixty one",
+    "one nine six one"
+   ],
+   [
+    "2003",
+    "two thousand three",
+    "two o o three"
+   ],
+   [
+    "1917",
+    "nineteen seventeen",
+    "one nine one seven"
+   ],
+   [
+    "801",
+    "eight o one",
+    "eight hundred one"
+   ],
+   [
+    "VII",
+    "the seventh",
+    "seven"
+   ],
+   [
+    "73058583",
+    "seventy three million fifty eight thousand five hundred thirty three",
+    "seven three o five eight five eight three"
+   ]
+  ],
+  "rules|spelling": [
+   [
+    "sr",
+    "senior",
+    "s r"
+   ],
+   [
+    "Rs",
+    "r s",
+    "r's"
+   ],
+   [
+    "Gs",
+    "g s",
+    "g's"
+   ],
+   [
+    "IV",
+    "the fourth",
+    "i v"
+   ],
+   [
+    "LXXII",
+    "seventy two",
+    "l x x i i"
+   ],
+   [
+    "LXXI",
+    "seventy one",
+    "l x x i"
+   ]
+  ],
+  "neural|spelling": [
+   [
+    "rbis",
+    "r b i's",
+    "r b i s"
+   ],
+   [
+    "Manx2.com",
+    "m a n x t w o n e dot c o m",
+    "m a n x t w o dot c o m"
+   ],
+   [
+    "parliament.gov.sg",
+    "p a r l i a m e n t dot g o v dot g o v s dot g o v s",
+    "p a r l i a m e n t dot g o v dot s g"
+   ],
+   [
+    ".ie.",
+    "dot i e",
+    "i e"
+   ],
+   [
+    "d'Hiv",
+    "d h i i v",
+    "d h i v"
+   ],
+   [
+    "americantheatrewing.org",
+    "a m e r i c a n t h e c a n t h e a t r i n g dot o r g",
+    "a m e r i c a n t h e a t r e w i n g dot o r g"
+   ]
+  ],
+  "gated|spelling": [
+   [
+    "Manx2.com",
+    "m a n x t w o n e dot c o m",
+    "m a n x t w o dot c o m"
+   ],
+   [
+    "parliament.gov.sg",
+    "p a r l i a m e n t dot g o v dot g o v s dot g o v s",
+    "p a r l i a m e n t dot g o v dot s g"
+   ],
+   [
+    "americantheatrewing.org",
+    "a m e r i c a n t h e c a n t h e a t r i n g dot o r g",
+    "a m e r i c a n t h e a t r e w i n g dot o r g"
+   ],
+   [
+    "LancasterHistory.org",
+    "l a n c a s t e r h i s t o r t i s t o r y dot o r g",
+    "l a n c a s t e r h i s t o r y dot o r g"
+   ],
+   [
+    "GlobalTwitcher.com",
+    "g l o b a l t w t c h e r dot c o m",
+    "g l o b a l t w i t c h e r dot c o m"
+   ],
+   [
+    "V.",
+    "the fifth",
+    "v"
+   ]
+  ],
+  "lookup|other": [
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "I's",
+    "the first's",
+    "one's"
+   ]
+  ],
+  "rules|other": [
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "2/12/2008",
+    "february twelfth two thousand eight",
+    "the twelfth of february two thousand eight"
+   ],
+   [
+    "12 1/8",
+    "twelve and a eighth",
+    "twelve and an eighth"
+   ],
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "Κ",
+    "sil",
+    "kappa"
+   ],
+   [
+    "Ε",
+    "sil",
+    "epsilon"
+   ]
+  ],
+  "neural|other": [
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "2/12/2008",
+    "february twelfth two thousand eight",
+    "the twelfth of february two thousand eight"
+   ],
+   [
+    "mg/m³",
+    "m g y m",
+    "milligram per cubic meter"
+   ],
+   [
+    "µg/m³",
+    "r g y m s",
+    "microgram per cubic meter"
+   ],
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "8-17-2010",
+    "the seventeenth of august twenty ten",
+    "august seventeenth twenty ten"
+   ]
+  ],
+  "gated|other": [
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "2/12/2008",
+    "february twelfth two thousand eight",
+    "the twelfth of february two thousand eight"
+   ],
+   [
+    "#",
+    "number",
+    "hash"
+   ],
+   [
+    "8-17-2010",
+    "the seventeenth of august twenty ten",
+    "august seventeenth twenty ten"
+   ],
+   [
+    "-",
+    "one half",
+    "sil"
+   ],
+   [
+    "12:50 pm AEST",
+    "twelve fifty p m e s t",
+    "twelve fifty p m a e s t"
+   ]
+  ],
+  "neural|unit": [
+   [
+    "100 dam",
+    "one hundred a d a m",
+    "one hundred deca meters"
+   ],
+   [
+    "1000Mb",
+    "one thousand megabytes",
+    "one thousand megabits"
+   ],
+   [
+    "€894.81",
+    "eight hundred ninety four point eight one cents",
+    "eight hundred ninety four euros and eighty one cents"
+   ],
+   [
+    "4:46.2",
+    "four minutes forty six seconds and twenty seconds",
+    "four minutes forty six seconds and two milliseconds"
+   ],
+   [
+    "7 TL",
+    "seven tera",
+    "seven tera liters"
+   ],
+   [
+    "18:01:43",
+    "eighteen hours one minutes and forty three seconds",
+    "eighteen hours one minute and forty three seconds"
+   ]
+  ],
+  "neural|repeat": [
+   [
+    "222.313 mph",
+    "two hundred twenty two point three three one three miles per hour",
+    "two hundred twenty two point three one three miles per hour"
+   ],
+   [
+    "5004 - 1934 DUESENBERG",
+    "five o o four sil one nine sil one nine three four sil <unk> sil <unk>",
+    "five o o four sil one nine three four sil duesenberg"
+   ],
+   [
+    "1/16,000",
+    "one one thousand euros",
+    "one sixteen thousandth"
+   ],
+   [
+    "2 BC.",
+    "o b b c",
+    "o two b c"
+   ],
+   [
+    "380/80",
+    "three hundred eighty eighty ninths",
+    "three hundred eighty eightieths"
+   ],
+   [
+    "0-1 1207",
+    "o sil one one o seven",
+    "o sil one sil one two o seven"
+   ]
+  ],
+  "gated|repeat": [
+   [
+    "222.313 mph",
+    "two hundred twenty two point three three one three miles per hour",
+    "two hundred twenty two point three one three miles per hour"
+   ],
+   [
+    "380/80",
+    "three hundred eighty eighty ninths",
+    "three hundred eighty eightieths"
+   ],
+   [
+    "0-19-855645-4",
+    "o sil one nine sil eight five six six four five sil four",
+    "o sil one nine sil eight five five six four five sil four"
+   ],
+   [
+    "2 2 0 0 5-1 62",
+    "two sil two sil five sil o sil five sil six sil six two sil six two",
+    "two sil two sil o sil o sil five sil one sil six two"
+   ],
+   [
+    "18.076 g",
+    "eighteen point o seven six grams grams",
+    "eighteen point o seven six grams"
+   ],
+   [
+    "13:15 GMT",
+    "thirteen fifteen g m m t",
+    "thirteen fifteen g m t"
+   ]
+  ],
+  "rules|month": [
+   [
+    "29-01-2006",
+    "two nine sil o one sil two o o six",
+    "the twenty ninth of january two thousand six"
+   ],
+   [
+    "05-02-2012",
+    "o five sil o two sil two o one two",
+    "the second of may twenty twelve"
+   ],
+   [
+    "2013-7-14",
+    "two o one three sil seven sil one four",
+    "the fourteenth of july twenty thirteen"
+   ],
+   [
+    "8-17-2010",
+    "eight sil one seven sil two o one o",
+    "august seventeenth twenty ten"
+   ],
+   [
+    "1995-7-30",
+    "one nine nine five sil seven sil three o",
+    "the thirtieth of july nineteen ninety five"
+   ],
+   [
+    "26-11-2006",
+    "two six sil one one sil two o o six",
+    "the twenty sixth of november two thousand six"
+   ]
+  ],
+  "gated|unit": [
+   [
+    "1000Mb",
+    "one thousand megabytes",
+    "one thousand megabits"
+   ],
+   [
+    "€894.81",
+    "eight hundred ninety four point eight one cents",
+    "eight hundred ninety four euros and eighty one cents"
+   ],
+   [
+    "4:46.2",
+    "four minutes forty six seconds and twenty seconds",
+    "four minutes forty six seconds and two milliseconds"
+   ],
+   [
+    "18:01:43",
+    "eighteen hours one minutes and forty three seconds",
+    "eighteen hours one minute and forty three seconds"
+   ],
+   [
+    "136'",
+    "one hundred thirty six",
+    "one hundred thirty six feet"
+   ],
+   [
+    "¥225,000",
+    "two hundred twenty five thousand",
+    "two hundred twenty five thousand yen"
+   ]
+  ],
+  "neural|month": [
+   [
+    "26 feb 10",
+    "the twenty sixth of december ten",
+    "the twenty sixth of february ten"
+   ],
+   [
+    "16.05.1941",
+    "the sixteenth of october nineteen forty one",
+    "the sixteenth of may nineteen forty one"
+   ],
+   [
+    "34-12-3",
+    "three four sil one two sil three",
+    "the third of december thirty four"
+   ],
+   [
+    "Sun. 1936-05-22",
+    "sunday the twenty second of november nineteen thirty six",
+    "sunday the twenty second of may nineteen thirty six"
+   ],
+   [
+    "06.01.2015",
+    "the sixth of january twenty fifteen",
+    "the first of june twenty fifteen"
+   ],
+   [
+    "09-06-2014",
+    "the sixth of june twenty fourteen",
+    "the sixth of september twenty fourteen"
+   ]
+  ],
+  "neural|unread": [
+   [
+    "V",
+    "V",
+    "the fifth"
+   ],
+   [
+    "V",
+    "V",
+    "the fifth"
+   ],
+   [
+    "V",
+    "V",
+    "five"
+   ],
+   [
+    "V",
+    "V",
+    "the fifth"
+   ],
+   [
+    "feei",
+    "feei",
+    "f e e i"
+   ],
+   [
+    "X",
+    "X",
+    "tenth"
+   ]
+  ],
+  "lookup|spelling": [
+   [
+    "sr",
+    "senior",
+    "s r"
+   ],
+   [
+    "LXXI",
+    "seventy one",
+    "l x x i"
+   ],
+   [
+    "sr",
+    "senior",
+    "s r"
+   ],
+   [
+    "NO",
+    "nitrogen monoxide",
+    "n o"
+   ],
+   [
+    "II's",
+    "the second's",
+    "i i's"
+   ],
+   [
+    "DR",
+    "drive",
+    "d r"
+   ]
+  ],
+  "rules|unit": [
+   [
+    "£482.80",
+    "four hundred eighty two pounds and eighty cents",
+    "four hundred eighty two pounds and eighty pence"
+   ],
+   [
+    "£507.40",
+    "five hundred seven pounds and forty cents",
+    "five hundred seven pounds and forty pence"
+   ],
+   [
+    "£418.80",
+    "four hundred eighteen pounds and eighty cents",
+    "four hundred eighteen pounds and eighty pence"
+   ],
+   [
+    "$14.1",
+    "fourteen point one dollars",
+    "fourteen dollars and ten cents"
+   ],
+   [
+    "$0.2",
+    "zero point two dollars",
+    "twenty cents"
+   ],
+   [
+    "$0.4",
+    "zero point four dollars",
+    "forty cents"
+   ]
+  ],
+  "gated|month": [
+   [
+    "16.05.1941",
+    "the sixteenth of october nineteen forty one",
+    "the sixteenth of may nineteen forty one"
+   ],
+   [
+    "06.01.2015",
+    "the sixth of january twenty fifteen",
+    "the first of june twenty fifteen"
+   ],
+   [
+    "09-06-2014",
+    "the sixth of june twenty fourteen",
+    "the sixth of september twenty fourteen"
+   ],
+   [
+    "08-03-2016",
+    "the eleventh of march twenty sixteen",
+    "the third of august twenty sixteen"
+   ]
+  ],
+  "lookup|unit": [
+   [
+    "11s",
+    "elevens",
+    "eleven seconds"
+   ]
+  ]
+ },
+ "neural": {
+  "train_minutes": 45.01419486602148,
+  "epochs": 7,
+  "train_examples": 641725,
+  "device": "cuda",
+  "best_dev_exact_nontrivial": 0.9843333333333333,
+  "per_input_cap": 40
+ },
+ "gate": {
+  "about": "gated = the neural model asked only about tokens the rules' classifier says need reading",
+  "trivial_sent_to_model": 3405,
+  "nontrivial_not_sent": 2819
+ },
+ "lookup": {
+  "noncopy_entries": 164422,
+  "seen_inputs": 723370,
+  "browser_entries": 3950
+ },
+ "preview_neural": {
+  "£900": "nine hundred pounds",
+  "3,500 kg": "three thousand five hundred kilograms",
+  "May 20, 2008": "may twentieth two thousand eight"
+ },
+ "demo": {
+  "sentences": 2106
+ }
+}

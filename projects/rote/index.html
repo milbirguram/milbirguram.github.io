@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Type text with prices, dates and measures and see how a text-to-speech front end should read each token, from four systems side by side; then watch a 99.5% accuracy shrink once padding, trivial tokens and memorised tokens stop counting.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Rote — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/rote/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1 class="rt-title">Rote</h1>
+  <p class="kit-lede">Before a speech synthesiser can say “£900” it must decide on “nine hundred pounds”. Type a sentence, or pull one from held-out test data, and compare four ways of deciding. Then switch off, one at a time, the tricks behind the <span data-num="original.claimed_val_acc" data-fmt="pct1">99.5%</span> accuracy that conTEXT, my <span data-num="original.year" data-fmt="raw">2018</span> SFU group project with Siddhant Singhal, Raghib Musarrat, Rahul Rajeev and Greg Mori, reported. “Correct” here means matching Google’s Kestrel system, itself largely hand-written grammars. Data: Sproat and Jaitly, from Wikipedia, CC BY-SA 4.0.</p>
+
+  <section class="kit-stage kit-wide rt-stage" data-kit-stage aria-label="Text normalisation bench">
+    <div class="rt-preview" id="rt-preview" hidden role="img" aria-label="A strip of paper tape: £900 is typed, a wrong reading, nine hundred euros, from the RNN in Sproat and Jaitly’s paper, is struck through in red, and nine hundred pounds is typed in black; then 3,500 kg and May 20, 2008 follow the same way, with wrong readings from conTEXT."></div>
+
+    <div class="rt-app" id="rt-app">
+      <div class="rt-feed">
+        <div class="rt-modes" role="group" aria-label="What to read">
+          <button type="button" class="rt-key" id="rt-draw" aria-describedby="rt-feed-note">Pull a test sentence</button>
+          <button type="button" class="rt-key rt-key-hollow" id="rt-own">Type your own</button>
+        </div>
+        <form class="rt-platen" id="rt-form" autocomplete="off">
+          <label for="rt-text" class="rt-label">Text to read aloud</label>
+          <div class="rt-platen-row">
+            <input id="rt-text" class="rt-input" type="text" spellcheck="false" maxlength="240" value="">
+            <button type="submit" class="rt-key rt-key-small">Read</button>
+          </div>
+        </form>
+        <p class="rt-note" id="rt-feed-note" aria-live="polite"></p>
+      </div>
+
+      <div class="rt-sentence" id="rt-sentence" role="group" aria-label="Tokens, marked by class"></div>
+
+      <div class="rt-tape" id="rt-tape">
+        <ol class="rt-rows" id="rt-rows"></ol>
+        <p class="rt-note rt-legend" id="rt-legend"></p>
+      </div>
+
+      <div class="rt-print" id="rt-print" aria-labelledby="rt-print-title">
+        <div class="rt-print-head">
+          <h2 class="rt-print-title" id="rt-print-title">Scoreboard · <span id="rt-test-size">held-out test</span></h2>
+          <p class="rt-note" id="rt-print-step"></p>
+        </div>
+        <div class="rt-switches" role="group" aria-label="What counts as correct">
+          <button type="button" class="rt-switch" id="rt-pad" aria-pressed="true"><span class="rt-switch-cap" aria-hidden="true"></span>Count padding as correct</button>
+          <button type="button" class="rt-switch" id="rt-triv" aria-pressed="true"><span class="rt-switch-cap" aria-hidden="true"></span>Include PLAIN and PUNCT</button>
+          <button type="button" class="rt-switch" id="rt-unseen" aria-pressed="false"><span class="rt-switch-cap" aria-hidden="true"></span>Unseen tokens only</button>
+        </div>
+        <pre class="rt-paper" id="rt-board" aria-live="polite"></pre>
+        <p class="rt-note" id="rt-board-note"></p>
+        <details class="rt-more">
+          <summary>By class, seen and unseen, and the silly errors</summary>
+          <div class="rt-classes" id="rt-classes" tabindex="0" role="region" aria-label="Tables by class and by kind of error; scrolls sideways on narrow screens"></div>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
