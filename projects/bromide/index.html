@@ -19,6 +19,7 @@
   <p class="kit-lede">Type a sentence and see which of your words were predictable and which were surprising, measured in bits: the less guessable a word, the more information it carries. Then rewrite to raise the number. The guesser is a small language model counted from a few dozen English novels and essays of about 1810 to 1920, texts from <a href="https://www.gutenberg.org/">Project Gutenberg</a>. It sees only the two words or punctuation marks before each word, so “predictable” here means predictable to those old books, not to you, and not to today.</p>
 
   <section class="kit-stage kit-wide bro" data-kit-stage aria-label="Bromide: score a sentence">
+    <div class="bro-blades" aria-hidden="true"><span class="bro-blade is-tl"></span><span class="bro-blade is-br"></span></div>
     <div class="bro-app" id="bro-app">
       <div class="bro-main">
         <label class="bro-label" for="bro-text">Your sentence</label>
@@ -55,9 +56,9 @@
         <div class="bro-reading" id="bro-reading" role="group" aria-labelledby="reading-label"></div>
 
         <div class="bro-legend">
-          <div class="bro-strip" id="bro-strip" role="img" aria-label="Test strip: at 0 bits a word prints faint; by 15 bits or more it prints dark."></div>
+          <div class="bro-strip" id="bro-strip" role="img" aria-label="Exposure wedge in five steps: under 2 bits a word prints faintest; 11 bits or more, darkest."></div>
           <div class="bro-strip-ends" aria-hidden="true"><span>faint: expected</span><span>dark: surprising</span></div>
-          <p class="bro-legend-note">Read it as a test strip: predictable words print faint, surprising words develop dark. 1 bit is a coin-toss guess; 10 bits, about 1 in 1,000. The number under each word says the same as its tone.</p>
+          <p class="bro-legend-note">Read it as a step wedge: predictable words print faint, surprising words develop dark. 1 bit is a coin-toss guess; 10 bits, about 1 in 1,000. The number under each word says the same as its tone.</p>
           <div class="bro-legend-unknown"><span class="bro-legend-swatch" aria-hidden="true"></span> unknown to the books: not printed, no score, left out of the average</div>
         </div>
       </div>
@@ -79,9 +80,12 @@
     </details>
 
     <div class="bro-preview" id="bro-preview" hidden>
-      <p class="pv-label bro-kicker" id="pv-label"></p>
+      <div class="pv-head">
+        <p class="pv-label bro-kicker" id="pv-label"></p>
+        <p class="pv-score"><span class="pv-num" id="pv-num"></span> <span class="pv-unit" id="pv-unit">bits per word</span></p>
+      </div>
       <p class="pv-text" id="pv-text"></p>
-      <p class="pv-score"><span class="pv-num" id="pv-num"></span> <span class="pv-unit" id="pv-unit">bits per word</span></p>
+      <p class="pv-key"><span class="pv-wedge" aria-hidden="true"><i class="s0"></i><i class="s1"></i><i class="s2"></i><i class="s3"></i><i class="s4"></i></span> faint: expected · dark: surprising</p>
     </div>
   </section>
 </main>

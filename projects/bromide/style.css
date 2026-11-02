@@ -1,7 +1,10 @@
-/* Bromide: a darkroom print. The page chrome comes from ../kit.css; inside the
-   stage everything is a sheet of warm-tone bromide paper on the enlarger easel.
-   Palette: paper, silver (the developed greys), Dmax ink, and the red safelight
-   for anything that belongs to the interface rather than to the print. */
+/* Bromide: a darkroom print. The page chrome comes from ../kit.css. The stage
+   is the darkroom itself: a near-black easel field lit from one edge by the red
+   safelight, two masking blades at the corners, and on it a deckle-edged sheet
+   of cool white bromide paper. On the sheet, surprisal is exposure: every word
+   is printed in silver, faint where the books saw it coming, developed nearly
+   black where they did not. Palette: easel #1b1514, safelight #a3201b, paper
+   #f3f0e8, and the five silver tones of the exposure wedge (#b9b4ab to #1a1816). */
 
 @font-face {
   font-family: "EB Garamond";
@@ -27,15 +30,25 @@ h1 {
 }
 
 .bro {
-  --paper: #f5f0e4;
-  --paper-lift: #faf7ef;
-  --dmax: #161412;
-  --silver: #5f5a53;
-  --silver-pale: #ddd5c6;
+  --easel: #1b1514;
+  --blade: #3b3330;
   --safelight: #a3201b;
+  --paper: #f3f0e8;
+  --paper-lift: #f8f6f0;
+  --dmax: #1a1816;
+  --silver: #5f5a53;      /* small print on the sheet: 6:1 on paper */
+  --silver-rule: #c9c4ba;
+  /* The exposure wedge: five tones of developed silver, faint to Dmax. */
+  --x0: #b9b4ab;
+  --x1: #88837b;
+  --x2: #6d6860;
+  --x3: #45413c;
+  --x4: #1a1816;
   --serif: "EB Garamond", Garamond, "Times New Roman", Georgia, serif;
+  --m: 26px;              /* easel margin round the sheet */
+  --blade-w: 15px;
   --r: 6px;
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .28 0 0 0 0 .22 .11 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .29 0 0 0 0 .28 0 0 0 0 .26 .09 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
   /* Deckle: two trains of shallow humps with unrelated periods on each edge,
      so the torn edge never quite repeats. */
   --h1: radial-gradient(calc(2 * var(--r)) var(--r) at 50% 100%, #000 97%, #0000);
@@ -58,14 +71,18 @@ h1 {
     var(--r2) 100% calc(0.5 * var(--r)) / var(--r) calc(4.5 * var(--r)) repeat-y;
   position: relative;
   isolation: isolate;
-  padding: 44px 48px 36px;
+  padding: calc(var(--m) + 42px) calc(var(--m) + 46px) calc(var(--m) + 34px);
   color: var(--dmax);
+  /* The easel field, with the safelight's red falling on it from the left. */
+  background:
+    radial-gradient(60% 90% at 0 45%, rgba(163, 32, 27, 0.26), rgba(163, 32, 27, 0) 70%),
+    var(--easel);
   font-family: var(--serif);
   font-size: 18px;
   line-height: 1.55;
   font-variant-numeric: lining-nums;
 }
-/* The sheet: a deckle-edged print with a hairline of darker paper round it. */
+/* The sheet: a deckle-edged print lying on the easel. */
 .bro::before, .bro::after {
   content: "";
   position: absolute;
@@ -73,10 +90,39 @@ h1 {
   -webkit-mask: var(--deckle);
   mask: var(--deckle);
 }
-.bro::before { inset: -1px; background: #c9bfad; }
-.bro::after { inset: 0; background: var(--grain), var(--paper); }
+.bro::before { inset: calc(var(--m) - 1px); background: #d9d4c9; }
+.bro::after { inset: var(--m); background: var(--grain), var(--paper); }
 
-/* Small labels on the print: stencilled small capitals in safelight red. */
+/* The masking blades: two L-shaped steel bars holding the sheet at opposite
+   corners, with an inch scale scribed along them. Their inner edges catch
+   the safelight. */
+.bro-blades { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.bro-blade { position: absolute; width: min(190px, 30%); height: min(120px, 40%); }
+.bro-blade::before, .bro-blade::after {
+  content: "";
+  position: absolute;
+  background-color: var(--blade);
+}
+.bro-blade::before {
+  left: 0; right: 0; height: var(--blade-w);
+  background-image: repeating-linear-gradient(90deg, rgba(243, 240, 232, 0.32) 0 1px, transparent 1px 12px);
+  background-size: 100% 4px;
+  background-repeat: no-repeat;
+}
+.bro-blade::after {
+  top: 0; bottom: 0; width: var(--blade-w);
+  background-image: repeating-linear-gradient(180deg, rgba(243, 240, 232, 0.32) 0 1px, transparent 1px 12px);
+  background-size: 4px 100%;
+  background-repeat: no-repeat;
+}
+.bro-blade.is-tl { left: calc(var(--m) - var(--blade-w) + 3px); top: calc(var(--m) - var(--blade-w) + 3px); }
+.bro-blade.is-tl::before { top: 0; background-position: left bottom; box-shadow: inset 0 -1px 0 rgba(163, 32, 27, 0.7); }
+.bro-blade.is-tl::after { left: 0; background-position: right top; box-shadow: inset -1px 0 0 rgba(163, 32, 27, 0.7); }
+.bro-blade.is-br { right: calc(var(--m) - var(--blade-w) + 3px); bottom: calc(var(--m) - var(--blade-w) + 3px); }
+.bro-blade.is-br::before { bottom: 0; background-position: left top; box-shadow: inset 0 1px 0 rgba(163, 32, 27, 0.55); }
+.bro-blade.is-br::after { right: 0; background-position: left top; box-shadow: inset 1px 0 0 rgba(163, 32, 27, 0.55); }
+
+/* Small labels on the print: letter-spaced capitals in safelight red. */
 .bro-label, .bro-reading-label, .bro-shelf-label, .bro-kicker {
   display: block;
   margin: 0 0 10px;
@@ -85,17 +131,17 @@ h1 {
   line-height: 1.4;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-variant-caps: normal;
 }
 
 .bro-app {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 290px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 44px;
   align-items: start;
 }
 
-/* The enlarger easel: black masking blades with a scale starting at the corner. */
+/* The enlarger easel for your words: black masking blades with a scale
+   starting at the corner, the paper held square inside them. */
 .bro-easel {
   position: relative;
   border: solid var(--dmax);
@@ -111,14 +157,14 @@ h1 {
 .bro-easel::before {
   left: 0; right: 0; top: -16px; height: 16px;
   background:
-    repeating-linear-gradient(90deg, rgba(244, 239, 227, 0.8) 0 1px, transparent 1px 48px) left bottom / 100% 9px no-repeat,
-    repeating-linear-gradient(90deg, rgba(244, 239, 227, 0.55) 0 1px, transparent 1px 12px) left bottom / 100% 4px no-repeat;
+    repeating-linear-gradient(90deg, rgba(243, 240, 232, 0.8) 0 1px, transparent 1px 48px) left bottom / 100% 9px no-repeat,
+    repeating-linear-gradient(90deg, rgba(243, 240, 232, 0.55) 0 1px, transparent 1px 12px) left bottom / 100% 4px no-repeat;
 }
 .bro-easel::after {
   top: 0; bottom: 0; left: -16px; width: 16px;
   background:
-    repeating-linear-gradient(180deg, rgba(244, 239, 227, 0.8) 0 1px, transparent 1px 48px) right top / 9px 100% no-repeat,
-    repeating-linear-gradient(180deg, rgba(244, 239, 227, 0.55) 0 1px, transparent 1px 12px) right top / 4px 100% no-repeat;
+    repeating-linear-gradient(180deg, rgba(243, 240, 232, 0.8) 0 1px, transparent 1px 48px) right top / 9px 100% no-repeat,
+    repeating-linear-gradient(180deg, rgba(243, 240, 232, 0.55) 0 1px, transparent 1px 12px) right top / 4px 100% no-repeat;
 }
 .bro-easel:focus-within { border-color: var(--safelight); }
 
@@ -139,10 +185,11 @@ h1 {
 }
 .bro .bro-text:focus-visible { outline: none; }
 
-/* Example lines: paper tags that reverse, negative-fashion, when touched. */
+/* Example lines: paper slips tabbed in black like an easel blade, which
+   reverse, negative-fashion, when touched. */
 .bro-shelf { margin: 18px 0 0; }
-.bro-shelf-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 8px; margin-bottom: 8px; }
-.bro-shelf-label { width: 112px; flex: none; margin: 0; font-size: 12.5px; }
+.bro-shelf-row { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 8px; padding-left: 118px; }
+.bro-shelf-label { position: absolute; left: 0; top: 5px; margin: 0; font-size: 12.5px; }
 .bro-chip-btn {
   appearance: none;
   font: inherit;
@@ -151,14 +198,15 @@ h1 {
   line-height: 1.35;
   color: var(--dmax);
   background: var(--paper-lift);
-  border: 1px solid var(--dmax);
+  border: 1px solid var(--x3);
+  border-left: 5px solid var(--dmax);
   border-radius: 0;
-  padding: 3px 11px 4px;
+  padding: 2px 10px 3px 8px;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 .bro-chip-btn:hover:not(:disabled) { background: var(--dmax); color: var(--paper); }
-.bro-chip-btn:disabled { color: var(--silver); border-color: #a59c8d; cursor: default; }
+.bro-chip-btn:disabled { color: var(--silver); border-color: var(--silver-rule); cursor: default; }
 
 .bro a:focus-visible, .bro button:focus-visible, .bro summary:focus-visible { outline: 2px solid var(--safelight); outline-offset: 3px; }
 
@@ -168,25 +216,34 @@ h1 {
   -webkit-appearance: none;
   width: 160px; height: 3px;
   border: 0;
-  background: var(--silver-pale);
+  background: var(--silver-rule);
   color: var(--safelight);
 }
-.bro-status progress::-webkit-progress-bar { background: var(--silver-pale); }
+.bro-status progress::-webkit-progress-bar { background: var(--silver-rule); }
 .bro-status progress::-webkit-progress-value { background: var(--safelight); }
 .bro-status progress::-moz-progress-bar { background: var(--safelight); }
 .bro-status.is-error { color: var(--safelight); }
 
-/* The print: each word exposed for as long as it was surprising. */
+/* The print: each word exposed for as long as it was surprising. No boxes:
+   the tone is in the silver of the letters themselves. */
 .bro-reading-label { margin-top: 34px; }
 .bro-reading {
   min-height: 80px;
   padding: 16px 0 6px;
   border-top: 1px solid var(--dmax);
   font-size: 23px;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 .bro-para + .bro-para { margin-top: 12px; }
 .bro-empty { color: var(--silver); font-size: 16px; font-style: italic; }
+
+/* Exposure classes, shared by the words, the wedge and the card. The two
+   darkest steps carry a slight silver-halide bloom of their own tone. */
+.x0 { color: var(--x0); }
+.x1 { color: var(--x1); }
+.x2 { color: var(--x2); }
+.x3 { color: var(--x3); text-shadow: 0 0 2px rgba(69, 65, 60, 0.45); }
+.x4 { color: var(--x4); text-shadow: 0 0 2px rgba(26, 24, 22, 0.5); }
 
 .w {
   appearance: none;
@@ -194,7 +251,7 @@ h1 {
   flex-direction: column;
   align-items: center;
   vertical-align: top;
-  margin: 0 4px 10px 0;
+  margin: 0 7px 12px 0;
   padding: 0;
   font: inherit;
   color: inherit;
@@ -204,48 +261,44 @@ h1 {
 }
 .w-text {
   display: block;
-  padding: 0 5px 2px;
-  border: 1px solid transparent;
-  color: var(--dmax);
+  padding: 0 2px 3px;
 }
 .w-bits {
   display: block;
   margin-top: 1px;
+  padding-top: 2px;
+  border-top: 1px solid var(--silver-rule);
   color: var(--silver);
   font-size: 13px;
   line-height: 1.3;
   font-variant-numeric: lining-nums tabular-nums;
 }
-.w.is-oov .w-text { border: 1px dashed var(--silver); background: transparent; color: var(--silver); font-style: italic; }
-.w.is-oov .w-bits { font-style: italic; }
-.w.is-selected .w-text, .w:hover .w-text { outline: 1.5px solid var(--dmax); outline-offset: 2px; }
-.w.is-selected .w-bits { color: var(--dmax); }
+.w.is-oov .w-text { color: var(--silver); font-style: italic; text-decoration: underline dashed var(--silver) 1px; text-underline-offset: 5px; }
+.w.is-oov .w-bits { font-style: italic; border-top-style: dashed; }
+.w.is-selected .w-text, .w:hover .w-text { outline: 1px solid var(--dmax); outline-offset: 2px; }
+.w.is-selected .w-bits { color: var(--dmax); border-top-color: var(--dmax); }
 .bro .w:focus-visible { outline: none; }
 .w:focus-visible .w-text { outline: 2px solid var(--safelight); outline-offset: 2px; }
-.w.is-memory .w-text { box-shadow: inset 0 -2px 0 var(--safelight); }
-.p { display: inline-block; vertical-align: top; margin: 0 6px 10px -3px; padding: 1px 0; color: var(--dmax); }
+.w.is-memory .w-text { text-decoration: underline solid var(--safelight) 2px; text-underline-offset: 5px; }
+.p { display: inline-block; vertical-align: top; margin: 0 7px 12px -6px; padding: 0; color: var(--x2); }
 
-/* Legend: a test strip. Each step is printed by the same rule as the words. */
+/* Legend: a step wedge. Each step prints the same word by the same rule as
+   your words, with the range of bits it stands for beneath. */
 .bro-legend { margin-top: 18px; font-size: 15.5px; line-height: 1.5; color: var(--silver); }
-.bro-strip { display: flex; max-width: 460px; border: 1px solid var(--dmax); }
-.bro-strip span {
-  flex: 1;
-  padding: 5px 0 4px 8px;
-  font-size: 14px;
-  line-height: 1.3;
-  font-variant-numeric: lining-nums tabular-nums;
-  white-space: nowrap;
-}
-.bro-strip span + span { border-left: 1px solid rgba(22, 20, 18, 0.25); }
-.bro-strip-ends { display: flex; justify-content: space-between; max-width: 460px; margin-top: 4px; font-style: italic; font-size: 15px; }
+.bro-strip { display: flex; max-width: 440px; border: 1px solid var(--dmax); background: var(--paper-lift); }
+.bro-step { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4px 2px 3px; }
+.bro-step + .bro-step { border-left: 1px solid var(--silver-rule); }
+.bro-step-w { font-size: 21px; line-height: 1.2; }
+.bro-step-b { color: var(--silver); font-size: 13px; line-height: 1.3; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.bro-strip-ends { display: flex; justify-content: space-between; max-width: 440px; margin-top: 4px; font-style: italic; font-size: 15px; }
 .bro-legend-note { margin: 8px 0 0; max-width: 560px; }
 .bro-legend-unknown { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.bro-legend-swatch { flex: none; width: 30px; height: 15px; border: 1px dashed var(--silver); }
+.bro-legend-swatch { flex: none; width: 30px; height: 0; border-top: 1px dashed var(--silver); }
 
 /* The exposure record beside the print. */
 .bro-side { position: sticky; top: 24px; padding: 4px 0 0 24px; border-left: 1px solid var(--dmax); }
 .bro-score { margin: 0; color: var(--dmax); line-height: 1; }
-.bro-num { display: block; font-size: 72px; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: lining-nums tabular-nums; }
+.bro-num { display: block; font-size: 72px; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: lining-nums tabular-nums; text-shadow: 0 0 2px rgba(26, 24, 22, 0.5); }
 .bro-unit { display: block; margin-top: 4px; color: var(--silver); font-size: 17px; font-style: italic; }
 .bro-sub { margin: 12px 0 0; color: var(--silver); font-size: 15.5px; line-height: 1.55; }
 .bro-nudge { margin: 14px 0 0; font-size: 17px; line-height: 1.55; }
@@ -261,7 +314,7 @@ h1 {
 .d-top .d-w { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .d-top li.is-yours .d-w { font-weight: 500; color: var(--dmax); }
 .d-top li.is-yours .d-w::after { content: " \2190 yours"; color: var(--safelight); font-size: 13px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; }
-.d-top .d-bar { height: 7px; background: var(--silver-pale); overflow: hidden; }
+.d-top .d-bar { height: 5px; background: var(--silver-rule); overflow: hidden; }
 .d-top .d-bar i { display: block; height: 100%; background: var(--dmax); }
 .d-top li.is-yours .d-bar i { background: var(--safelight); }
 .d-top .d-p { text-align: right; font-size: 15px; color: var(--silver); font-variant-numeric: lining-nums tabular-nums; }
@@ -281,41 +334,71 @@ h1 {
   .bro-num { font-size: 60px; }
 }
 @media (max-width: 600px) {
-  .bro { padding: 30px 20px 26px; --r: 4.5px; }
+  .bro { --m: 11px; --blade-w: 8px; --r: 4.5px; padding: calc(var(--m) + 28px) calc(var(--m) + 17px) calc(var(--m) + 24px); }
+  .bro-blade { width: 34%; height: 90px; }
   .bro-easel { border-width: 12px 5px 5px 12px; }
   .bro-easel::before { top: -12px; height: 12px; }
   .bro-easel::after { left: -12px; width: 12px; }
   .bro-text, .bro-reading { font-size: 20px; }
-  .bro-shelf-label { width: 100%; margin-top: 4px; }
+  .w { margin-right: 5px; }
+  .p { margin-left: -4px; margin-right: 5px; }
+  .bro-shelf-row { padding-left: 0; }
+  .bro-shelf-label { position: static; width: 100%; margin-top: 4px; }
   .bro-shelf-row { gap: 6px; }
-  .bro-chip-btn { font-size: 15.5px; padding: 2px 9px 3px; }
-  .bro-strip span { padding-left: 5px; font-size: 13px; }
+  .bro-chip-btn { font-size: 15.5px; padding: 5px 9px 6px 8px; }
+  .bro-step-w { font-size: 18px; }
+  .bro-step-b { font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bro-easel, .bro-chip-btn, .pv-w { transition: none !important; }
+  .bro-easel, .bro-chip-btn, .pv-t, .pv-b { transition: none !important; }
 }
 
-/* Preview (the card on projects.html): a print lying in the safelit dark. */
-html.kit-preview [data-kit-stage].bro { background: #221b19; padding: 0; --r: 4px; }
-html.kit-preview .bro::before { inset: 9px 11px; background: #8f8473; }
-html.kit-preview .bro::after { inset: 10px 12px; }
+/* ---- Preview (the card on projects.html) ---------------------------------
+   The same print on the same easel, small: one sentence fully developed, then
+   the next developing in place, faint words settling first and the surprising
+   ones darkening longest. */
+html.kit-preview [data-kit-stage].bro {
+  --m: clamp(9px, 3.4vw, 16px);
+  --blade-w: clamp(6px, 2vw, 9px);
+  --r: 3.5px;
+  padding: 0;
+  background:
+    radial-gradient(60% 110% at 0 45%, rgba(163, 32, 27, 0.3), rgba(163, 32, 27, 0) 70%),
+    var(--easel);
+}
+html.kit-preview .bro-blade { width: 34%; height: 46%; }
 .bro-preview {
+  position: absolute;
+  inset: var(--m);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  height: 100%;
-  padding: 18px 30px;
+  justify-content: space-between;
+  padding: clamp(9px, 3.4vw, 18px) clamp(13px, 4.6vw, 26px) clamp(8px, 3vw, 16px);
   overflow: hidden;
 }
-.bro-preview .pv-label { margin: 0 0 3%; font-size: clamp(11px, 3.5vw, 16px); letter-spacing: 0.16em; }
-.pv-text { margin: 0; font-size: clamp(15px, 5.7vw, 28px); line-height: 1.5; color: var(--dmax); }
-.pv-w { display: inline; padding: 0 3px 1px; transition: background-color 0.9s ease-out, color 0.9s ease-out; }
-.pv-w.pv-p { padding: 0; }
-.pv-w.is-hidden { color: transparent !important; background-color: transparent !important; }
-.pv-w.is-oov { box-shadow: inset 0 0 0 1px var(--silver); }
-.is-still .pv-w { transition: none; }
-.pv-score { margin: 4% 0 0; color: var(--dmax); line-height: 1.1; }
-.pv-num { font-size: clamp(20px, 7vw, 34px); font-weight: 500; font-variant-numeric: lining-nums tabular-nums; }
-.pv-unit { color: var(--silver); font-size: clamp(12px, 3.8vw, 18px); font-style: italic; }
+.pv-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 0; }
+.bro-preview .pv-label { margin: 0; font-size: clamp(11px, 3.4vw, 15px); letter-spacing: 0.16em; white-space: nowrap; }
+.pv-score { margin: 0; color: var(--dmax); line-height: 1; white-space: nowrap; }
+.pv-num { font-size: clamp(20px, 6.6vw, 32px); font-weight: 500; font-variant-numeric: lining-nums tabular-nums; text-shadow: 0 0 2px rgba(26, 24, 22, 0.5); }
+.pv-unit { color: var(--silver); font-size: clamp(11px, 3.6vw, 16px); font-style: italic; }
+.pv-text { margin: 0; font-size: clamp(18px, 5.6vw, 27px); line-height: 1; }
+.pv-w { display: inline-flex; flex-direction: column; align-items: center; vertical-align: top; margin: 0 0.1em 0.18em 0; }
+.pv-w.pv-p { margin-left: -0.1em; }
+.pv-t { display: block; line-height: 1.05; transition-property: color, text-shadow; transition-timing-function: cubic-bezier(0.3, 0, 0.4, 1); }
+.pv-b { display: block; color: var(--silver); font-size: clamp(11px, 3.4vw, 14px); line-height: 1.15; font-variant-numeric: lining-nums tabular-nums; transition: color 0.6s ease; }
+.pv-w.pv-p .pv-t { color: var(--x2); }
+/* Latent: exposed but not yet developed, the letters only a ghost. */
+.pv-w.is-latent .pv-t { color: #e2ded5; text-shadow: none; }
+.pv-w.is-latent .pv-b { color: #e2ded5; }
+.is-still .pv-t, .is-still .pv-b { transition: none; }
+.pv-key { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--silver); font-size: clamp(11px, 3.4vw, 14px); font-style: italic; line-height: 1.2; }
+.pv-wedge { display: flex; flex: none; border: 1px solid var(--dmax); }
+.pv-wedge i { width: clamp(10px, 3.4vw, 16px); height: clamp(9px, 2.8vw, 13px); }
+.pv-wedge i + i { border-left: 1px solid var(--paper); }
+.pv-wedge .s0 { background: var(--x0); }
+.pv-wedge .s1 { background: var(--x1); }
+.pv-wedge .s2 { background: var(--x2); }
+.pv-wedge .s3 { background: var(--x3); }
+.pv-wedge .s4 { background: var(--x4); }
 
 .bro-detail.is-inline { margin-top: 18px; }

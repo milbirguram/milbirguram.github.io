@@ -4,32 +4,23 @@
   var Kit = window.Kit || { preview: false, reducedMotion: false, onPlay: function (cb) { cb(true); } };
   var B = window.Bromide;
 
-  // Exposure: bits -> optical density of the print. Predictable words print
-  // faint, surprising ones develop dark. The grey behind a word is the paper's
-  // own colour attenuated by 10^-D (D rises with bits, 0 to 1.6); the letters
-  // go from pale silver to black, and turn paper-white once the grey is too
-  // dark to read black on (from 9 bits, where D steps up so both stay above
-  // 5:1 contrast). The legend's test strip is printed by this same rule.
-  var PAPER = [245, 240, 228], FG0 = [106, 101, 94], FG1 = [18, 17, 16], FLIP = 9;
-  function lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
-  function srgb(v) { v = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; return Math.round(255 * Math.max(0, Math.min(1, v))); }
-  function rgb(c) { return 'rgb(' + c.join(',') + ')'; }
-  function density(bits) {
-    var b = Math.max(0, Math.min(15, bits));
-    return b < FLIP ? 0.53 * b / FLIP : 0.85 + 0.75 * (b - FLIP) / (15 - FLIP);
-  }
-  function exposure(bits) {
-    var att = Math.pow(10, -density(bits)), b = Math.max(0, Math.min(15, bits));
-    var bg = PAPER.map(function (c) { return srgb(lin(c) * att); });
-    var f = Math.pow(Math.min(1, b / FLIP), 0.8);
-    var fg = b < FLIP ? FG0.map(function (c, k) { return Math.round(c + f * (FG1[k] - c)); }) : PAPER;
-    return { fg: rgb(fg), bg: b < 0.05 ? 'transparent' : rgb(bg), dark: b >= FLIP };
+  // Exposure: bits -> one of five silver tones, printed in the letters
+  // themselves. Predictable words print faint, surprising ones develop dark.
+  // The steps are the legend's wedge (style.css .x0 to .x4): under 2 bits
+  // (better than a 1-in-4 guess) palest; 11 bits or more (rarer than about
+  // 1 in 2,000) Dmax. The bits figure printed under every word says the
+  // same thing in numbers, so tone is never the only signal.
+  var STEPS = [2, 4, 7, 11];
+  var STEP_LABELS = ['under 2', '2–4', '4–7', '7–11', '11+'];
+  function step(bits) {
+    var k = 0;
+    while (k < STEPS.length && bits >= STEPS[k]) k++;
+    return k;
   }
   function print(node, bits) {
-    var e = exposure(bits);
-    node.style.color = e.fg;
-    node.style.backgroundColor = e.bg;
-    node.classList.toggle('is-dark', e.dark);
+    var k = step(bits);
+    for (var i = 0; i <= STEPS.length; i++) node.classList.toggle('x' + i, i === k);
+    return k;
   }
 
   function $(id) { return document.getElementById(id); }
@@ -45,7 +36,7 @@
   if (Kit.preview) preview();
   else app();
 
-  // ---- Preview: a sentence types itself, each word glowing in its colour ----
+  // ---- Preview: a print on the easel; the next sentence develops in place --
 
   function preview() {
     $('bro-app').hidden = true;
@@ -62,74 +53,76 @@
     }
     var sentences = data.sentences;
     var LABELS = { tired: 'A tired line', fresh: 'A fresher line' };
-    var spans = [];
-    var current = -1;
+    var words = [];
 
-    function build(si) {
-      current = si;
-      var s = sentences[si];
+    // Lay a sentence on the sheet as a latent image: every word and its bits
+    // in place, but only a ghost on the paper until it develops.
+    function lay(si) {
+      var s = sentences[si], total = 0, n = 0;
       label.textContent = LABELS[s.label] || '';
       text.textContent = '';
-      spans = s.words.map(function (w) {
+      words = s.words.map(function (w) {
+        var sp = el('span', 'pv-w is-latent');
+        var t = el('span', 'pv-t', w.t);
+        sp.appendChild(t);
+        if (w.punct) {
+          sp.classList.add('pv-p');
+        } else {
+          sp.appendChild(el('span', 'pv-b', w.bits === undefined ? '?' : fmt(w.bits)));
+          if (w.bits !== undefined) {
+            var k = print(t, w.bits);
+            // Development time: highlights settle fast, shadows keep darkening.
+            t.style.transitionDuration = (0.7 + 0.55 * k) + 's';
+            total += w.bits;
+            n++;
+          }
+        }
         if (w.pre) text.appendChild(document.createTextNode(w.pre));
-        var sp = el('span', 'pv-w is-hidden', w.t);
-        if (w.oov) sp.classList.add('is-oov');
-        if (w.punct) sp.classList.add('pv-p');
         text.appendChild(sp);
         return sp;
       });
-    }
-    function show(si, shown) {
-      if (si !== current) build(si);
-      var s = sentences[si], total = 0, n = 0;
-      s.words.forEach(function (w, i) {
-        var sp = spans[i];
-        var on = i < shown;
-        sp.classList.toggle('is-hidden', !on);
-        if (w.bits !== undefined) print(sp, w.bits);
-        if (on && w.bits !== undefined) { total += w.bits; n++; }
-      });
       num.textContent = n ? fmt(total / n) : '–';
     }
-    function still() {
-      var last = sentences.length - 1;
-      show(last, sentences[last].words.length);
+    function develop() {
+      words.forEach(function (sp) { sp.classList.remove('is-latent'); });
+    }
+    function fix() {
+      words.forEach(function (sp) {
+        sp.firstChild.style.transitionDuration = FADE_MS / 1000 + 's';
+        sp.classList.add('is-latent');
+      });
     }
 
-    // One loop lasts LOOP_MS (9 s): each sentence gets an equal share, holds
-    // fully typed for HOLD_MS, then a blank GAP_MS before the next. The time
-    // left is spread over its tokens (punctuation counts half a word).
-    var LOOP_MS = 9000, HOLD_MS = 1700, GAP_MS = 400;
-    var step = sentences.map(function (s) {
-      var units = s.words.reduce(function (n, w) { return n + (w.punct ? 0.5 : 1); }, 0);
-      return Math.max(80, Math.min(400, (LOOP_MS / sentences.length - HOLD_MS - GAP_MS) / units));
-    });
-    var timer = null, si = 0, shown = 0;
-    function tick() {
-      var s = sentences[si];
-      if (shown < s.words.length) {
-        shown++;
-        show(si, shown);
-        var next = s.words[shown] || {};
-        timer = setTimeout(tick, shown < s.words.length ? step[si] * (next.punct ? 0.5 : 1) : HOLD_MS);
-      } else {
+    // One loop is 2 x 5.4 s: a sentence develops (up to 2.9 s for the
+    // darkest words), holds, then fades to a ghost for 0.5 s (the sheet is
+    // never blank), and the next is laid as a ghost and developed in place.
+    var HOLD_MS = 4900, FADE_MS = 500;
+    var timer = null, si = 0;
+    function next() {
+      box.classList.remove('is-still');
+      fix();
+      timer = setTimeout(function () {
         si = (si + 1) % sentences.length;
-        shown = 0;
-        show(si, 0);
-        timer = setTimeout(tick, GAP_MS);
-      }
+        lay(si);
+        // Let the latent state paint before developing, so it transitions.
+        void text.offsetWidth;
+        develop();
+        timer = setTimeout(next, HOLD_MS);
+      }, FADE_MS);
     }
+    // First frame: the fresher line, fully developed. Never a blank sheet.
+    si = sentences.length - 1;
+    box.classList.add('is-still');
+    lay(si);
+    develop();
     Kit.onPlay(function (playing) {
       clearTimeout(timer);
       timer = null;
-      box.classList.toggle('is-still', !playing);
       if (playing) {
-        si = 0;
-        shown = 0;
-        show(si, 0);
-        timer = setTimeout(tick, GAP_MS);
+        timer = setTimeout(next, HOLD_MS - 1500);
       } else {
-        still();
+        box.classList.add('is-still');
+        develop();
       }
     });
   }
@@ -158,13 +151,16 @@
     loadBooks();
     loadModel();
 
-    // The legend, printed by the same rule as the words: a darkroom test strip.
+    // The legend, printed by the same rule as the words: a step wedge.
     function testStrip() {
       var strip = $('bro-strip');
-      [0, 3, 6, 9, 12, 15].forEach(function (b) {
-        var band = el('span', '', b === 0 ? '0 bits' : b === 15 ? '15+' : String(b));
-        print(band, b);
-        strip.appendChild(band);
+      STEP_LABELS.forEach(function (lab, k) {
+        var cell = el('span', 'bro-step');
+        var w = el('span', 'bro-step-w', 'word');
+        print(w, k === 0 ? 0 : STEPS[k - 1]);
+        cell.appendChild(w);
+        cell.appendChild(el('span', 'bro-step-b', lab + (k === STEP_LABELS.length - 1 ? ' bits' : '')));
+        strip.appendChild(cell);
       });
     }
 
