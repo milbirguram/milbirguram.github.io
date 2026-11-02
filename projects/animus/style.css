@@ -1,0 +1,103 @@
+/* Animus: page-specific styles. The site chrome comes from ../kit.css. */
+
+.an-stage { --arena: #f3f3ed; }
+
+/* Mode tabs */
+.an-tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; padding: 3px; gap: 3px; margin-bottom: 16px; background: var(--bg); }
+.an-tabs button {
+  appearance: none; font: inherit; font-size: 15px; line-height: 1.4; color: var(--muted);
+  background: transparent; border: 0; border-radius: 4px; padding: 6px 14px; cursor: pointer;
+}
+.an-tabs button:hover { color: var(--ink-strong); background: var(--wash); }
+.an-tabs button[aria-selected="true"] { color: var(--bg); background: var(--ink-strong); }
+
+/* Layout: arena on the left, panel on the right; stacked on narrow screens */
+.an-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
+@media (max-width: 860px) {
+  .an-layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+}
+
+.an-arena {
+  position: relative; aspect-ratio: 16 / 10; width: 100%;
+  background: var(--arena); border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+}
+.an-arena canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.an-arena canvas.is-grab { cursor: grab; }
+.an-arena canvas.is-grabbing { cursor: grabbing; }
+.an-arena canvas.is-locked { cursor: default; }
+.an-arena canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+
+.an-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 12px; }
+.an-bar-mode { display: contents; }
+.an-speed { margin-left: auto; color: var(--muted); font-size: 15px; display: inline-flex; align-items: center; gap: 8px; }
+.an-speed select {
+  font: inherit; font-size: 15px; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px;
+}
+.an-hint { margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+/* Panel */
+.an-panel { font-size: 15px; line-height: 1.65; min-width: 0; }
+.an-panel h3 { margin: 0 0 8px; color: var(--ink-strong); font-size: 16px; font-weight: 500; line-height: 1.5; }
+.an-panel p { margin: 0 0 14px; }
+.an-panel h3:focus { outline: none; }
+.an-panel h3:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.an-muted { color: var(--muted); }
+.an-small { font-size: 14px; }
+
+.an-diagram { display: flex; justify-content: center; margin: 4px 0 10px; }
+.an-diagram svg { width: 100%; max-width: 210px; height: auto; display: block; }
+
+.an-field { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
+.an-field legend { padding: 0; margin-bottom: 6px; color: var(--muted); font-size: 14px; }
+.an-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.an-seg .kit-button { padding: 6px 12px; font-size: 14px; }
+.an-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.an-row .kit-button { font-size: 14px; padding: 6px 12px; }
+
+.an-name { padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.an-name strong { font-weight: 500; }
+.an-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; vertical-align: 0; }
+
+.an-cars { list-style: none; padding: 0; margin: 0 0 14px; }
+.an-cars li { display: flex; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.an-cars li:last-child { border-bottom: 0; }
+.an-cars li span.an-car-name { flex: 1; min-width: 0; }
+.an-x {
+  appearance: none; font: inherit; font-size: 14px; color: var(--muted); background: transparent;
+  border: 1px solid transparent; border-radius: 4px; padding: 0 8px; cursor: pointer; line-height: 1.6; min-height: 32px;
+}
+.an-x:hover { color: var(--ink-strong); border-color: var(--line); }
+.an-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (pointer: coarse) { .an-x { min-height: 40px; padding: 0 12px; } }
+
+.an-range { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 10px; margin-bottom: 12px; }
+.an-range label { color: var(--muted); font-size: 14px; }
+.an-range output { font-family: var(--mono); font-size: 14px; min-width: 3ch; text-align: right; color: var(--ink-strong); }
+.an-range input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+
+.an-result { padding: 12px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); margin-bottom: 14px; }
+.an-result p:last-child { margin-bottom: 0; }
+.an-result.is-right { border-color: #9fb3a0; }
+.an-result.is-wrong { border-color: #d0b8a8; }
+.an-key { display: flex; flex-direction: column; gap: 4px; margin: 0 0 14px; font-size: 14px; color: var(--muted); }
+.an-key svg { vertical-align: middle; margin-right: 6px; }
+
+.an-score-list { padding-left: 20px; margin: 0 0 14px; }
+.an-progress { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+
+.an-list { padding-left: 20px; margin: 0 0 20px; }
+.an-list li { margin-bottom: 8px; }
+.an-list strong { font-weight: 500; color: var(--ink-strong); }
+
+.an-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Preview (?preview): only the arena, filling the frame */
+html.kit-preview .an-tabs,
+html.kit-preview .an-bar,
+html.kit-preview .an-hint,
+html.kit-preview .an-panel { display: none; }
+html.kit-preview .an-layout,
+html.kit-preview .an-left { display: block; width: 100%; height: 100%; }
+html.kit-preview .an-arena { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; border: 0; border-radius: 0; }
+html.kit-preview .an-arena canvas { cursor: default; }
