@@ -16,6 +16,8 @@ A hundred and twenty adults are split by lot into two groups of sixty. One group
 
 **Why one path stays near 5%.** When there is no effect, a p-value is equally likely to land anywhere between 0 and 1, so one fixed test falls below 0.05 about one time in twenty. That is all the 5% promises. Every extra path is another draw. The paths share the same people, so they are far from independent, and 486 paths are not 486 separate tries, but they differ enough that the chance of at least one hit climbs well past 5%. Pre-registration means writing the path down before seeing the data. It removes the forks, not the noise. It does not make an analysis right, only honest about its error rate.
 
+**The look.** The stage is an engraved botanical plate: cream plate paper with a platemark, sepia ink in fine rules and hatching, and printer’s vermilion used for one thing only, a result under p = 0.05. The garden is drawn as a plant on a cut stalk: each complete analysis ends in a slender leaf, and each significant one in a vermilion berry, so shape as well as colour marks it. The plate number is the number of noise studies the page drew before it found the one it shows (see "The first study is selected" below), so the file drawer is printed in the corner of the plate. Type is Old Standard TT, with the digits taken from IM Fell English because Old Standard has no old-style figures; both are SIL OFL fonts, self-hosted from Fontsource (Latin subset, about 109 KB in all) with the licence in `fonts/OFL.txt`.
+
 **Page length.** At the owner’s request the page itself is only a back link, a title and one short paragraph. Everything a visitor needs to use the interactive is brief microcopy inside the stage; the longer explanation lives here.
 
 ## How I know

@@ -3,10 +3,14 @@
 (function () {
   'use strict';
   var M = window.Mirage, Kit = window.Kit;
+  // The plate's palette: cream paper, sepia ink, and vermilion for p < 0.05 only.
   var C = {
-    bg: '#faf9f6', wash: '#f3f3ed', ink: '#343630', strong: '#252821', muted: '#686d62',
-    line: '#dedfd7', lineStrong: '#b5bdaf', accent: '#58705a', dot: '#4d5148', cell: '#e4e5dd'
+    bg: '#f4ecda', paperDeep: '#e8dabd', ink: '#5b4636', strong: '#3b2c20', muted: '#725c48',
+    faded: '#a08a70', verm: '#d23c1e', cell: '#cdbb98', empty: '#ebdfc6'
   };
+  function inkA(a) { return 'rgba(91,70,54,' + a + ')'; }
+  // Digits come from the old-style figures of IM Fell, letters from Old Standard.
+  var FONT = '"Mirage Figures", "Mirage Serif", Georgia, "Times New Roman", serif';
   var SHOWCASE_START = 20261101;
   var NF = M.FORKS.length;
 
@@ -26,6 +30,20 @@
   }
   function pText(p) { var s = fmtP(p); return s.charAt(0) === '<' ? 'p ' + s : 'p = ' + s; }
   function isSig(p) { return p < M.ALPHA; }
+  function roman(n) {
+    var v = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1], r = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'], out = '';
+    for (var i = 0; i < v.length; i++) while (n >= v[i]) { out += r[i]; n -= v[i]; }
+    return out;
+  }
+  // Canvas text needs the plate's faces loaded before it draws; call back once they are.
+  function whenFonts(cb) {
+    if (!document.fonts || !document.fonts.load) return;
+    Promise.all([
+      document.fonts.load('16px "Mirage Serif"'),
+      document.fonts.load('italic 16px "Mirage Serif"'),
+      document.fonts.load('16px "Mirage Figures"', '0123456789')
+    ]).then(cb, function () {});
+  }
 
   // Size a canvas to its CSS box, devicePixelRatio capped at 2.
   function fit(canvas) {
@@ -62,9 +80,11 @@
       if (i % span[1] === 0) slot += 6; else if (i % span[2] === 0) slot += 3; else if (i % span[3] === 0) slot += 1;
       slots.push(slot); slot += 1;
     }
-    var total = slot;
+    // The leaves run clockwise from the lower left round to the lower right, leaving a gap
+    // at the bottom for the stem.
+    var GAP = 0.9, first = slots[0], last = slots[N - 1];
     var leafAngle = new Float64Array(N);
-    for (i = 0; i < N; i++) leafAngle[i] = -Math.PI / 2 + 2 * Math.PI * (slots[i] - 2.5) / total;
+    for (i = 0; i < N; i++) leafAngle[i] = Math.PI / 2 + GAP / 2 + (2 * Math.PI - GAP) * (slots[i] - first) / (last - first);
     var nodeAngle = [];                // nodeAngle[d][j]
     for (d = 0; d <= NF; d++) {
       var count = N / span[d], arr = new Float64Array(count);
@@ -74,7 +94,7 @@
     // Sector extents of the first fork (for the outer arcs and labels).
     var sectors = [];
     for (j = 0; j < RADIX[0]; j++) sectors.push([leafAngle[j * span[1]], leafAngle[(j + 1) * span[1] - 1]]);
-    return { span: span, RING: RING, leafAngle: leafAngle, nodeAngle: nodeAngle, sectors: sectors, N: N };
+    return { span: span, RING: RING, leafAngle: leafAngle, nodeAngle: nodeAngle, sectors: sectors, N: N, GAP: GAP };
   })();
 
   function sigCounts(p) {
@@ -114,18 +134,94 @@
     }
   }
 
-  function diamond(ctx, x, y, r) {
-    ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath();
+  // ---------- the engraved plant ----------
+
+  // Sizes on the rim, shared by drawing and pointing.
+  function leafLen(R) { return clamp(R * 0.055, 4.5, 13); }
+  function berryR(R, s) { return Math.max(R < 200 ? 3.3 : 3, 4.3 * s); }
+  function berryAt(R, s) { return R + leafLen(R) * 0.6 + berryR(R, s); }
+  function rimOuter(R, s) { return berryAt(R, s) + berryR(R, s); }
+  function sway(i) { var v = Math.sin(i * 12.9898) * 43758.5453; return v - Math.floor(v); }
+
+  // A berry: vermilion, ruled round in ink, with an engraved highlight.
+  function berry(ctx, x, y, r) {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = C.verm; ctx.fill();
+    ctx.lineWidth = Math.max(0.7, r * 0.2); ctx.strokeStyle = C.strong; ctx.stroke();
+    if (r >= 3.5) {
+      ctx.beginPath(); ctx.arc(x - r * 0.18, y - r * 0.18, r * 0.5, Math.PI * 1.08, Math.PI * 1.62);
+      ctx.strokeStyle = 'rgba(244,236,218,0.9)'; ctx.lineWidth = Math.max(0.7, r * 0.17); ctx.stroke();
+    }
   }
 
-  // Draw the garden. o: { p, counts, you, pre, sel, grow (0..6), bloom, glow, trace, cx, cy, R, scale }
+  // A leaf with a midrib and hatched veins, base at (bx, by), pointing along ang.
+  function bigLeaf(ctx, bx, by, ang, len, s) {
+    var ca = Math.cos(ang), sa = Math.sin(ang), nx = -sa, ny = ca, wd = len * 0.36;
+    var tx = bx + ca * len, ty = by + sa * len, mx = (bx + tx) / 2, my = (by + ty) / 2;
+    ctx.beginPath(); ctx.moveTo(bx, by);
+    ctx.quadraticCurveTo(mx + nx * wd, my + ny * wd, tx, ty);
+    ctx.quadraticCurveTo(mx - nx * wd, my - ny * wd, bx, by);
+    ctx.fillStyle = C.bg; ctx.fill();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(0.8, 1 * s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty);
+    for (var j = 1; j <= 6; j++) {
+      var t = j / 7.2, px = bx + ca * len * t, py = by + sa * len * t, half = 2 * t * (1 - t) * wd * 0.5 * 0.86;
+      // veins on both sides; the shaded side gets a second, shorter stroke
+      ctx.moveTo(px, py); ctx.lineTo(px + ca * len * 0.1 + nx * half, py + sa * len * 0.1 + ny * half);
+      ctx.moveTo(px, py); ctx.lineTo(px + ca * len * 0.1 - nx * half, py + sa * len * 0.1 - ny * half);
+      ctx.moveTo(px + ca * len * 0.04 - nx * half * 0.3, py + sa * len * 0.04 - ny * half * 0.3);
+      ctx.lineTo(px + ca * len * 0.1 - nx * half * 0.85, py + sa * len * 0.1 - ny * half * 0.85);
+    }
+    ctx.lineWidth = Math.max(0.5, 0.6 * s); ctx.stroke();
+  }
+
+  // The stalk the whole garden stands on, cut obliquely at the foot, hatched on its shaded
+  // side. f (0..1) grows it up from the cut towards the root.
+  function drawStem(ctx, cx, cy, R, s, bottom, f) {
+    if (f <= 0 || bottom <= cy) return;
+    var x0 = cx - R * 0.05, y0 = bottom, qx = cx + R * 0.08, qy = (cy + bottom) / 2;
+    var n = 36, L = [], Rt = [], mid = [];
+    for (var i = 0; i <= n; i++) {
+      var t = i / n * f, u = 1 - t;
+      var x = u * u * x0 + 2 * u * t * qx + t * t * cx, y = u * u * y0 + 2 * u * t * qy + t * t * cy;
+      var dx = 2 * u * (qx - x0) + 2 * t * (cx - qx), dy = 2 * u * (qy - y0) + 2 * t * (cy - qy);
+      var dl = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / dl, ny = dx / dl;
+      var hw = (Math.max(3, 7.5 * s) * (1 - t) + Math.max(1.6, 3.4 * s) * t) / 2;
+      mid.push([x, y, nx, ny, hw]);
+      L.push([x - nx * hw, y - ny * hw]); Rt.push([x + nx * hw, y + ny * hw]);
+    }
+    // a leaf off the stalk, a third of the way up
+    if (f > 0.4) {
+      var m = mid[Math.round(n * 0.3)], lead = Math.min(1, (f - 0.4) / 0.3);
+      bigLeaf(ctx, m[0], m[1], Math.PI * 1.08 + 0.15, R * 0.3 * lead, s);
+    }
+    ctx.beginPath();
+    ctx.moveTo(L[0][0], L[0][1] + 2.5 * s);
+    for (i = 1; i <= n; i++) ctx.lineTo(L[i][0], L[i][1]);
+    for (i = n; i >= 0; i--) ctx.lineTo(Rt[i][0], Rt[i][1]);
+    ctx.lineTo(Rt[0][0], Rt[0][1] - 2.5 * s);
+    ctx.closePath();
+    ctx.fillStyle = C.bg; ctx.fill();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(0.8, 1.05 * s); ctx.stroke();
+    ctx.beginPath();
+    for (i = 1; i < n; i += 1) {
+      var q = mid[i], k = q[4];
+      ctx.moveTo(q[0] + q[2] * k * 0.15, q[1] + q[3] * k * 0.15);
+      ctx.lineTo(q[0] + q[2] * k * 0.95, q[1] + q[3] * k * 0.95 - 1.2 * s);
+    }
+    ctx.lineWidth = Math.max(0.45, 0.55 * s); ctx.stroke();
+  }
+
+  // Draw the garden. o: { p, counts, you, pre, sel, grow (0..6), bloom, glow, trace, cx, cy, R, scale, bottom }
   function drawTree(ctx, o) {
     var cx = o.cx, cy = o.cy, R = o.R, s = o.scale;
     var grow = o.grow == null ? NF : o.grow;
-    var d, j;
+    var d, j, i, a;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    // Branches, plain then significant-bearing, thinner towards the rim.
+    if (o.bottom != null) drawStem(ctx, cx, cy, R, s, o.bottom, clamp(grow * 1.2, 0, 1));
+    // Branches: thick hollow stems near the root, fine single lines towards the rim. The
+    // branches that bear a significant result are inked darker once they show.
     for (var pass = 0; pass < 2; pass++) {
       for (d = 1; d <= NF; d++) {
         var f = clamp(grow - (d - 1), 0, 1);
@@ -141,34 +237,46 @@
           linkTo(ctx, cx, cy, R, Tree.nodeAngle[d - 1][pj], Tree.RING[d - 1], Tree.nodeAngle[d][j], Tree.RING[d], fe, true);
         }
         if (!any) continue;
-        var w = Math.max(0.6, (2.4 - d * 0.28) * s);
-        if (pass === 0) { ctx.strokeStyle = 'rgba(104,109,98,0.30)'; ctx.lineWidth = w; }
-        else { ctx.strokeStyle = 'rgba(88,112,90,' + (0.25 + 0.55 * o.glow) + ')'; ctx.lineWidth = w * (1 + 0.35 * o.glow); }
+        var w = Math.max(0.6, (d <= 2 ? 4.4 - d * 1.0 : 2.3 - d * 0.27) * s);
+        if (pass === 0) { ctx.strokeStyle = inkA(0.6); ctx.lineWidth = w; }
+        else { ctx.strokeStyle = 'rgba(59,44,32,' + (0.6 + 0.35 * o.glow) + ')'; ctx.lineWidth = w * (1 + 0.25 * o.glow); }
         ctx.stroke();
+        if (d <= 2 && s >= 0.75) { ctx.strokeStyle = C.bg; ctx.lineWidth = ctx.lineWidth - 2 * Math.max(0.75, 0.8 * s); ctx.stroke(); }
       }
     }
-    // Arcs marking the three outcome sectors.
+    var L = leafLen(R), bR = berryR(R, s), bAt = berryAt(R, s);
+    // Brackets marking the three outcome sectors.
     if (o.arcs && grow >= NF) {
-      ctx.strokeStyle = C.lineStrong; ctx.lineWidth = 1;
+      var ar = rimOuter(R, s) + 5;
+      ctx.strokeStyle = C.faded; ctx.lineWidth = 1;
       Tree.sectors.forEach(function (sec) {
-        ctx.beginPath(); ctx.arc(cx, cy, R + 9 * s, sec[0] - 0.01, sec[1] + 0.01); ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx, cy, ar, sec[0] - 0.008, sec[1] + 0.008);
+        [sec[0] - 0.008, sec[1] + 0.008].forEach(function (e) {
+          ctx.moveTo(cx + Math.cos(e) * ar, cy + Math.sin(e) * ar);
+          ctx.lineTo(cx + Math.cos(e) * (ar - 4), cy + Math.sin(e) * (ar - 4));
+        });
+        ctx.stroke();
       });
     }
-    // Leaves.
+    // Leaves: slender, inked, each on the end of one complete analysis.
     var bloom = o.bloom == null ? 1 : o.bloom;
     if (bloom > 0) {
       var shown = bloom * (Tree.N + 60);
-      ctx.fillStyle = C.lineStrong;
+      var hw = clamp(R * (2 * Math.PI - Tree.GAP) / 530 * 0.44, 0.45, L * 0.22);
       ctx.beginPath();
-      for (var i = 0; i < Tree.N; i++) {
+      for (i = 0; i < Tree.N; i++) {
         var k = clamp((shown - i) / 60, 0, 1);
         if (k <= 0) break;
         if (o.glow > 0 && isSig(o.p[i])) continue;
-        var a = Tree.leafAngle[i], r = 1.7 * s * ease(k);
-        var x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
-        ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 2 * Math.PI);
+        a = Tree.leafAngle[i] + (sway(i) - 0.5) * 0.012;
+        var ca = Math.cos(a), sa = Math.sin(a), len = L * ease(k) * (0.78 + 0.22 * sway(i + 7));
+        var bx = cx + ca * R, by = cy + sa * R, tx = cx + ca * (R + len), ty = cy + sa * (R + len);
+        var mx = (bx + tx) / 2, my = (by + ty) / 2, hh = hw * 2 * ease(k);
+        ctx.moveTo(bx, by);
+        ctx.quadraticCurveTo(mx - sa * hh, my + ca * hh, tx, ty);
+        ctx.quadraticCurveTo(mx + sa * hh, my - ca * hh, bx, by);
       }
-      ctx.fill();
+      ctx.fillStyle = inkA(0.8); ctx.fill();
     }
     // The visitor's path, the pre-registered path, and a selected path.
     var trace = o.trace == null ? NF : o.trace;
@@ -179,54 +287,50 @@
       ctx.setLineDash([]);
     }
     if (o.sel != null && o.sel !== o.you) {
-      ctx.strokeStyle = 'rgba(77,81,72,0.85)'; ctx.lineWidth = Math.max(1.2, 1.7 * s);
+      ctx.strokeStyle = 'rgba(59,44,32,0.8)'; ctx.lineWidth = Math.max(1.2, 1.7 * s);
       tracePath(ctx, cx, cy, R, o.sel, NF); ctx.stroke();
     }
     if (o.you != null && trace > 0) {
       ctx.strokeStyle = C.strong; ctx.lineWidth = Math.max(1.8, 2.8 * s);
       tracePath(ctx, cx, cy, R, o.you, trace); ctx.stroke();
     }
-    // Significant leaves: accent diamonds with a soft halo.
+    // Significant results: vermilion berries on short stalks, round where leaves are long.
     if (o.glow > 0 && bloom > 0) {
-      var g = ease(o.glow), pulse = o.pulse || 0;
-      ctx.fillStyle = 'rgba(88,112,90,' + (0.16 + 0.1 * pulse) * g + ')';
+      var gl = ease(o.glow), r0 = bR * gl * (1 + 0.06 * (o.pulse || 0));
       ctx.beginPath();
       for (i = 0; i < Tree.N; i++) {
         if (!isSig(o.p[i])) continue;
-        a = Tree.leafAngle[i]; x = cx + Math.cos(a) * R; y = cy + Math.sin(a) * R;
-        var hr = (7 + 2 * pulse) * s * g;
-        ctx.moveTo(x + hr, y); ctx.arc(x, y, hr, 0, 2 * Math.PI);
+        a = Tree.leafAngle[i];
+        ctx.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+        ctx.lineTo(cx + Math.cos(a) * (bAt - r0), cy + Math.sin(a) * (bAt - r0));
       }
-      ctx.fill();
-      // On small trees, keep the diamond big enough to read as a shape, and lift it just
-      // past the rim so it separates from the grey leaves.
-      var dR = Math.max(R < 200 ? 3.8 : 2.8, 4.6 * s), dOff = R < 200 ? 3 : 1.5 * s;
-      ctx.fillStyle = C.accent; ctx.strokeStyle = C.bg; ctx.lineWidth = Math.max(0.75, 0.9 * s);
-      ctx.beginPath();
+      ctx.strokeStyle = C.strong; ctx.lineWidth = Math.max(0.7, 0.9 * s); ctx.stroke();
       for (i = 0; i < Tree.N; i++) {
         if (!isSig(o.p[i])) continue;
-        a = Tree.leafAngle[i]; x = cx + Math.cos(a) * (R + dOff); y = cy + Math.sin(a) * (R + dOff);
-        diamond(ctx, x, y, dR * g);
+        a = Tree.leafAngle[i];
+        berry(ctx, cx + Math.cos(a) * bAt, cy + Math.sin(a) * bAt, r0);
       }
-      ctx.fill();
-      ctx.stroke();
     }
-    // Rings around the ends of marked paths.
-    function ringAt(leaf, color, width, rad, dash) {
-      var aa = Tree.leafAngle[leaf];
+    // Rings round the ends of marked paths: round the berry, or round the leaf.
+    function ringAt(leaf, color, width, extra, dash) {
+      var aa = Tree.leafAngle[leaf], sig = o.glow > 0 && isSig(o.p[leaf]);
+      var rr = sig ? bAt : R + L * 0.5, rad = (sig ? bR : L * 0.55) + extra;
       ctx.beginPath();
-      ctx.arc(cx + Math.cos(aa) * R, cy + Math.sin(aa) * R, rad, 0, 2 * Math.PI);
+      ctx.arc(cx + Math.cos(aa) * rr, cy + Math.sin(aa) * rr, rad, 0, 2 * Math.PI);
       ctx.strokeStyle = color; ctx.lineWidth = width;
       if (dash) ctx.setLineDash(dash);
       ctx.stroke(); ctx.setLineDash([]);
     }
     if (trace >= NF) {
-      if (o.pre != null) ringAt(o.pre, C.muted, Math.max(1, 1.3 * s), 6.5 * s, [2.5 * s, 2.5 * s]);
-      if (o.you != null) ringAt(o.you, C.strong, Math.max(1.5, 2 * s), 7.5 * s);
+      if (o.pre != null) ringAt(o.pre, C.muted, Math.max(1, 1.3 * s), 2.5 * s, [2.5 * s, 2.5 * s]);
+      if (o.you != null) ringAt(o.you, C.strong, Math.max(1.5, 2 * s), 3 * s);
     }
-    if (o.sel != null) ringAt(o.sel, C.dot, Math.max(1.2, 1.5 * s), 9.5 * s);
-    // Root.
-    if (grow > 0) { ctx.fillStyle = C.strong; ctx.beginPath(); ctx.arc(cx, cy, 3.2 * s, 0, 2 * Math.PI); ctx.fill(); }
+    if (o.sel != null) ringAt(o.sel, C.strong, Math.max(1.2, 1.5 * s), 5.5 * s);
+    // The root: a knot where the stalk divides.
+    if (grow > 0) {
+      ctx.beginPath(); ctx.arc(cx, cy, 3.6 * s, 0, 2 * Math.PI);
+      ctx.fillStyle = C.strong; ctx.fill();
+    }
   }
 
   // ===========================================================================
@@ -244,16 +348,19 @@
     var youP = 'p = ' + fmtP(g.p[you]);
     var LOOP = 10500, raf = 0, t0 = 0, playing = false;
 
+    var plate = 'Pl. ' + roman(show.tries) + '.';
+
+    // The canvas stays transparent so the stage's paper grain and platemark show through.
     function frame(t) {
       var fc = fit(canvas), ctx = fc.ctx, w = fc.w, h = fc.h;
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = C.bg; ctx.fillRect(0, 0, w, h);
       var wide = w / h > 1.25;
-      var R = wide ? Math.min(h * 0.42, w * 0.3) : Math.min(w, h) * 0.36;
-      var cx = wide ? Math.max(R + 12, w * 0.33) : w / 2, cy = wide ? h / 2 : h * 0.44;
+      var R = wide ? Math.min(h * 0.36, w * 0.28) : Math.min(w, h) * 0.33;
+      var cx = wide ? Math.max(R + 22, w * 0.31) : w / 2, cy = wide ? h * 0.47 : h * 0.42;
       var sec = t / 1000;
       var o = {
         p: g.p, counts: counts, you: you, pre: null, sel: null, cx: cx, cy: cy, R: R, scale: R / 150,
+        bottom: wide ? h - 9 : h - Math.round(clamp(h * 0.065, 12, 18)) * 2.4,
         grow: clamp(sec / 0.55, 0, NF),
         bloom: clamp((sec - 3.0) / 1.1, 0, 1),
         glow: clamp((sec - 4.2) / 0.7, 0, 1),
@@ -261,37 +368,42 @@
         pulse: sec > 4.9 ? 0.5 + 0.5 * Math.sin((sec - 4.9) * 3.2) : 0
       };
       var fade = clamp((10.5 - sec) / 0.6, 0, 1);
+      var small = Math.round(clamp(h * 0.065, 12, 18));
+      // The plate number, engraved in the corner; it stays while the plant regrows.
+      ctx.globalAlpha = 1;
+      ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'right';
+      ctx.fillStyle = C.strong; ctx.font = 'italic ' + small + 'px ' + FONT;
+      ctx.fillText(plate, w - 14, 14 + small);
       ctx.globalAlpha = fade;
       drawTree(ctx, o);
-      // Words, never below 12px.
+      // Words, never below 12px. Ink for the words; the berry carries the red.
       var ta = clamp((sec - 4.6) / 0.6, 0, 1) * fade;
       if (ta > 0) {
         ctx.globalAlpha = ta;
-        var big = Math.round(clamp(h * 0.105, 17, 34)), small = Math.round(clamp(h * 0.062, 12, 18));
-        ctx.textBaseline = 'alphabetic';
+        var big = Math.round(clamp(h * 0.12, 18, 38));
         if (wide) {
-          var tx = cx + R + Math.max(16, w * 0.045), avail = w - tx - 8;
-          var lines = [['after six', C.ink], ['sensible choices,', C.ink], ['in pure noise', C.muted]];
-          // Shrink to fit the space beside the tree, never below 12px.
-          ctx.font = '600 ' + big + 'px ' + fontStack();
-          while (big > 14 && ctx.measureText(youP).width > avail) { big--; ctx.font = '600 ' + big + 'px ' + fontStack(); }
-          ctx.font = small + 'px ' + fontStack();
-          while (small > 12 && ctx.measureText('sensible choices,').width > avail) { small--; ctx.font = small + 'px ' + fontStack(); }
-          var lh = small * 1.35, ty = h / 2 - (big + lh * lines.length) / 2 + big * 0.85;
+          var tx = cx + R + Math.max(20, w * 0.06), avail = w - tx - 14;
+          var lines = ['after six', 'sensible choices,', 'in pure noise'];
+          ctx.font = big + 'px ' + FONT;
+          while (big > 14 && ctx.measureText(youP).width + big * 0.55 > avail) { big--; ctx.font = big + 'px ' + FONT; }
+          ctx.font = 'italic ' + small + 'px ' + FONT;
+          while (small > 12 && ctx.measureText('sensible choices,').width > avail) { small--; ctx.font = 'italic ' + small + 'px ' + FONT; }
+          var lh = small * 1.3, ty = h / 2 - (big + lh * lines.length) / 2 + big * 0.85;
           ctx.textAlign = 'left';
-          ctx.fillStyle = C.accent; ctx.font = '600 ' + big + 'px ' + fontStack();
-          ctx.fillText(youP, tx, ty);
-          ctx.font = small + 'px ' + fontStack();
-          lines.forEach(function (ln, li) { ctx.fillStyle = ln[1]; ctx.fillText(ln[0], tx, ty + big * 0.35 + lh * (li + 1)); });
+          var br = big * 0.2;
+          berry(ctx, tx + br, ty - big * 0.26, br);
+          ctx.fillStyle = C.strong; ctx.font = big + 'px ' + FONT;
+          ctx.fillText(youP, tx + br * 2 + big * 0.18, ty);
+          ctx.font = 'italic ' + small + 'px ' + FONT;
+          lines.forEach(function (ln, li) { ctx.fillStyle = li === 2 ? C.muted : C.ink; ctx.fillText(ln, tx, ty + big * 0.3 + lh * (li + 1)); });
         } else {
           ctx.textAlign = 'center';
-          ctx.fillStyle = C.accent; ctx.font = '600 ' + small + 'px ' + fontStack();
-          ctx.fillText(youP + ' after six sensible choices, in pure noise', w / 2, h - small * 0.8);
+          ctx.fillStyle = C.strong; ctx.font = 'italic ' + small + 'px ' + FONT;
+          ctx.fillText(youP + ' after six sensible choices, in pure noise', w / 2, h - small * 0.9);
         }
       }
       ctx.globalAlpha = 1;
     }
-    function fontStack() { return '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'; }
     function tick(ts) {
       if (!playing) return;
       if (!t0) t0 = ts;
@@ -306,6 +418,7 @@
       else still();
     });
     window.addEventListener('resize', function () { if (!playing) still(); });
+    whenFonts(function () { if (!playing) still(); });
   }
 
   // ===========================================================================
@@ -488,43 +601,43 @@
     var fc = fit(el.dots), ctx = fc.ctx, w = fc.w, h = fc.h;
     var dd = state.dotData, study = state.show.study;
     ctx.clearRect(0, 0, w, h);
-    var axisY = h - 24, rowH = (axisY - 8) / 2;
+    var axisY = h - 26, rowH = (axisY - 8) / 2;
     var rows = [{ g: 1, label: 'Walked', y: 8 + rowH * 0.5 }, { g: 0, label: 'Usual', y: 8 + rowH * 1.5 }];
-    // Row bands and labels.
-    ctx.font = '13px ' + getComputedStyle(document.body).fontFamily;
-    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-    rows.forEach(function (r, i) {
-      ctx.fillStyle = i === 0 ? C.wash : 'rgba(243,243,237,0.5)';
-      ctx.fillRect(tg.L - 8, r.y - rowH / 2 + 2, tg.pw + 16, rowH - 4);
-      ctx.fillStyle = C.ink;
-      ctx.fillText(r.label, 0, r.y);
-    });
+    // The two groups lie between ruled lines, like specimens in a drawer.
+    ctx.strokeStyle = inkA(0.3); ctx.lineWidth = 1;
+    ctx.beginPath();
+    [8, 8 + rowH].forEach(function (y) { ctx.moveTo(tg.L - 8, Math.round(y) + 0.5); ctx.lineTo(tg.L + tg.pw + 8, Math.round(y) + 0.5); });
+    ctx.stroke();
+    ctx.font = 'italic 15px ' + FONT;
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillStyle = C.strong;
+    rows.forEach(function (r) { ctx.fillText(r.label, 0, r.y); });
     // Axis in the scale's own units, spaced on the analysed (raw or log) scale.
-    ctx.strokeStyle = C.lineStrong; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(tg.L, axisY + 0.5); ctx.lineTo(tg.L + tg.pw, axisY + 0.5); ctx.stroke();
-    ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = '12px ' + getComputedStyle(document.body).fontFamily;
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(tg.L - 8, axisY + 0.5); ctx.lineTo(tg.L + tg.pw + 8, axisY + 0.5); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.font = '15px ' + FONT;
     dd.sc.ticks.forEach(function (t) {
-      var x = tg.map(tg.f(t));
-      ctx.beginPath(); ctx.moveTo(x + 0.5, axisY); ctx.lineTo(x + 0.5, axisY + 4); ctx.stroke();
+      var x = Math.round(tg.map(tg.f(t))) + 0.5;
+      ctx.beginPath(); ctx.moveTo(x, axisY - 3); ctx.lineTo(x, axisY + 4); ctx.stroke();
       ctx.fillText(String(t), x, axisY + 6);
     });
-    // Dots.
-    var rad = w < 420 ? 3 : 3.5;
+    // Each person a stipple dot of ink; those your choices leave out, an empty ring.
+    var rad = w < 420 ? 3 : 3.4;
     for (var i = 0; i < study.n; i++) {
       var row = rows[study.group[i] ? 0 : 1];
       var y = row.y + state.show.jitter[i] * (rowH / 2 - 8);
       var kNow = dd.keep[i], kWas = fromKeep[i];
       var a = kWas + (kNow - kWas) * e; // 1 = analysed, 0 = left out
       ctx.beginPath(); ctx.arc(X[i], y, rad, 0, 2 * Math.PI);
-      if (a > 0.02) { ctx.fillStyle = 'rgba(77,81,72,' + (0.72 * a) + ')'; ctx.fill(); }
-      if (a < 0.98) { ctx.strokeStyle = 'rgba(141,150,134,' + (1 - a) + ')'; ctx.lineWidth = 1.2; ctx.stroke(); }
+      if (a > 0.02) { ctx.fillStyle = inkA(0.82 * a); ctx.fill(); }
+      if (a < 0.98) { ctx.strokeStyle = 'rgba(160,138,112,' + (1 - a) + ')'; ctx.lineWidth = 1.2; ctx.stroke(); }
     }
-    // Group means of the analysed values.
-    ctx.strokeStyle = C.accent; ctx.lineWidth = 2.5;
+    // Group means of the analysed values: a heavy rule with serifs.
+    ctx.strokeStyle = C.strong;
     [[dd.m1, rows[0]], [dd.m0, rows[1]]].forEach(function (m) {
       if (!isFinite(m[0])) return;
-      var x = tg.map(m[0]);
-      ctx.beginPath(); ctx.moveTo(x, m[1].y - rowH / 2 + 5); ctx.lineTo(x, m[1].y + rowH / 2 - 5); ctx.stroke();
+      var x = tg.map(m[0]), y0 = m[1].y - rowH / 2 + 5, y1 = m[1].y + rowH / 2 - 5;
+      ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke();
+      ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x - 4, y0); ctx.lineTo(x + 4, y0); ctx.moveTo(x - 4, y1); ctx.lineTo(x + 4, y1); ctx.stroke();
     });
   }
 
@@ -552,8 +665,8 @@
 
   function gardenLayout() {
     var fc = fit(gc), size = Math.min(fc.w, fc.h);
-    var R = size / 2 - Math.max(22, size * 0.07);
-    return { ctx: fc.ctx, w: fc.w, h: fc.h, cx: fc.w / 2, cy: fc.h / 2, R: R, scale: clamp(R / 240, 0.62, 1.4) };
+    var R = size / 2 - Math.max(38, size * 0.1);
+    return { ctx: fc.ctx, w: fc.w, h: fc.h, cx: fc.w / 2, cy: fc.h / 2, R: R, scale: clamp(R / 240, 0.62, 1.4), bottom: fc.h - 3 };
   }
 
   function gardenTick() {
@@ -562,7 +675,7 @@
     var t = garden.anim ? (now() - garden.anim.start) / 1000 : 99;
     var o = {
       p: state.show.garden.p, counts: state.show.counts, you: garden.you, pre: garden.pre, sel: garden.sel,
-      cx: lay.cx, cy: lay.cy, R: lay.R, scale: lay.scale, arcs: true,
+      cx: lay.cx, cy: lay.cy, R: lay.R, scale: lay.scale, arcs: true, bottom: lay.bottom,
       grow: clamp(t / 0.42, 0, NF), bloom: clamp((t - 2.4) / 0.8, 0, 1), glow: clamp((t - 3.2) / 0.5, 0, 1),
       trace: clamp((t - 3.7) / 0.25, 0, NF)
     };
@@ -574,28 +687,16 @@
   }
   function redrawGarden() { if (!garden.anim && !el.garden.hidden) gardenTick(); }
 
-  // Each outcome label sits in the corner or edge its arc faces, joined to the middle of
-  // the arc by a short leader, so it is clear which third of the tree is which.
+  // Each outcome sector is bracketed and keyed with an italic letter, as figures on a
+  // plate are; the letters are explained beside the plate.
   function drawSectorLabels(lay) {
-    var ctx = lay.ctx, names = ['Questionnaire', 'Rating', 'Diary'];
-    var pad = 2, fs = 13, arcR = lay.R + 9 * lay.scale;
-    ctx.font = fs + 'px ' + getComputedStyle(document.body).fontFamily;
-    ctx.textBaseline = 'middle';
+    var ctx = lay.ctx, keys = ['a', 'b', 'c'];
+    var fs = 16, rr = Math.min(rimOuter(lay.R, lay.scale) + 5 + 11, Math.min(lay.w, lay.h) / 2 - 9);
+    ctx.font = 'italic ' + fs + 'px ' + FONT;
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillStyle = C.strong;
     Tree.sectors.forEach(function (sec, k) {
-      var m = (sec[0] + sec[1]) / 2, cm = Math.cos(m), sm = Math.sin(m);
-      var ax = lay.cx + cm * (arcR + 2), ay = lay.cy + sm * (arcR + 2);
-      var tw = ctx.measureText(names[k]).width;
-      var lx = cm > 0.35 ? lay.w - pad - tw : cm < -0.35 ? pad : lay.cx - tw / 2;     // label box left
-      var ly = sm > 0 ? lay.h - pad - fs / 2 - 1 : pad + fs / 2 + 1;                   // label middle
-      if (Math.abs(cm) <= 0.35) ly = sm > 0 ? Math.min(lay.h - pad - fs / 2 - 1, ay + 4 + fs / 2) : Math.max(pad + fs / 2 + 1, ay - 4 - fs / 2);
-      // Leader from the arc to the nearest point of the label box.
-      var bx = clamp(ax, lx, lx + tw), by = ly + (ay > ly ? fs / 2 + 1 : -fs / 2 - 1);
-      if (Math.abs(bx - ax) + Math.abs(by - ay) > 10) {
-        ctx.strokeStyle = C.lineStrong; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
-      }
-      ctx.textAlign = 'left'; ctx.fillStyle = C.muted;
-      ctx.fillText(names[k], lx, ly);
+      var m = (sec[0] + sec[1]) / 2;
+      ctx.fillText(keys[k], lay.cx + Math.cos(m) * rr, lay.cy + Math.sin(m) * rr);
     });
   }
 
@@ -603,7 +704,7 @@
     var lay = garden.layout;
     if (!lay) return null;
     var dx = x - lay.cx, dy = y - lay.cy, r = Math.sqrt(dx * dx + dy * dy);
-    if (r < lay.R * 0.72 || r > lay.R + 26) return null;
+    if (r < lay.R * 0.72 || r > rimOuter(lay.R, lay.scale) + 10) return null;
     var a = Math.atan2(dy, dx), best = null, bd = Infinity;
     for (var i = 0; i < Tree.N; i++) {
       var d = Math.abs(Math.atan2(Math.sin(a - Tree.leafAngle[i]), Math.cos(a - Tree.leafAngle[i])));
@@ -622,11 +723,11 @@
   function renderInspect() {
     var box = $('inspect'), i = garden.sel;
     if (i == null) i = garden.you;
-    if (i == null) { box.innerHTML = '<p style="margin:0">Point at a dot on the rim to see its path.</p>'; return; }
+    if (i == null) { box.innerHTML = '<p style="margin:0">Point at a leaf on the rim to see its path.</p>'; return; }
     var ch = M.pathChoices(i), p = state.show.garden.p[i], sg = state.show.garden.sign[i];
     var tag = i === garden.you ? 'Your path' : i === garden.pre ? 'The pre-registered path' : 'Path ' + (i + 1) + ' of ' + M.N_PATHS;
     if (i === garden.you && i === garden.pre) tag = 'Your path, which is also the pre-registered one';
-    box.innerHTML = '<b>' + esc(tag) + '</b> · <span class="ip' + (isSig(p) ? ' is-sig' : '') + '">' + (isSig(p) ? '◆ ' : '') + pText(p) + '</span>' +
+    box.innerHTML = '<b>' + esc(tag) + '</b> · <span class="ip' + (isSig(p) ? ' is-sig' : '') + '">' + (isSig(p) ? '<span class="berry" aria-hidden="true"></span>' : '') + pText(p) + (isSig(p) ? ' (significant)' : '') + '</span>' +
       ' · walkers ' + (sg > 0 ? 'higher' : 'lower') + '<br>' + esc(pathWords(ch).join(' → '));
   }
 
@@ -671,9 +772,10 @@
     else lead = 'Your path, at ' + pText(youP) + ', is not one of them. These are.';
     $('garden-noise').innerHTML = esc(lead) + ' <b>The data were pure noise.</b> Every number was random, and the group labels were dealt afterwards by a separate shuffle.';
     $('garden-hint').hidden = false;
+    $('plate-no').textContent = 'Pl. ' + roman(state.show.tries) + '.';
     var keyYou = document.querySelector('.key-you');
     if (keyYou) keyYou.parentNode.hidden = garden.you == null;
-    gc.setAttribute('aria-label', 'A radial tree of all ' + N + ' analysis paths. ' + g.nSig + ' end in p below 0.05, drawn as larger diamonds. ' +
+    gc.setAttribute('aria-label', 'A radial tree of all ' + N + ' analysis paths. ' + g.nSig + ' end in p below 0.05, drawn as red berries where the others are leaves. ' +
       (youP != null ? 'Your path is traced in a thick dark line and ends at ' + pText(youP) + '. ' : '') +
       'The pre-registered path is dashed and ends at ' + pText(g.p[garden.pre]) + '.');
     renderInspect();
@@ -689,7 +791,7 @@
     // The file drawer.
     var t = state.show.tries;
     $('drawer').innerHTML = '<b>One more fork was mine.</b> The page drew noise studies until one let a p-guided walk succeed, but only after four or more decisions. ' +
-      (t === 1 ? 'This was the first draw.' : 'This was draw ' + t + '; ' + (t - 1) + ' ' + (t - 1 === 1 ? 'was' : 'were') + ' set aside.') +
+      (t === 1 ? 'This was the first draw, hence Plate I.' : 'This was draw ' + t + ', hence Plate ' + roman(t) + '; ' + (t - 1) + ' ' + (t - 1 === 1 ? 'was' : 'were') + ' set aside.') +
       ' Published studies pass a similar filter.';
   }
 
@@ -708,33 +810,38 @@
     var Y = function (v) { return T + (zmax - v) / (2 * zmax) * ph; };
     var Xi = function (r) { return L + (r + 0.5) / N * pw; };
     ctx.clearRect(0, 0, w, h);
-    var font = getComputedStyle(document.body).fontFamily;
-    // Significance bands.
+    var font = FONT;
+    // Significance bands, hatched as an engraver shades.
     var crit = M.normInv(0.975);
-    ctx.fillStyle = 'rgba(88,112,90,0.08)';
-    ctx.fillRect(L, Y(zmax), pw, Y(crit) - Y(zmax));
-    ctx.fillRect(L, Y(-crit), pw, Y(-zmax) - Y(-crit));
-    ctx.strokeStyle = C.accent; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(L, Y(zmax), pw, Y(crit) - Y(zmax));
+    ctx.rect(L, Y(-crit), pw, Y(-zmax) - Y(-crit));
+    ctx.clip();
+    ctx.beginPath();
+    for (var hx = L - ph; hx < L + pw; hx += 5) { ctx.moveTo(hx, T + ph); ctx.lineTo(hx + ph, T); }
+    ctx.strokeStyle = inkA(0.16); ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
     [crit, -crit].forEach(function (c) { ctx.beginPath(); ctx.moveTo(L, Math.round(Y(c)) + 0.5); ctx.lineTo(L + pw, Math.round(Y(c)) + 0.5); ctx.stroke(); });
     ctx.setLineDash([]);
-    ctx.strokeStyle = C.lineStrong;
+    ctx.strokeStyle = C.faded;
     ctx.beginPath(); ctx.moveTo(L, Math.round(Y(0)) + 0.5); ctx.lineTo(L + pw, Math.round(Y(0)) + 0.5); ctx.stroke();
     // Axis labels.
-    ctx.font = '12px ' + font; ctx.fillStyle = C.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.font = '15px ' + font; ctx.fillStyle = C.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     [-2, 0, 2].forEach(function (v) { ctx.fillText((v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v), L - 6, Y(v)); });
     ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-    ctx.fillText('z · walkers happier ↑', L, T - 6);
+    ctx.font = 'italic 15px ' + font;
+    ctx.fillText('z · walkers happier ↑', L, T - 4);
     ctx.textBaseline = 'top';
-    ctx.fillStyle = C.accent; ctx.textAlign = 'left';
+    ctx.fillStyle = C.strong; ctx.textAlign = 'left';
     ctx.fillText('p < 0.05', L + 6, Y(crit) + 4);
     // Points.
     var r = w < 500 ? 1.5 : 1.9;
-    ctx.fillStyle = '#a3ab9c'; ctx.beginPath();
+    ctx.fillStyle = inkA(0.6); ctx.beginPath();
     order.forEach(function (idx, rank) { if (!isSig(g.p[idx])) { var x = Xi(rank), y = Y(z[idx]); ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 2 * Math.PI); } });
     ctx.fill();
-    ctx.fillStyle = C.accent; ctx.beginPath();
-    order.forEach(function (idx, rank) { if (isSig(g.p[idx])) diamond(ctx, Xi(rank), Y(z[idx]), 3.6); });
-    ctx.fill();
+    order.forEach(function (idx, rank) { if (isSig(g.p[idx])) berry(ctx, Xi(rank), Y(z[idx]), w < 500 ? 3 : 3.6); });
     // Mark your path and the pre-registered one.
     // The curve rises left to right, so the space above-left of any point on it, and the
     // space below-right, is empty. Labels go there, never across the curve.
@@ -743,7 +850,7 @@
       var rank = order.indexOf(idx), x = Xi(rank), y = Y(z[idx]);
       ctx.strokeStyle = color; ctx.lineWidth = 1.6; if (dash) ctx.setLineDash([2.5, 2.5]);
       ctx.beginPath(); ctx.arc(x, y, 6.5, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
-      ctx.font = '12px ' + font; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      ctx.font = 'italic 15px ' + font; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
       var tw = ctx.measureText(label).width;
       function box(left) {
         var bx = left ? x - 9 - tw : x + 9, by = clamp(left ? y - 13 : y + 13, T + 8, T + ph - 8);
@@ -764,7 +871,7 @@
     for (i = 0; i < N; i++) if (isSig(g.p[i])) { if (g.sign[i] > 0) up++; else down++; }
     var cap = 'A specification curve: every path, sorted by its signed z-score. ' +
       up + ' significant paths say walking lifts mood' + (down ? ' and ' + down + ' say it lowers it' : '') + ', from the same data.';
-    $('spec-caption').textContent = cap;
+    $('spec-caption').innerHTML = '<span class="fig">Fig. 2.</span> ' + esc(cap);
     canvas.setAttribute('aria-label', 'Specification curve of all ' + N + ' paths sorted by signed z. ' + up + ' are significant in the positive direction and ' + down + ' in the negative.');
   }
 
@@ -784,11 +891,18 @@
     var cell = wf.w / COLS;
     return { cell: cell, size: Math.max(1, cell - (cell > 6 ? 1.5 : 1)) };
   }
+  // A study that found nothing is a square of tint; one that found p < 0.05 is a
+  // vermilion berry, so shape as well as colour tells them apart.
   function paintCell(wf, i, state) {
-    var g = cellGeom(wf), x = (i % COLS) * g.cell, y = Math.floor(i / COLS) * g.cell;
-    wf.ctx.fillStyle = state === 2 ? C.accent : state === 1 ? C.cell : C.wash;
-    wf.ctx.clearRect(x, y, g.cell, g.cell);
-    wf.ctx.fillRect(x, y, g.size, g.size);
+    var g = cellGeom(wf), x = (i % COLS) * g.cell, y = Math.floor(i / COLS) * g.cell, c = wf.ctx;
+    c.clearRect(x, y, g.cell, g.cell);
+    if (state === 2) {
+      c.fillStyle = C.verm; c.beginPath();
+      c.arc(x + g.size / 2, y + g.size / 2, g.size / 2 + 0.3, 0, 2 * Math.PI); c.fill();
+    } else {
+      c.fillStyle = state === 1 ? C.cell : C.empty;
+      c.fillRect(x, y, g.size, g.size);
+    }
   }
   function sizeWaffles() {
     waffles.forEach(function (wf) {
@@ -878,4 +992,5 @@
   newShowcase(SHOWCASE_START);
   el.peek.checked = state.peek;
   renderWalk(false);
+  whenFonts(onResize);
 })();

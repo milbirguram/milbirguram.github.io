@@ -55,22 +55,24 @@
 
     <div class="garden" id="garden" hidden role="region" aria-labelledby="garden-h">
       <div class="garden-grid">
-        <div class="garden-figure">
+        <figure class="garden-figure">
           <canvas id="garden-canvas" tabindex="0" role="img" aria-label="The garden of forking paths"></canvas>
-        </div>
+          <p class="plate-no" id="plate-no"></p>
+          <figcaption class="plate-cap"><span class="fig">Fig. 1.</span> Every analysis of one study, drawn as a plant.</figcaption>
+        </figure>
         <div class="garden-side">
           <h2 id="garden-h">The garden</h2>
           <p class="headline" id="garden-headline"></p>
           <p id="garden-noise"></p>
           <ul class="legend">
-            <li><span class="key key-sig" aria-hidden="true"></span>Path with p &lt; 0.05</li>
-            <li><span class="key key-ns" aria-hidden="true"></span>Path with p ≥ 0.05</li>
+            <li><span class="key key-sig" aria-hidden="true"></span>Berry: a path with p &lt; 0.05</li>
+            <li><span class="key key-ns" aria-hidden="true"></span>Leaf: a path with p ≥ 0.05</li>
             <li><span class="key key-you" aria-hidden="true"></span>Your path</li>
             <li><span class="key key-pre" aria-hidden="true"></span>The plain, pre-registered path</li>
           </ul>
-          <p class="ring-note">From the centre out: outcome, scale, exclusions, who, adjustment, test. Each dot on the rim is one complete analysis.</p>
+          <p class="ring-note">From the centre out: outcome (<i>a</i> questionnaire, <i>b</i> rating, <i>c</i> diary), scale, exclusions, who, adjustment, test. Each leaf or berry on the rim is one complete analysis.</p>
           <div class="inspect" id="inspect" aria-live="polite"></div>
-          <p class="hint" id="garden-hint">Point at or tap a rim dot. With the tree focused, arrow keys step along the rim; Shift jumps between significant paths.</p>
+          <p class="hint" id="garden-hint">Point at or tap a leaf on the rim. With the tree focused, arrow keys step along the rim; Shift jumps between significant paths.</p>
         </div>
       </div>
 
@@ -111,7 +113,7 @@
           <canvas id="w-pre" role="img" aria-label="Grid of 1,000 studies: pre-registered path"></canvas>
         </div>
       </div>
-      <p class="tally-key"><span class="key key-sq-sig" aria-hidden="true"></span> a study that found “p &lt; 0.05” <span class="key key-sq-ns" aria-hidden="true"></span> a study that found nothing</p>
+      <p class="tally-key"><span class="fig">Fig. 3.</span> <span class="key key-sq-sig" aria-hidden="true"></span> a study that found “p &lt; 0.05” <span class="key key-sq-ns" aria-hidden="true"></span> a study that found nothing</p>
       <div class="studies-text" id="studies-explain" hidden>
         <p id="explain-numbers"></p>
         <p>With no effect, one fixed test falls below 0.05 about one time in twenty. Each extra path is another, partly overlapping draw. Pre-registration removes the forks, not the noise.</p>
