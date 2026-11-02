@@ -1,0 +1,57 @@
+device cuda, torch 2.14.1+cu126; 200 images; foreground share 0.000-0.339 (mean 0.196)
+split seed 20261102: 140 train / 30 val / 30 test
+parameters: 1942289
+epoch   1  loss 0.7870  val Dice 0.9130  lr 1e-03     10s *
+epoch   2  loss 0.5299  val Dice 0.9424  lr 1e-03     18s *
+epoch   3  loss 0.3681  val Dice 0.9469  lr 1e-03     25s *
+epoch   4  loss 0.2635  val Dice 0.9423  lr 1e-03     33s
+epoch   5  loss 0.1944  val Dice 0.9456  lr 1e-03     41s
+epoch   6  loss 0.1556  val Dice 0.9523  lr 1e-03     49s *
+epoch   7  loss 0.1401  val Dice 0.9445  lr 1e-03     59s
+epoch   8  loss 0.1243  val Dice 0.9566  lr 1e-03     67s *
+epoch   9  loss 0.1159  val Dice 0.9463  lr 1e-03     76s
+epoch  10  loss 0.1066  val Dice 0.9644  lr 1e-03     84s *
+epoch  11  loss 0.1025  val Dice 0.9600  lr 1e-03     92s
+epoch  12  loss 0.1056  val Dice 0.9115  lr 1e-03    103s
+epoch  13  loss 0.1186  val Dice 0.9626  lr 1e-03    113s
+epoch  14  loss 0.0944  val Dice 0.9659  lr 1e-03    121s *
+epoch  15  loss 0.0959  val Dice 0.9684  lr 1e-03    130s *
+epoch  16  loss 0.0904  val Dice 0.9677  lr 1e-03    138s
+epoch  17  loss 0.0907  val Dice 0.9652  lr 1e-03    147s
+epoch  18  loss 0.0901  val Dice 0.9676  lr 1e-03    154s
+epoch  19  loss 0.0892  val Dice 0.9693  lr 1e-03    162s *
+epoch  20  loss 0.0929  val Dice 0.9684  lr 1e-03    170s
+epoch  21  loss 0.0903  val Dice 0.9555  lr 1e-03    177s
+epoch  22  loss 0.1109  val Dice 0.9394  lr 1e-03    185s
+epoch  23  loss 0.0908  val Dice 0.9628  lr 1e-03    193s
+epoch  24  loss 0.0897  val Dice 0.9657  lr 1e-03    202s
+epoch  25  loss 0.0900  val Dice 0.9701  lr 1e-03    210s *
+epoch  26  loss 0.0804  val Dice 0.9636  lr 1e-03    218s
+epoch  27  loss 0.0733  val Dice 0.9631  lr 1e-03    226s
+epoch  28  loss 0.0788  val Dice 0.9671  lr 1e-03    234s
+epoch  29  loss 0.0722  val Dice 0.9560  lr 1e-03    243s
+epoch  30  loss 0.0671  val Dice 0.9704  lr 1e-03    251s *
+epoch  31  loss 0.0769  val Dice 0.9617  lr 1e-03    259s
+epoch  32  loss 0.0982  val Dice 0.9591  lr 1e-03    267s
+epoch  33  loss 0.0992  val Dice 0.9534  lr 1e-03    275s
+epoch  34  loss 0.0909  val Dice 0.9623  lr 1e-03    285s
+epoch  35  loss 0.0820  val Dice 0.9675  lr 1e-03    293s
+epoch  36  loss 0.0689  val Dice 0.9643  lr 5e-04    301s
+epoch  37  loss 0.0738  val Dice 0.9679  lr 5e-04    309s
+epoch  38  loss 0.0705  val Dice 0.9642  lr 5e-04    317s
+epoch  39  loss 0.0765  val Dice 0.9672  lr 5e-04    325s
+epoch  40  loss 0.0679  val Dice 0.9663  lr 5e-04    333s
+epoch  41  loss 0.0693  val Dice 0.9681  lr 5e-04    342s
+epoch  42  loss 0.0689  val Dice 0.9692  lr 3e-04    350s
+epoch  43  loss 0.0694  val Dice 0.9651  lr 3e-04    359s
+epoch  44  loss 0.0711  val Dice 0.9662  lr 3e-04    369s
+epoch  45  loss 0.0695  val Dice 0.9686  lr 3e-04    379s
+early stop: no val Dice gain for 15 epochs
+best val Dice 0.9704 at epoch 30; training took 379 s
+validation-chosen threshold: 0.55
+test set, 30 images, per-image mean (min-max):
+  unet_0.5        acc 0.984 (0.882-1.000)  IoU 0.932 (0.701-1.000)  Dice 0.964 (0.824-1.000)
+  unet_val_t      acc 0.985 (0.883-1.000)  IoU 0.933 (0.703-1.000)  Dice 0.964 (0.825-1.000)
+  all_background  acc 0.811 (0.702-1.000)  IoU 0.033 (0.000-1.000)  Dice 0.033 (0.000-1.000)
+  otsu            acc 0.945 (0.339-0.999)  IoU 0.822 (0.000-0.954)  Dice 0.867 (0.000-0.976)
+alignment: mean test Dice is highest at shift (0, 0) (0,0 means aligned): 0.9639 vs 0.9411 at (0,1)

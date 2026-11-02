@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Slide a threshold over a U-Net's cell-nucleus segmentation and see pixel accuracy, IoU and Dice recomputed from the pixels. Predicting nothing still scores 0.70 to 0.96 pixel accuracy, and a Dice of zero.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Stencil — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/stencil/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1 class="stencil-title">Stencil</h1>
+  <p class="kit-lede">A small U-Net outlines cell nuclei in microscope images it never saw in training, and every score is recomputed from the pixels as you move a control. The caveat: this model is confident, so across the threshold slider pixel accuracy and Dice both move only a little and agree on the best cut. The gap shows when you press “Predict nothing”: pixel accuracy still reads 0.70–0.96, because most of each image is background, and Dice falls to zero. Images: BBBC039v1 (Caicedo et al.), Broad Bioimage Benchmark Collection, CC0.</p>
+
+  <section class="kit-stage kit-wide stencil-stage" data-kit-stage aria-label="Segmentation viewer">
+    <header class="readout-head" aria-label="Acquisition">
+      <span class="rh-item"><span class="rh-k">SET</span> BBBC039v1</span>
+      <span class="rh-item"><span class="rh-k">CELLS</span> U2OS</span>
+      <span class="rh-item rh-ch"><span class="rh-k">CH1</span> Hoechst 33342 · DNA</span>
+      <span class="rh-item"><span class="rh-k">OBJ</span> 20×</span>
+      <span class="rh-item"><span class="rh-k">PX</span> 0.656 µm</span>
+      <span class="rh-item" id="rh-well"><span class="rh-k">WELL</span> —</span>
+      <span class="rh-item rh-split"><span class="rh-k">SPLIT</span> test, unseen</span>
+    </header>
+
+    <div class="bench">
+      <div class="field-col">
+        <div class="field-wrap">
+          <canvas id="field" class="field" role="img" aria-label="Microscope field loading"></canvas>
+          <div class="field-tag field-tag-left" aria-hidden="true">RAW</div>
+          <div class="field-tag field-tag-right" id="layer-tag" aria-hidden="true">ERRORS</div>
+          <div class="preview-readout" aria-hidden="true">
+            <span class="pr-h"></span><span class="pr-h">PIXEL ACC</span><span class="pr-h pr-hd">DICE</span>
+            <div class="pr-row" id="pr-unet"><span class="pr-k">U-NET <span id="pr-t">—</span></span><span class="pr-v" id="pr-acc">—</span><span class="pr-v pr-d" id="pr-dice">—</span></div>
+            <div class="pr-row" id="pr-none"><span class="pr-k">NOTHING</span><span class="pr-v" id="pr-acc0">—</span><span class="pr-v pr-d" id="pr-dice0">—</span></div>
+          </div>
+        </div>
+
+        <div class="wipe-row">
+          <label for="wipe" class="ctl-label">Wipe</label>
+          <span class="wipe-end" aria-hidden="true">raw</span>
+          <input type="range" id="wipe" min="0" max="100" step="1" value="40" aria-valuetext="40% raw, 60% overlay">
+          <span class="wipe-end" aria-hidden="true">overlay</span>
+        </div>
+
+        <div class="layers" role="group" aria-label="Overlay layer">
+          <button type="button" class="cube" data-layer="truth" aria-pressed="false"><span class="cube-swatch sw-truth" aria-hidden="true"></span>Truth</button>
+          <button type="button" class="cube" data-layer="pred" aria-pressed="false"><span class="cube-swatch sw-pred" aria-hidden="true"></span>Prediction</button>
+          <button type="button" class="cube" data-layer="errors" aria-pressed="true"><span class="cube-swatch sw-err" aria-hidden="true"></span>Errors</button>
+        </div>
+        <p class="legend" id="legend">
+          <span class="lg lg-tp"><span class="lg-sw" aria-hidden="true"></span>found</span>
+          <span class="lg lg-fp"><span class="lg-sw" aria-hidden="true"></span>false positive, hatched</span>
+          <span class="lg lg-fn"><span class="lg-sw" aria-hidden="true"></span>missed nucleus, dotted</span>
+        </p>
+      </div>
+
+      <div class="panel-col">
+        <div class="source" role="group" aria-label="Who makes the prediction">
+          <button type="button" class="src" data-source="unet" aria-pressed="true">U-Net</button>
+          <button type="button" class="src" data-source="otsu" aria-pressed="false">Otsu baseline</button>
+          <button type="button" class="src src-nothing" data-source="nothing" aria-pressed="false">Predict nothing</button>
+        </div>
+
+        <div class="thresh">
+          <div class="thresh-top">
+            <label for="threshold" class="ctl-label">Threshold</label>
+            <output id="t-out" for="threshold" class="t-out">0.50</output>
+          </div>
+          <input type="range" id="threshold" min="0.01" max="0.99" step="0.01" value="0.50">
+          <p class="hint" id="hint">Slide it, then press Predict nothing.</p>
+        </div>
+
+        <dl class="meters" id="meters">
+          <div class="meter" id="m-acc">
+            <dt>Pixel accuracy</dt><dd class="mv" id="v-acc">—</dd>
+            <dd class="bar" aria-hidden="true"><span class="bar-free" id="b-free"></span><span class="bar-fill" id="b-acc"></span></dd>
+            <dd class="mdelta" id="d-acc"></dd>
+            <dd class="mnote" id="n-acc"></dd>
+          </div>
+          <div class="meter" id="m-iou">
+            <dt>IoU</dt><dd class="mv" id="v-iou">—</dd>
+            <dd class="bar" aria-hidden="true"><span class="bar-fill" id="b-iou"></span></dd>
+            <dd class="mdelta" id="d-iou"></dd>
+          </div>
+          <div class="meter meter-dice" id="m-dice">
+            <dt>Dice</dt><dd class="mv" id="v-dice">—</dd>
+            <dd class="bar" aria-hidden="true"><span class="bar-fill" id="b-dice"></span></dd>
+            <dd class="mdelta" id="d-dice"></dd>
+          </div>
+        </dl>
+
+        <p class="count" id="count">Nuclei —</p>
+
+        <figure class="sweep">
+          <canvas id="sweep" role="img" aria-label="Pixel accuracy and Dice across all thresholds"></canvas>
+          <figcaption id="sweep-cap">The U-Net on this field at every threshold; the axis starts at 0.6. Dashed: predicting nothing.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="fields">
+      <table class="ftable">
+        <caption>Eight test crops from one cell line, at the current setting. Choose one to view it.</caption>
+        <thead><tr><th scope="col">Field</th><th scope="col">Nucleus share</th><th scope="col">Pixel acc</th><th scope="col">Dice</th><th scope="col">Nuclei found / true</th></tr></thead>
+        <tbody id="ftbody"></tbody>
+        <tfoot><tr><th scope="row">Mean</th><td id="mean-share"></td><td id="mean-acc"></td><td id="mean-dice"></td><td id="mean-count"></td></tr></tfoot>
+      </table>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </section>
+</main>
+<script src="data/manifest.js"></script>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
