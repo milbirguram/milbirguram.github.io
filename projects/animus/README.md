@@ -38,3 +38,7 @@ For every guessing round the tests simulate every wiring the controls can expres
 - Valentino Braitenberg, *Vehicles: Experiments in Synthetic Psychology*. MIT Press, 1984. Vehicles 2 and 3, and the law of uphill analysis and downhill invention.
 - Fritz Heider and Marianne Simmel, “An experimental study of apparent behavior”. *American Journal of Psychology* 57 (1944), 243–259. People watching moving shapes describe intentions and feelings.
 - Daniel C. Dennett, *The Intentional Stance*. MIT Press, 1987. On predicting a system by treating it as if it had beliefs and desires.
+
+## Look
+
+The stage is drawn as a long exposure in a dark room: a graphite field with faint film grain, the lights as tungsten bulbs whose halo uses the same falloff as the sensors, and each toy robot carrying a lamp that paints its path. Streaks are blended additively, so a place a vehicle passes again, or lingers at, burns in brighter. Each wiring has its own lamp colour and its own streak pattern (2a broken, 2b one hot line, 3a beads, 3b twin rails), so colour is never the only cue. In the guessing rounds the hidden track is solid and the guess dashed, with a strobe flash every half second to show speed. Type: DM Mono by Colophon Foundry, SIL Open Font License 1.1, self-hosted in `fonts/` with `OFL.txt`.

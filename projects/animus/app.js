@@ -9,10 +9,22 @@
   var TRAIL_KEEP = 240;      // fading trails keep the last 8 seconds
   var DOT_EVERY = 15;        // on lasting tracks, a dot every 15 points = every half second
 
+  // The arena is a long exposure in a dark room: graphite field, tungsten bulbs, and each
+  // vehicle carrying a lamp that paints its path. Each wiring has its own lamp colour AND its
+  // own streak pattern, so the two never rely on colour alone.
   var COL = {
-    arena: '#f3f3ed', ink: '#343630', muted: '#686d62', line: '#dedfd7',
-    lightCore: '#f2c14e', lightEdge: '#a8790f', hidden: '#343630', guess: '#a34f12'
+    arena: '#121212', paper: '#ebe5d8', muted: '#a7a094',
+    tungsten: '#ffb347', tin: '#34322d', tinEdge: '#9a9488', tread: '#0b0b0b'
   };
+  var LOOK = {
+    '2a': { colour: '#7cc4ff', core: '#d6ecff', style: 'flicker' }, // fear: a nervous broken streak
+    '2b': { colour: '#ff5d50', core: '#ffd2c8', style: 'hot' },     // aggression: one hot line
+    '3a': { colour: '#c9a0ff', core: '#efe2ff', style: 'pearls' },  // love: a string of beads
+    '3b': { colour: '#93e07f', core: '#e1f8d8', style: 'twin' },    // explorer: twin rails
+    hidden: { colour: '#efe8da', core: '#ffffff', style: 'hot' },   // solid in the comparison key
+    guess: { colour: '#5fd6e6', core: '#d4f7fb', style: 'flicker' } // dashed in the comparison key
+  };
+  var MONO = '"DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
   var canvas = document.getElementById('an-canvas');
   var arenaEl = document.getElementById('an-arena');
@@ -49,6 +61,12 @@
   }
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
   function torusDelta(d, size) { return d - size * Math.round(d / size); }
+  // length of the step into point i of a flat track; a wrap across the edge counts as no length
+  function hop(pts, i) {
+    var dx = pts[i * 2] - pts[i * 2 - 2], dy = pts[i * 2 + 1] - pts[i * 2 - 1];
+    if (Math.abs(dx) > P.W / 2 || Math.abs(dy) > P.H / 2) return 0;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
   var MINUS = '−';
 
   // ------------------------------------------------------------------ cars (vehicle + drawing state)
@@ -56,14 +74,14 @@
     var v = M.makeVehicle({ x: o.x, y: o.y, th: o.th, wiring: o.wiring, jitter: o.slip || 0, seed: o.seed });
     return {
       v: v, px: o.x, py: o.y, pth: o.th, steps: 0, limit: o.limit || 0,
-      colour: o.colour, label: o.label, name: o.name, fade: o.fade !== false,
-      trail: [o.x, o.y], start: { x: o.x, y: o.y, th: o.th }, opts: o
+      look: o.look, label: o.label, name: o.name, fade: o.fade !== false,
+      trail: [o.x, o.y], dropped: 0, start: { x: o.x, y: o.y, th: o.th }, opts: o
     };
   }
   function resetCar(c) {
     var o = c.opts;
     c.v = M.makeVehicle({ x: o.x, y: o.y, th: o.th, wiring: o.wiring, jitter: o.slip || 0, seed: o.seed });
-    c.px = o.x; c.py = o.y; c.pth = o.th; c.steps = 0; c.trail = [o.x, o.y];
+    c.px = o.x; c.py = o.y; c.pth = o.th; c.steps = 0; c.trail = [o.x, o.y]; c.dropped = 0;
   }
   function stepCar(c, lights) {
     if (c.limit && c.steps >= c.limit) { c.px = c.v.x; c.py = c.v.y; c.pth = c.v.th; return; }
@@ -72,14 +90,19 @@
     c.steps++;
     if (c.steps % TRAIL_EVERY === 0) {
       c.trail.push(c.v.x, c.v.y);
-      if (c.fade && c.trail.length > TRAIL_KEEP * 2) c.trail.splice(0, c.trail.length - TRAIL_KEEP * 2);
+      if (c.fade && c.trail.length > TRAIL_KEEP * 2) {
+        var cut = c.trail.length - TRAIL_KEEP * 2;
+        // remember how much track has gone, so a dashed streak does not crawl as it fades
+        for (var q = 2; q <= cut; q += 2) c.dropped += hop(c.trail, q / 2);
+        c.trail.splice(0, cut);
+      }
     }
   }
   function classicCar(id, x, y, th, seed) {
     var info = M.CLASSIC_INFO[id];
     return makeCar({
       x: x, y: y, th: th, wiring: M.classic(info.wires, info.sign), slip: SLIP, seed: seed,
-      colour: info.colour, label: id, name: id + ' ' + info.name
+      look: LOOK[id], label: id, name: id + ' ' + info.name
     });
   }
 
@@ -127,7 +150,7 @@
   // ------------------------------------------------------------------ drawing
   var glowCache = null;
   function glowSprite() {
-    // Radial glow drawn from the same falloff the sensors use: 1 / (1 + d^2 / k).
+    // A tungsten bulb's halo, drawn from the same falloff the sensors use: 1 / (1 + d^2 / k).
     if (glowCache) return glowCache;
     var R = 3.2 * Math.sqrt(P.k);
     var px = Math.max(32, Math.ceil(R * view.s * view.dpr));
@@ -137,8 +160,8 @@
     var grad = g.createRadialGradient(px, px, 0, px, px, px);
     for (var i = 0; i <= 16; i++) {
       var t = i / 16, d = t * R;
-      var a = 0.62 / (1 + d * d / P.k) * (1 - t * t);
-      grad.addColorStop(t, 'rgba(236, 178, 52,' + a.toFixed(3) + ')');
+      var a = 0.5 / (1 + d * d / P.k) * (1 - t * t);
+      grad.addColorStop(t, 'rgba(255, 179, 71,' + a.toFixed(3) + ')');
     }
     g.fillStyle = grad;
     g.fillRect(0, 0, px * 2, px * 2);
@@ -149,6 +172,7 @@
   function drawLights(lights, opts) {
     var gs = glowSprite();
     var s = view.s;
+    ctx.globalCompositeOperation = 'lighter'; // light adds to the exposure
     lights.forEach(function (L) {
       // draw the light and its wrapped copies near the edges, since the floor is a torus
       for (var ix = -1; ix <= 1; ix++) for (var iy = -1; iy <= 1; iy++) {
@@ -157,68 +181,113 @@
         ctx.drawImage(gs.canvas, (x - gs.R) * s, (y - gs.R) * s, gs.R * 2 * s, gs.R * 2 * s);
       }
     });
+    ctx.globalCompositeOperation = 'source-over';
     lights.forEach(function (L, i) {
-      var r = Math.max(6, 8 * s);
+      var r = Math.max(6, 8 * s), cx = L.x * s, cy = L.y * s;
+      // the bulb: a white-hot filament inside a tungsten envelope
+      var bulb = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bulb.addColorStop(0, '#fffaf0'); bulb.addColorStop(0.45, '#ffd796'); bulb.addColorStop(1, COL.tungsten);
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = bulb; ctx.fill();
       ctx.beginPath();
-      ctx.arc(L.x * s, L.y * s, r, 0, Math.PI * 2);
-      ctx.fillStyle = COL.lightCore; ctx.fill();
-      ctx.lineWidth = 1.5; ctx.strokeStyle = COL.lightEdge; ctx.stroke();
+      ctx.moveTo(cx - r * 0.45, cy + r * 0.1);
+      ctx.lineTo(cx - r * 0.15, cy - r * 0.25); ctx.lineTo(cx + r * 0.15, cy + r * 0.1); ctx.lineTo(cx + r * 0.45, cy - r * 0.25);
+      ctx.strokeStyle = 'rgba(160, 90, 20, 0.55)'; ctx.lineWidth = 1; ctx.stroke();
       if (opts.numbers) {
         if (opts.selected === i && opts.movable) {
           ctx.beginPath();
-          ctx.arc(L.x * s, L.y * s, r + 5, 0, Math.PI * 2);
-          ctx.setLineDash([3, 3]); ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.25; ctx.stroke(); ctx.setLineDash([]);
+          ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+          ctx.setLineDash([3, 3]); ctx.strokeStyle = COL.paper; ctx.lineWidth = 1.25; ctx.stroke(); ctx.setLineDash([]);
         }
-        label(String(i + 1), L.x * s + r + 4, L.y * s - r - 2, COL.muted);
+        label(String(i + 1), cx + r + 4, cy - r - 2, COL.muted);
       }
     });
   }
 
-  var fontFamily = null;
   function label(text, x, y, colour) {
-    if (!fontFamily) fontFamily = getComputedStyle(document.body).fontFamily;
-    ctx.font = '500 12px ' + fontFamily;
+    ctx.font = '500 12px ' + MONO;
     ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round';
     ctx.lineWidth = 3.5; ctx.strokeStyle = COL.arena; ctx.strokeText(text, x, y);
     ctx.fillStyle = colour; ctx.fillText(text, x, y);
   }
 
-  // A trail stored as flat [x0, y0, x1, y1, ...]. Fading trails grow fainter with age.
-  function drawTrail(pts, colour, fade, dashed, upTo) {
-    var n = upTo == null ? pts.length / 2 : Math.min(upTo, pts.length / 2);
-    if (n < 2) return;
-    var s = view.s;
-    ctx.strokeStyle = colour;
-    ctx.lineWidth = Math.max(1.5, 2.6 * s);
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    if (dashed) ctx.setLineDash([6, 5]);
-    var chunk = fade ? 12 : n;
-    for (var a = 1; a < n; a += chunk) {
-      var b = Math.min(n, a + chunk);
-      ctx.globalAlpha = fade ? 0.85 * Math.pow((a + b) / 2 / n, 1.3) : 0.85;
-      ctx.beginPath();
-      ctx.moveTo(pts[(a - 1) * 2] * s, pts[(a - 1) * 2 + 1] * s);
-      for (var i = a; i < b; i++) {
-        var x = pts[i * 2], y = pts[i * 2 + 1], x0 = pts[i * 2 - 2], y0 = pts[i * 2 - 1];
-        if (Math.abs(x - x0) > P.W / 2 || Math.abs(y - y0) > P.H / 2) ctx.moveTo(x * s, y * s);
-        else ctx.lineTo(x * s, y * s);
+  // One run of a track (points a-1 .. b-1) as a path, optionally shifted sideways by off world units.
+  function tracePath(pts, a, b, s, off) {
+    ctx.beginPath();
+    var nx = 0, ny = 1, last = pts.length / 2 - 1;
+    for (var i = a - 1; i < b; i++) {
+      var x = pts[i * 2], y = pts[i * 2 + 1];
+      var jump = i === a - 1 || Math.abs(x - pts[i * 2 - 2]) > P.W / 2 || Math.abs(y - pts[i * 2 - 1]) > P.H / 2;
+      if (off) {
+        var i0 = Math.max(0, i - 1), i1 = Math.min(last, i + 1);
+        var dx = torusDelta(pts[i1 * 2] - pts[i0 * 2], P.W), dy = torusDelta(pts[i1 * 2 + 1] - pts[i0 * 2 + 1], P.H);
+        var len = Math.sqrt(dx * dx + dy * dy);
+        if (len > 1e-6) { nx = -dy / len; ny = dx / len; }
+        x += nx * off; y += ny * off;
       }
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-    ctx.setLineDash([]);
-    if (!fade) {
-      // a dot every half second: the gaps show speed
-      ctx.fillStyle = colour;
-      var r = Math.max(1.6, 2.4 * s);
-      for (var j = DOT_EVERY; j < n; j += DOT_EVERY) {
-        ctx.beginPath(); ctx.arc(pts[j * 2] * s, pts[j * 2 + 1] * s, r, 0, Math.PI * 2); ctx.fill();
-      }
+      if (jump) ctx.moveTo(x * s, y * s); else ctx.lineTo(x * s, y * s);
     }
   }
 
-  function drawBody(x, y, th, colour, text) {
+  // A track stored as flat [x0, y0, x1, y1, ...], painted as a light streak. Streaks add to one
+  // another, so where a vehicle passes again or lingers the exposure builds up. Fading tracks grow
+  // fainter with age; lasting tracks get a strobe flash every half second, so the gaps show speed.
+  function drawTrail(pts, look, fade, upTo, dropped) {
+    var n = upTo == null ? pts.length / 2 : Math.min(upTo, pts.length / 2);
+    if (n < 2) return;
+    var s = view.s, w = Math.max(2, 3 * s);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    var chunk = fade ? 12 : n, along = dropped || 0;
+    for (var a = 1; a < n; a += chunk) {
+      var b = Math.min(n, a + chunk);
+      var alpha = fade ? Math.pow((a + b) / 2 / n, 1.1) : 0.95;
+      ctx.lineDashOffset = along * s;
+      if (look.style === 'hot') {
+        // a wide dim halo and a thin white-hot core
+        tracePath(pts, a, b, s, 0);
+        ctx.globalAlpha = alpha * 0.28; ctx.strokeStyle = look.colour; ctx.lineWidth = w * 2.6; ctx.stroke();
+        ctx.globalAlpha = alpha; ctx.strokeStyle = look.core; ctx.lineWidth = w * 0.7; ctx.stroke();
+      } else if (look.style === 'twin') {
+        // two thin parallel rails
+        var off = w * 0.8 / s;
+        ctx.globalAlpha = alpha; ctx.strokeStyle = look.colour; ctx.lineWidth = w * 0.55;
+        tracePath(pts, a, b, s, off); ctx.stroke();
+        tracePath(pts, a, b, s, -off); ctx.stroke();
+      } else if (look.style === 'pearls') {
+        // a string of beads
+        ctx.globalAlpha = Math.min(1, alpha * 1.15); ctx.strokeStyle = look.colour; ctx.lineWidth = w * 1.7;
+        ctx.setLineDash([0.01, w * 2.3]);
+        tracePath(pts, a, b, s, 0); ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        // flicker: a broken streak
+        ctx.globalAlpha = alpha; ctx.strokeStyle = look.colour; ctx.lineWidth = w;
+        ctx.setLineDash([w * 3, w * 2.4]);
+        tracePath(pts, a, b, s, 0); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      for (var q = a; q < b; q++) along += hop(pts, q);
+    }
+    if (!fade) {
+      // strobe flashes, one every half second
+      var r = Math.max(1.6, 2.2 * s);
+      for (var j = DOT_EVERY; j < n; j += DOT_EVERY) {
+        var x = pts[j * 2] * s, y = pts[j * 2 + 1] * s;
+        ctx.globalAlpha = 0.35; ctx.fillStyle = look.colour;
+        ctx.beginPath(); ctx.arc(x, y, r * 2.1, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1; ctx.fillStyle = look.core;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // A small tin toy robot seen from above: treaded wheels, a riveted body, two photocell eyes
+  // where the model puts the sensors, and on its back the lamp that paints its streak.
+  function drawBody(x, y, th, look, text) {
     var s = view.s;
     var k = Math.max(s, 0.72); // drawn a little larger than life on small screens, to stay legible
     // draw the vehicle and, near an edge, its wrapped copy
@@ -230,19 +299,35 @@
       ctx.translate(xx * s, yy * s);
       ctx.rotate(th);
       ctx.scale(k, k);
-      ctx.fillStyle = COL.ink;
-      ctx.fillRect(-8, -12.5, 13, 4);   // left wheel
-      ctx.fillRect(-8, 8.5, 13, 4);     // right wheel
-      ctx.beginPath();
-      roundRect(-12, -9, 26, 18, 5);
-      ctx.fillStyle = colour; ctx.fill();
-      ctx.fillStyle = '#fff6d8'; ctx.strokeStyle = COL.ink; ctx.lineWidth = 1;
+      // wheels with treads
+      ctx.lineWidth = 0.8; ctx.strokeStyle = '#5d584f';
+      [-12.5, 8.5].forEach(function (wy) {
+        ctx.fillStyle = COL.tread; ctx.fillRect(-8, wy, 13, 4);
+        ctx.strokeRect(-8, wy, 13, 4);
+        ctx.beginPath();
+        for (var tx = -5.5; tx < 5; tx += 2.6) { ctx.moveTo(tx, wy + 0.6); ctx.lineTo(tx, wy + 3.4); }
+        ctx.stroke();
+      });
+      // tin body with rivets
+      ctx.beginPath(); roundRect(-12, -9, 26, 18, 3.5);
+      ctx.fillStyle = COL.tin; ctx.fill();
+      ctx.strokeStyle = COL.tinEdge; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = COL.tinEdge;
+      [[-10, -7], [-10, 7], [11.5, -7], [11.5, 7]].forEach(function (p) {
+        ctx.beginPath(); ctx.arc(p[0], p[1], 0.85, 0, Math.PI * 2); ctx.fill();
+      });
+      // the lamp on its back
+      ctx.beginPath(); ctx.arc(-3, 0, 4, 0, Math.PI * 2);
+      ctx.fillStyle = look.colour; ctx.fill();
+      ctx.beginPath(); ctx.arc(-3.9, -1, 1.3, 0, Math.PI * 2);
+      ctx.fillStyle = look.core; ctx.fill();
       // the sensors, drawn where the model puts them
+      ctx.fillStyle = '#ffdca6'; ctx.strokeStyle = '#121212'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(P.sensorFwd, -P.sensorSide, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.arc(P.sensorFwd, P.sensorSide, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       ctx.restore();
     }); });
-    if (text) label(text, x * s + 16 * k, y * s - 15 * k, colour);
+    if (text) label(text, x * s + 16 * k, y * s - 15 * k, look.colour);
   }
   function roundRect(x, y, w, h, r) {
     ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
@@ -274,16 +359,16 @@
     drawLights(sc.lights, { numbers: !Kit.preview, selected: state.selected, movable: movable });
     if (G && G.phase === 'compared') {
       var cmp = G.compare, i = Math.min(cmp.idx, cmp.max);
-      drawTrail(cmp.truthPts, COL.hidden, false, false, Math.floor(i / TRAIL_EVERY) + 1);
-      drawTrail(cmp.guessPts, COL.guess, false, true, Math.floor(i / TRAIL_EVERY) + 1);
+      drawTrail(cmp.truthPts, LOOK.hidden, false, Math.floor(i / TRAIL_EVERY) + 1);
+      drawTrail(cmp.guessPts, LOOK.guess, false, Math.floor(i / TRAIL_EVERY) + 1);
       var tp = cmp.truth, gp = cmp.guess;
-      drawBody(gp.xs[i], gp.ys[i], gp.ths[i], COL.guess, 'your guess');
-      drawBody(tp.xs[i], tp.ys[i], tp.ths[i], COL.hidden, 'hidden');
+      drawBody(gp.xs[i], gp.ys[i], gp.ths[i], LOOK.guess, 'your guess');
+      drawBody(tp.xs[i], tp.ys[i], tp.ths[i], LOOK.hidden, 'hidden');
     } else {
-      sc.cars.forEach(function (c) { drawTrail(c.trail, c.colour, c.fade, false); });
+      sc.cars.forEach(function (c) { drawTrail(c.trail, c.look, c.fade, null, c.dropped); });
       sc.cars.forEach(function (c) {
         var p = carPose(c, t);
-        drawBody(p.x, p.y, p.th, c.colour, c.label);
+        drawBody(p.x, p.y, p.th, c.look, c.label);
       });
     }
     ctx.restore();
@@ -373,34 +458,50 @@
       { k: 'rl', x1: S.rx, x2: S.mlx, t: 0.24 }
     ];
     var out = '<svg viewBox="0 0 220 200" role="img" aria-label="' + title + '">';
-    out += '<text x="110" y="13" text-anchor="middle" font-size="12" fill="#686d62">front</text>';
-    out += '<rect x="48" y="28" width="124" height="160" rx="16" fill="#f3f3ed" stroke="#b5bdaf"/>';
-    out += '<rect x="30" y="122" width="16" height="52" rx="4" fill="#343630"/>';
-    out += '<rect x="174" y="122" width="16" height="52" rx="4" fill="#343630"/>';
+    out += '<text x="110" y="13" text-anchor="middle" font-size="12" fill="#a7a094">front</text>';
+    out += '<rect x="48" y="28" width="124" height="160" rx="7" fill="#1b1a18" stroke="#7a7468"/>';
+    out += '<rect x="30" y="122" width="16" height="52" rx="2" fill="#0b0b0b" stroke="#5d584f"/>';
+    out += '<rect x="174" y="122" width="16" height="52" rx="2" fill="#0b0b0b" stroke="#5d584f"/>';
     wires.forEach(function (wr) {
       var v = w[wr.k];
       if (!v) return;
       var x1 = wr.x1, y1 = S.sy + 8, x2 = wr.x2, y2 = S.my - 10;
       var exc = v > 0;
       var width = 1.2 + 1.6 * Math.abs(v);
-      out += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (exc ? '#343630' : '#686d62') +
+      out += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (exc ? '#ebe5d8' : '#a7a094') +
         '" stroke-width="' + width.toFixed(1) + '"' + (exc ? '' : ' stroke-dasharray="5 4"') + ' stroke-linecap="round"/>';
       var bx = x1 + (x2 - x1) * wr.t, by = y1 + (y2 - y1) * wr.t;
       var mag = Math.abs(v), txt = (exc ? '+' : MINUS) + (mag === 1 ? '' : mag === 0.5 ? '½' : String(mag));
       var r = txt.length > 1 ? 11 : 9;
-      out += '<circle cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="' + r + '" fill="#faf9f6" stroke="#343630"/>';
-      out += '<text x="' + bx.toFixed(1) + '" y="' + (by + 4.5).toFixed(1) + '" text-anchor="middle" font-size="' + (txt.length > 1 ? 12 : 15) + '" fill="#252821">' + txt + '</text>';
+      out += '<circle cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="' + r + '" fill="#121212" stroke="#ebe5d8"/>';
+      out += '<text x="' + bx.toFixed(1) + '" y="' + (by + 4.5).toFixed(1) + '" text-anchor="middle" font-size="' + (txt.length > 1 ? 12 : 15) + '" fill="#ebe5d8">' + txt + '</text>';
     });
     // sensors and motors drawn on top of the wires
     [S.lx, S.rx].forEach(function (x, i) {
-      out += '<circle cx="' + x + '" cy="' + S.sy + '" r="10" fill="#f6dd8f" stroke="#343630"/>';
-      out += '<text x="' + x + '" y="' + (S.sy + 4) + '" text-anchor="middle" font-size="11" fill="#252821">' + (i ? 'R' : 'L') + '</text>';
+      out += '<circle cx="' + x + '" cy="' + S.sy + '" r="10" fill="#ffb347" stroke="#ffd796"/>';
+      out += '<text x="' + x + '" y="' + (S.sy + 4) + '" text-anchor="middle" font-size="11" fill="#17120a">' + (i ? 'R' : 'L') + '</text>';
     });
     [S.mlx, S.mrx].forEach(function (x) {
-      out += '<circle cx="' + x + '" cy="' + S.my + '" r="10" fill="#faf9f6" stroke="#343630"/>';
-      out += '<text x="' + x + '" y="' + (S.my + 4) + '" text-anchor="middle" font-size="11" fill="#252821">M</text>';
+      out += '<circle cx="' + x + '" cy="' + S.my + '" r="10" fill="#121212" stroke="#ebe5d8"/>';
+      out += '<text x="' + x + '" y="' + (S.my + 4) + '" text-anchor="middle" font-size="11" fill="#ebe5d8">M</text>';
     });
     return out + '</svg>';
+  }
+  // A short sample of a vehicle's streak, for keys and lists (the pattern, not only the colour).
+  function streakSvg(look) {
+    var o = '<svg class="an-streak" viewBox="0 0 30 12" aria-hidden="true" focusable="false">', c = look.colour;
+    if (look.style === 'hot') {
+      o += '<line x1="3" y1="6" x2="27" y2="6" stroke="' + c + '" stroke-opacity=".35" stroke-width="6" stroke-linecap="round"/>' +
+        '<line x1="3" y1="6" x2="27" y2="6" stroke="' + look.core + '" stroke-width="1.8" stroke-linecap="round"/>';
+    } else if (look.style === 'twin') {
+      o += '<line x1="2" y1="3.8" x2="28" y2="3.8" stroke="' + c + '" stroke-width="1.4"/>' +
+        '<line x1="2" y1="8.2" x2="28" y2="8.2" stroke="' + c + '" stroke-width="1.4"/>';
+    } else if (look.style === 'pearls') {
+      o += '<line x1="3" y1="6" x2="28" y2="6" stroke="' + c + '" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.01 6.2"/>';
+    } else {
+      o += '<line x1="2" y1="6" x2="28" y2="6" stroke="' + c + '" stroke-width="2.4" stroke-dasharray="6 4.4"/>';
+    }
+    return o + '</svg>';
   }
   function unitWeights(w) {
     return { ll: w.ll / P.gain, rr: w.rr / P.gain, lr: w.lr / P.gain, rl: w.rl / P.gain };
@@ -439,7 +540,7 @@
     panel.appendChild(segment('Effect of light on the motor', SIGN_OPTS, wg.sign, function (v) { state.wiring.sign = v; renderWorkshop(); focusPressed(1); }));
     panel.appendChild(el('p', { class: 'an-muted an-small', text: 'In the dark every motor turns at the same steady cruising speed. A + wire adds to it as the light grows; a ' + MINUS + ' wire takes away from it, down to a stop. There is no goal, map or memory inside.' }));
     var name = el('p', { class: 'an-name' });
-    name.innerHTML = '<span class="an-swatch" style="background:' + info.colour + '"></span><strong>' + id + ' · ' + info.name + '.</strong> ' + info.text;
+    name.innerHTML = streakSvg(LOOK[id]) + '<strong>' + id + ' · ' + info.name + '.</strong> ' + info.text;
     panel.appendChild(name);
     var rel = button('Release a ' + id, { primary: true, onclick: function () { releaseCar(); } });
     rel.id = 'an-release';
@@ -453,7 +554,7 @@
       var ul = el('ul', { class: 'an-cars', 'aria-label': 'Vehicles in the arena' });
       sc.cars.forEach(function (c, i) {
         var li = el('li');
-        li.innerHTML = '<span class="an-swatch" style="background:' + c.colour + '"></span><span class="an-car-name">' + c.name + '</span>';
+        li.innerHTML = streakSvg(c.look) + '<span class="an-car-name">' + c.name + '</span>';
         var x = el('button', { type: 'button', class: 'an-x', 'aria-label': 'Remove ' + c.name, text: 'remove' });
         x.addEventListener('click', function () { sc.cars.splice(i, 1); renderWorkshop(); describeArena(); requestDraw(); });
         li.appendChild(x);
@@ -529,7 +630,7 @@
     G.scene = {
       lights: clone(R.lights),
       cars: [makeCar({ x: R.start.x, y: R.start.y, th: R.start.th, wiring: M.specWiring(R.mode, R.truth),
-        colour: COL.hidden, label: '?', name: 'hidden vehicle', fade: false, limit: M.roundSteps(R) })]
+        look: LOOK.hidden, label: '?', name: 'hidden vehicle', fade: false, limit: M.roundSteps(R) })]
     };
     G.moved = false;
     state.selected = 0;
@@ -713,8 +814,8 @@
     box.insertAdjacentHTML('beforeend', html);
     panel.appendChild(box);
     panel.appendChild(el('div', { class: 'an-key' },
-      '<span><svg width="28" height="6" aria-hidden="true"><line x1="0" y1="3" x2="28" y2="3" stroke="' + COL.hidden + '" stroke-width="2"/></svg>Solid: the hidden wiring</span>' +
-      '<span><svg width="28" height="6" aria-hidden="true"><line x1="0" y1="3" x2="28" y2="3" stroke="' + COL.guess + '" stroke-width="2" stroke-dasharray="6 5"/></svg>Dashed: your guess, same start, original lights</span>'));
+      '<span>' + streakSvg(LOOK.hidden) + 'Solid: the hidden wiring</span>' +
+      '<span>' + streakSvg(LOOK.guess) + 'Dashed: your guess, same start, original lights</span>'));
     var row3 = el('div', { class: 'an-row' });
     row3.appendChild(button('Replay comparison', { onclick: replayCompare }));
     row3.appendChild(button(G.index + 1 < M.ROUNDS.length ? 'Next round' : 'See your score', { primary: true, onclick: nextRound }));
@@ -921,6 +1022,10 @@
   // ------------------------------------------------------------------ start up
   if (window.ResizeObserver) new ResizeObserver(resize).observe(arenaEl);
   window.addEventListener('resize', resize);
+  // the canvas labels use the page's own face; redraw once it has arrived
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('500 12px "DM Mono"').then(function () { requestDraw(); }, function () {});
+  }
 
   if (Kit.preview) {
     previewReset();
