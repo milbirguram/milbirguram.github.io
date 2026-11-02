@@ -37,11 +37,15 @@
   // ---------------------------------------------------------------- wood shavings
   // One shaving curls off for each shrink step; a bigger cut makes a bigger shaving.
   // Decoration only: nothing is drawn under reduced motion.
-  var CURL = 'M1 15 C 9 14, 20 6, 31 6 C 40 6, 42 15, 35 17 C 30 18.5, 27 13, 32 11.5';
-  var SHAVING = '<svg viewBox="0 0 44 22" aria-hidden="true" focusable="false">' +
-    '<path d="' + CURL + '" fill="none" stroke="#9c7a48" stroke-width="6" stroke-linecap="round"/>' +
-    '<path d="' + CURL + '" fill="none" stroke="#d9b981" stroke-width="4.2" stroke-linecap="round"/>' +
-    '<path d="M2 14 C 10 12.5, 20 5.5, 30 5" fill="none" stroke="#f6ead0" stroke-width="1.2" stroke-linecap="round"/></svg>';
+  // A plane shaving: a ribbon cut square at one end that rolls up at the other; the inner turn
+  // shows the darker underside of the wood, the outer face a pale sheen and one grain line.
+  var CURL = 'M2.5 22 C 14 19.5, 25.5 9.5, 38 6.4 C 48.5 3.8, 56.5 9, 55 16.6 C 53.5 24.4, 43.5 26.2, 38.8 21.2 C 35.4 17.4, 37.6 11.6, 43.4 10.8';
+  var SHAVING = '<svg viewBox="0 0 60 30" aria-hidden="true" focusable="false">' +
+    '<path d="' + CURL + '" fill="none" stroke="#8d6738" stroke-width="7.3" stroke-linejoin="round"/>' +
+    '<path d="' + CURL + '" fill="none" stroke="#e2c38b" stroke-width="5.8"/>' +
+    '<path d="M38.8 21.2 C 35.4 17.4, 37.6 11.6, 43.4 10.8" fill="none" stroke="#b48a52" stroke-width="5.8"/>' +
+    '<path d="M3.2 20.6 C 14 18, 25 8.4, 38 5 C 47.6 2.8, 54.6 7.6, 54.2 13.4" fill="none" stroke="#f6e9cc" stroke-width="1" stroke-linecap="round"/>' +
+    '<path d="M8 21.6 C 18 18.4, 27 10.8, 38.6 8 C 47 6, 52.6 10.6, 52.4 16" fill="none" stroke="#b9925a" stroke-width="0.6"/></svg>';
   function shaving(scale) {
     var d = el('span', 'wh-shaving');
     d.innerHTML = SHAVING;
@@ -383,9 +387,7 @@
     $('wh-app').hidden = true;
     var box = $('wh-preview');
     box.hidden = false;
-    var streamBox = $('wh-p-stream');
-    var pile = el('div', 'wh-p-pile');
-    $('wh-p-big').parentNode.appendChild(pile);
+    var streamBox = $('wh-p-stream'), pile = $('wh-p-pile');
 
     // Real runs of the strongest property on each buggy function, for the seeds listed in the
     // model (W.PREVIEW, checked by the tests); the runs themselves are untouched.
@@ -395,7 +397,7 @@
 
     function timeline(e) {
       var N = e.run.inputs.length, steps = e.shrunk.steps.length;
-      var t = { stream: Math.min(2600, N * 75), hold: 700, step: 420 };
+      var t = { stream: Math.min(1400, N * 70), hold: 520, step: 320 };
       t.shrink = (steps + 1) * t.step;
       t.end = 1900;
       t.total = t.stream + t.hold + t.shrink + t.end;
@@ -403,24 +405,41 @@
     }
     var plans = demos.map(timeline);
 
-    // The pile on the bench: one shaving per shrink step taken, placed by a fixed pattern.
-    // When the animation is running, the newest one drops into place.
-    var HEAP = [[30, 22, -8], [4, 18, 170], [40, 4, 14], [14, 2, -24], [22, 12, 192], [0, 0, 8], [36, 14, -168], [10, 24, 26], [26, 0, -4]];
+    // The pile on the bench: one shaving per shrink step taken, at real size (a bigger cut makes
+    // a bigger shaving), placed by a fixed pattern given as fractions of the open bench area.
+    // When the animation is running, the newest one drops off the card into place.
+    var HEAP = [[0.5, 0.92, -8], [0.06, 0.78, 168], [0.92, 0.7, 14], [0.3, 0.5, -26], [0.7, 0.3, 192],
+      [0.02, 0.2, 10], [0.96, 0.02, -164], [0.42, 0.08, 28], [0.62, 0.62, -4]];
+    var SW = 56, SH = 28; // a shaving's box at scale 1, matching the CSS
+    function pileScale(before, after) {
+      var raw = shavingScale(before, after); // 0.55 .. 1.4
+      return 0.8 + 0.45 * Math.max(0, Math.min(1, (raw - 0.55) / 0.85));
+    }
     function drawPile(e, k) {
       var have = pile.childNodes.length;
       if (k < have) { pile.textContent = ''; have = 0; }
+      // On a larger card the bench is larger, and so are the shavings.
+      var grow = Math.max(1, Math.min(1.5, pile.clientWidth / 130));
+      var PW = pile.clientWidth, PH = pile.clientHeight;
       for (var j = have; j < k; j++) {
         var st = e.shrunk.steps[j], before = j === 0 ? e.shrunk.original.value : e.shrunk.steps[j - 1].value;
-        var sc = Math.min(1.1, shavingScale(before, st.value)) * 0.85;
+        var sc = +(pileScale(before, st.value) * grow).toFixed(3);
         var sv = shaving(sc);
-        var at = HEAP[j % HEAP.length];
-        var rest = 'translate(' + at[0] + 'px, ' + at[1] + 'px) rotate(' + at[2] + 'deg) scale(' + sc + ')';
+        // Place the scaled shaving (scaled about its centre) so it lies within the open bench.
+        var w = SW * sc, h = SH * sc, at = HEAP[j % HEAP.length];
+        var x = Math.round(at[0] * Math.max(0, PW - w) + (w - SW) / 2), y = Math.round(at[1] * Math.max(0, PH - h) + (h - SH) / 2);
+        var rest = 'translate(' + x + 'px, ' + y + 'px) rotate(' + at[2] + 'deg) scale(' + sc + ')';
         sv.style.setProperty('--rest', rest);
+        sv.style.setProperty('--from', 'translate(' + (x - 34) + 'px, ' + (y - PH - 40) + 'px) rotate(' + (at[2] - 150) + 'deg) scale(' + (sc * 0.6).toFixed(3) + ')');
         sv.style.transform = rest;
-        sv.style.left = '0'; sv.style.top = '0';
         if (j === k - 1 && Kit.playing && !Kit.reducedMotion) sv.className += ' is-new';
         pile.appendChild(sv);
       }
+    }
+
+    function streamChip(s, item) {
+      var c = el('span', 'wh-chip is-' + item.outcome, (item.outcome === 'fail' ? '✕ ' : '') + clip(s.show(item.value), 22));
+      return c;
     }
 
     var cur = -1, lastKey = '';
@@ -437,51 +456,58 @@
       if (di !== cur) { cur = di; streamBox.textContent = ''; streamBox.dataset.n = '0'; pile.textContent = ''; }
       var have = +streamBox.dataset.n;
       if (n < have) { streamBox.textContent = ''; have = 0; }
-      for (var i = Math.max(have, n - 30); i < n; i++) {
-        var item = e.run.inputs[i];
-        var c = el('span', 'wh-chip is-' + item.outcome, (item.outcome === 'fail' ? '✕ ' : '') + clip(s.show(item.value), 22));
-        streamBox.appendChild(c);
-      }
+      for (var i = Math.max(have, n - 30); i < n; i++) streamBox.appendChild(streamChip(s, e.run.inputs[i]));
       while (streamBox.childNodes.length > 30) streamBox.removeChild(streamBox.firstChild);
       streamBox.dataset.n = String(n);
       streamBox.className = 'wh-p-stream' + (inShrink ? ' is-dim' : '');
 
       $('wh-p-fn').textContent = s.tab;
       $('wh-p-count').textContent = plural(n, 'input');
-      var label = $('wh-p-label'), big = $('wh-p-big');
+      var label = $('wh-p-label'), big = $('wh-p-big'), text, failing;
       if (!inShrink) {
-        label.textContent = n === N ? 'input ' + W.fmtInt(N) + ' fails' : 'example tests pass · trying random inputs';
-        big.textContent = n === N ? '✕ ' + clip(s.show(e.run.failure.value), 40) : '';
-        big.className = 'wh-p-big' + (n === N ? ' is-fail' : '');
+        failing = n === N;
+        label.textContent = failing ? 'input ' + W.fmtInt(N) + ' fails' : 'example tests pass · trying random inputs';
+        text = (failing ? '✕ ' : '') + clip(s.show(e.run.inputs[n - 1].value), 40);
       } else {
         var v = k === 0 ? e.shrunk.original.value : e.shrunk.steps[k - 1].value;
+        failing = true;
         label.textContent = done ? 'smallest failing input · ' + plural(e.shrunk.steps.length, 'step') : 'whittling · step ' + k + ' of ' + e.shrunk.steps.length;
-        big.textContent = '✕ ' + clip(s.show(v), 40);
-        big.className = 'wh-p-big is-fail' + (done ? ' is-final' : '');
+        text = '✕ ' + clip(s.show(v), 40);
       }
+      big.textContent = '';
+      big.appendChild(el('span', 'wh-p-cut' + (failing ? ' is-ring' : ''), text));
+      big.className = 'wh-p-big' + (failing ? ' is-fail' : '') + (text.length > 26 ? ' is-long' : '') + (done ? ' is-final' : '');
       drawPile(e, inShrink ? k : 0);
     }
 
     // A still frame for paused cards and reduced motion: the first demo, fully whittled.
-    function still() { draw(0, plans[0].total - 1); }
-
     var raf = 0, at = 0, demo = 0, prev = null;
     function frame(now) {
       if (prev != null) at += Math.min(100, now - prev);
       prev = now;
+      // The next demo streams its inputs in from the start; the first play never does (below).
       if (at >= plans[demo].total) { at = 0; demo = (demo + 1) % demos.length; }
       draw(demo, at);
       raf = requestAnimationFrame(frame);
     }
-    still();
+    draw(demo, plans[demo].total - 1);
+    window.addEventListener('resize', function () {
+      // The pile is laid out against the bench's size; lay it out again.
+      pile.textContent = ''; lastKey = '';
+      draw(demo, Kit.playing ? at : plans[demo].total - 1);
+    });
     Kit.onPlay(function (playing) {
       cancelAnimationFrame(raf);
       prev = null;
-      if (playing) { raf = requestAnimationFrame(frame); return; }
-      // Paused: show the current demo fully whittled, never a half-empty frame. On resume the
-      // loop moves on to the next demo.
+      if (playing) {
+        // Start with the stream already on the bench (the same chips as the still frame), so the
+        // card opens on the failing input and goes straight into the whittle.
+        at = plans[demo].stream;
+        raf = requestAnimationFrame(frame);
+        return;
+      }
+      // Paused: show the current demo fully whittled, never a half-empty frame.
       draw(demo, plans[demo].total - 1);
-      at = plans[demo].total;
     });
   }
 })();
