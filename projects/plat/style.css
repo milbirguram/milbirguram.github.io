@@ -32,12 +32,18 @@
   --pl-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --pl-sc: "Cormorant SC", "Cormorant Garamond", "Palatino Linotype", Georgia, serif;
   --pl-mono: "Overpass Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --pl-linen: #efe6d1;   /* the sheet */
+  --pl-linen: #e6e2d6;   /* drafting linen, grey-cream */
   --pl-ink: #22201b;     /* survey linework and text */
-  --pl-sepia: #5e5040;   /* secondary text, 6.3:1 on linen */
+  --pl-sepia: #5e5040;   /* secondary text, 6.0:1 on linen */
   --pl-red: #8c2f1c;     /* red ink: what the reader has marked */
-  --pl-forest: #2d5442;  /* the deep end of the wash */
-  --pl-rule: #b9ab89;
+  --pl-forest: #3a5443;  /* the deep end of the wash */
+  --pl-rule: #b3a990;
+  /* The card's linen: warp and weft coarse enough to survive a 320px frame, at about
+     7-8%, so it never fights the lettering. The full sheet keeps a finer weave. */
+  --pl-weave-coarse:
+    repeating-linear-gradient(0deg, rgba(74, 62, 44, 0.08) 0 1px, transparent 1px 3px, rgba(74, 62, 44, 0.045) 3px 4px, transparent 4px 5px),
+    repeating-linear-gradient(90deg, rgba(74, 62, 44, 0.07) 0 1px, transparent 1px 4px, rgba(255, 255, 255, 0.14) 4px 5px);
+  --pl-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.16 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
 /* The h1 takes the plat's face; the back link and the paragraph stay the site's. */
@@ -62,7 +68,7 @@ h1 { font-family: var(--pl-sc); font-weight: 600; font-size: 28px; letter-spacin
   background-image:
     repeating-linear-gradient(0deg, rgba(92, 72, 40, 0.045) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(90deg, rgba(92, 72, 40, 0.035) 0 1px, transparent 1px 4px),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.16 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+    var(--pl-grain);
   border: 1.5px solid var(--pl-ink);
 }
 /* the inner border of a drawn sheet */
@@ -134,7 +140,7 @@ h1 { font-family: var(--pl-sc); font-weight: 600; font-size: 28px; letter-spacin
 .pl-book { grid-area: book; align-self: stretch; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 
 .pl-year-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.pl-year-num { font-family: var(--pl-mono); font-size: 40px; line-height: 1; letter-spacing: -0.02em; color: var(--pl-ink); }
+.pl-year-num { font-family: var(--pl-serif); font-weight: 600; font-size: 46px; line-height: 0.95; font-variant-numeric: lining-nums; color: var(--pl-ink); }
 .pl-year-note { font-style: italic; font-size: 16px; color: var(--pl-sepia); }
 
 /* The year scrubber: a surveyor's chain laid along a ruled line. */
@@ -254,6 +260,9 @@ h1 { font-family: var(--pl-sc); font-weight: 600; font-size: 28px; letter-spacin
 
 .pl-fail { padding: 16px; font-style: italic; }
 
+/* The pooled edge of each wash: its own rim, multiplied over it. */
+.pl-pool { mix-blend-mode: multiply; opacity: 0.5; }
+
 /* ------------------------------------------------------------------ narrow */
 @media (max-width: 900px) {
   .pl-sheet { grid-template-columns: minmax(0, 1fr); grid-template-areas: "map" "controls" "record" "ledger" "notes"; padding: 18px 14px 16px; gap: 16px; }
@@ -274,35 +283,58 @@ h1 { font-family: var(--pl-sc); font-weight: 600; font-size: 28px; letter-spacin
 }
 
 /* ------------------------------------------------------------------ the card preview */
-html.kit-preview .pl-stage { background: var(--pl-linen); }
+/* The card is a corner of the same sheet: linen, wash, cartouche, arrow, rule, lettering. */
+html.kit-preview .pl-stage { background-color: var(--pl-linen); background-image: var(--pl-weave-coarse), var(--pl-grain); }
 .pl-pv {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 37%;
+  grid-template-columns: minmax(0, 1fr) 34%;
   grid-template-rows: minmax(0, 1fr);
   align-items: center;
-  gap: 4%;
-  padding: 5% 5% 5% 4%;
+  gap: 3%;
+  padding: 4.5% 5% 4% 3%;
   box-sizing: border-box;
   color: var(--pl-ink);
   font-family: var(--pl-serif);
-  background-color: var(--pl-linen) !important;
-  background-image:
-    repeating-linear-gradient(0deg, rgba(92, 72, 40, 0.05) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(90deg, rgba(92, 72, 40, 0.04) 0 1px, transparent 1px 4px);
   border: 1.5px solid var(--pl-ink);
   outline: 0.75px solid var(--pl-ink);
   outline-offset: -6px;
 }
 .pl-pv-wrap { min-width: 0; min-height: 0; height: 100%; }
-.pl-pv-map { display: block; width: 100%; height: 100%; }
-.pl-pv-side { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.pl-pv-cap { font-family: var(--pl-sc); font-weight: 600; font-size: clamp(11px, 3.6vw, 17px); letter-spacing: 0.05em; line-height: 1.1; }
-.pl-pv-year { font-family: var(--pl-mono); font-size: clamp(22px, 9vw, 44px); line-height: 1; color: var(--pl-red); }
-.pl-pv-sub { font-style: italic; font-size: clamp(11px, 3.4vw, 16px); color: var(--pl-sepia); line-height: 1.1; }
-/* Two bars on one scale, one for each median; never stacked. */
-.pl-pv-row { display: flex; flex-direction: column; gap: 1px; margin-top: 4px; min-width: 0; }
-.pl-pv-k { font-family: var(--pl-mono); font-size: clamp(11px, 2.6vw, 13px); line-height: 1.2; color: var(--pl-ink); white-space: nowrap; letter-spacing: -0.02em; }
-.pl-pv-track { display: block; height: clamp(6px, 2.4vw, 11px); border-bottom: 1px solid var(--pl-ink); border-left: 1px solid var(--pl-ink); }
-.pl-pv-fill { display: block; height: 100%; border: 1px solid var(--pl-ink); border-left: 0; box-sizing: border-box; }
-.pl-pv-fill.pl-pv-land { background: var(--pl-forest); }
+.pl-pv-map { display: block; width: 100%; height: 100%; overflow: visible; }
+.pl-pv-names text { paint-order: stroke; stroke: var(--pl-linen); stroke-opacity: 0.8; stroke-width: calc(2.6px * var(--u, 1)); stroke-linejoin: round; letter-spacing: 0.04em; }
+.pl-pv-side { display: flex; flex-direction: column; gap: clamp(6px, 2.4vw, 12px); min-width: 0; }
+
+/* The cartouche: a double-ruled box, name in small capitals, the roll year beneath. */
+.pl-pv-cart {
+  padding: clamp(4px, 1.6vw, 9px) clamp(5px, 2vw, 11px) clamp(4px, 1.4vw, 8px);
+  border: 1.25px solid var(--pl-ink);
+  outline: 0.6px solid var(--pl-ink);
+  outline-offset: -4px;
+  text-align: center;
+}
+.pl-pv-cap { font-family: var(--pl-sc); font-weight: 600; font-size: clamp(11px, 3.6vw, 17px); letter-spacing: 0.04em; line-height: 1.05; }
+.pl-pv-year {
+  font-family: var(--pl-serif); font-weight: 600;
+  font-size: clamp(25px, 9.4vw, 46px); line-height: 0.95;
+  font-variant-numeric: lining-nums;
+  color: var(--pl-sepia);
+  margin: 1px 0 1px;
+}
+.pl-pv-sub { font-style: italic; font-size: clamp(11px, 3vw, 15px); color: var(--pl-sepia); line-height: 1.05; border-top: 0.6px solid var(--pl-sepia); padding-top: 2px; }
+
+/* Two bars on one scale, never stacked, with a surveyor's rule beneath. */
+.pl-pv-bars { display: flex; flex-direction: column; gap: clamp(2px, 0.9vw, 5px); min-width: 0; }
+.pl-pv-row { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pl-pv-k { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; line-height: 1.1; white-space: nowrap; }
+.pl-pv-w { font-family: var(--pl-sc); font-weight: 600; font-size: clamp(11px, 3vw, 15px); letter-spacing: 0.05em; }
+.pl-pv-fig { font-family: var(--pl-mono); font-size: clamp(11px, 2.6vw, 13px); letter-spacing: -0.03em; }
+.pl-pv-track { display: block; height: clamp(6px, 2.2vw, 11px); border-left: 1px solid var(--pl-ink); }
+.pl-pv-fill { display: block; height: 100%; border: 0.75px solid var(--pl-ink); border-left: 0; box-sizing: border-box; }
+.pl-pv-fill.pl-pv-land { background: #55704f; box-shadow: inset 0 -2px 0 rgba(36, 58, 47, 0.5); }
 .pl-pv-fill.pl-pv-bldg { background: repeating-linear-gradient(45deg, var(--pl-ink) 0 1px, #d9c48f 1px 4px); }
+.pl-pv-rule { position: relative; height: clamp(17px, 5.4vw, 24px); border-top: 1px solid var(--pl-ink); margin-top: 1px; }
+.pl-pv-tick { position: absolute; top: 0; width: 0; height: 3px; border-left: 0.75px solid var(--pl-ink); }
+.pl-pv-tick.is-half { height: 4.5px; }
+.pl-pv-tick.is-major { height: 6px; border-left-width: 1px; }
+.pl-pv-tl { position: absolute; top: 5px; left: 0; transform: translateX(-50%); font-family: var(--pl-mono); font-size: 11px; line-height: 1; color: var(--pl-sepia); white-space: nowrap; }
+.pl-pv-tick:first-child .pl-pv-tl { transform: translateX(-1px); }

@@ -10,8 +10,9 @@
   var K = 7; // colour classes
 
   // The wash scale: dry earth to deep forest. Darker always means a higher median.
-  var WASH = ['#eadcb4', '#d9c48f', '#bdb574', '#93a462', '#6b8c56', '#48704b', '#2d5442'];
-  var EDGE = ['#cdb88a', '#bba46c', '#9e9655', '#768747', '#52703f', '#345636', '#1d3a2d'];
+  // Muted, as pigment dries on linen; EDGE is where each wash pools at its boundary.
+  var WASH = ['#e9dcb8', '#d8c594', '#beb27c', '#9a9f6c', '#76875d', '#55704f', '#3a5443'];
+  var EDGE = ['#cbb88e', '#b9a470', '#9d935c', '#7a8150', '#586a45', '#3c553b', '#243a2f'];
 
   var MEASURE_LABEL = { land: 'land', building: 'building', total: 'land and building' };
   var KIND_LABEL = { nonstrata: 'lots', strata: 'strata units' };
@@ -35,38 +36,75 @@
 
   // ------------------------------------------------------------------ shared drawing
 
+  var LINEN = '#e6e2d6', INK = '#22201b', SEPIA = '#5e5040';
+
   function defs(root, prefix) {
     var d = el('defs', {}, root);
     // Withheld cells: diagonal hatching in survey ink, as a plat marks land it does not describe.
     var pat = el('pattern', { id: prefix + 'hatch', width: 7, height: 7, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, d);
-    el('rect', { width: 7, height: 7, fill: '#efe6d1' }, pat);
+    el('rect', { width: 7, height: 7, fill: LINEN }, pat);
     el('line', { x1: 0, y1: 0, x2: 0, y2: 7, stroke: '#4a4234', 'stroke-width': 1.1 }, pat);
-    // The wash: a slight wobble at the edge, as pigment runs a little past a ruled line.
-    var f = el('filter', { id: prefix + 'wash', x: '-2%', y: '-2%', width: '104%', height: '104%' }, d);
-    el('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.035', numOctaves: 2, seed: 7, result: 'n' }, f);
-    el('feDisplacementMap', { in: 'SourceGraphic', in2: 'n', scale: 5, xChannelSelector: 'R', yChannelSelector: 'G' }, f);
-    return d;
+    // The wash: pigment runs a hair past the ruled line (fine displacement) and settles
+    // unevenly into the linen (granulation). One filter over the whole wash layer.
+    var f = el('filter', { id: prefix + 'wash', x: '-2%', y: '-2%', width: '104%', height: '104%', 'color-interpolation-filters': 'sRGB' }, d);
+    var t1 = el('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.5', numOctaves: 2, seed: 7, result: 'n' }, f);
+    var dm = el('feDisplacementMap', { in: 'SourceGraphic', in2: 'n', scale: 2, xChannelSelector: 'R', yChannelSelector: 'G', result: 'wash' }, f);
+    // Granulation: slow blooms where the pigment settled thicker or thinner.
+    var t2 = el('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.1', numOctaves: 3, seed: 3, result: 'g' }, f);
+    el('feColorMatrix', { in: 'g', type: 'matrix', values: '0 0 0 0 0.20  0 0 0 0 0.16  0 0 0 0 0.10  0.55 0 0 0 -0.22', result: 'dk' }, f);
+    el('feColorMatrix', { in: 'g', type: 'matrix', values: '0 0 0 0 0.93  0 0 0 0 0.92  0 0 0 0 0.88  -0.6 0 0 0 0.25', result: 'lt' }, f);
+    el('feComposite', { in: 'dk', in2: 'wash', operator: 'in', result: 'dkin' }, f);
+    el('feComposite', { in: 'lt', in2: 'wash', operator: 'in', result: 'ltin' }, f);
+    var m = el('feMerge', {}, f);
+    el('feMergeNode', { in: 'wash' }, m);
+    el('feMergeNode', { in: 'ltin' }, m);
+    el('feMergeNode', { in: 'dkin' }, m);
+    // The pooled edge: each area's own rim, clipped inside it, softened and multiplied over
+    // the wash, as pigment gathers where a wet wash meets its boundary.
+    var pf = el('filter', { id: prefix + 'pool', x: '-2%', y: '-2%', width: '104%', height: '104%' }, d);
+    var bl = el('feGaussianBlur', { stdDeviation: 1 }, pf);
+    return {
+      defs: d,
+      // u: viewBox units per CSS pixel. Filter sizes are given in screen pixels, so the wash
+      // reads the same on the card and on the full sheet.
+      tune: function (u) {
+        t1.setAttribute('baseFrequency', (0.9 / u).toFixed(4));
+        dm.setAttribute('scale', (2 * u).toFixed(2));
+        t2.setAttribute('baseFrequency', (0.07 / u).toFixed(4));
+        bl.setAttribute('stdDeviation', (1.1 * u).toFixed(2));
+      }
+    };
+  }
+
+  // Clip each rim to its own area so the darker stroke sits only on the inside.
+  function rimClip(dfs, prefix, i, d) {
+    var cp = el('clipPath', { id: prefix + 'c' + i }, dfs.defs);
+    el('path', { d: d }, cp);
+    return 'url(#' + prefix + 'c' + i + ')';
   }
 
   function northArrow(g, x, y, s) {
     var a = el('g', { transform: 'translate(' + x + ',' + y + ') scale(' + s + ')', class: 'pl-north' }, g);
-    el('circle', { r: 17, fill: 'none', stroke: '#22201b', 'stroke-width': 0.8 }, a);
-    el('path', { d: 'M0,-26 L6,6 L0,1 Z', fill: '#22201b' }, a);
-    el('path', { d: 'M0,-26 L-6,6 L0,1 Z', fill: 'none', stroke: '#22201b', 'stroke-width': 0.9 }, a);
+    el('circle', { r: 17, fill: 'none', stroke: INK, 'stroke-width': 0.8 }, a);
+    el('path', { d: 'M0,-26 L6,6 L0,1 Z', fill: INK }, a);
+    el('path', { d: 'M0,-26 L-6,6 L0,1 Z', fill: 'none', stroke: INK, 'stroke-width': 0.9 }, a);
     var t = el('text', { x: 0, y: -31, 'text-anchor': 'middle', class: 'pl-svg-caps' }, a);
     t.textContent = 'N';
     return a;
   }
 
   // A scale bar of whole kilometres, alternating filled and open like a surveyor's rule.
-  function scaleBar(g, view, x, y, km) {
+  // above: put the figures over the bar instead of under it.
+  function scaleBar(g, view, x, y, km, h, above) {
     var u = 1000 / view.m_per_unit;
+    h = h || 5;
     var s = el('g', { transform: 'translate(' + x + ',' + y + ')', class: 'pl-scale' }, g);
     for (var i = 0; i < km; i++) {
-      el('rect', { x: i * u, y: 0, width: u, height: 5, fill: i % 2 ? '#efe6d1' : '#22201b', stroke: '#22201b', 'stroke-width': 0.8 }, s);
+      el('rect', { x: i * u, y: 0, width: u, height: h, fill: i % 2 ? LINEN : INK, stroke: INK, 'stroke-width': h / 6 }, s);
     }
     for (var j = 0; j <= km; j++) {
-      var t = el('text', { x: j * u, y: 17, 'text-anchor': 'middle', class: 'pl-svg-mono' }, s);
+      var t = el('text', { x: j * u, y: above ? -h * 0.9 : h, dy: above ? 0 : '1.05em', 'text-anchor': j === km && above ? 'start' : 'middle', class: 'pl-svg-mono' }, s);
+      if (j === km && above) t.setAttribute('dx', '-0.3em');
       t.textContent = j === km ? j + ' km' : String(j);
     }
     return s;
@@ -96,10 +134,10 @@
     // --- the map
     svg.setAttribute('viewBox', '0 0 ' + view.w + ' ' + view.h);
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    defs(svg, 'pl-');
-    var gWash = el('g', { filter: 'url(#pl-wash)' }, svg);
-    var gEdge = el('g', { filter: 'url(#pl-wash)', fill: 'none' }, svg);
-    var gLine = el('g', { fill: 'none', stroke: '#22201b', 'stroke-width': 1.1, 'stroke-linejoin': 'round' }, svg);
+    var dfs = defs(svg, 'pl-');
+    var gWash = el('g', { filter: 'url(#pl-wash)', 'fill-opacity': 0.9 }, svg);
+    var gEdge = el('g', { filter: 'url(#pl-pool)', fill: 'none', class: 'pl-pool' }, svg);
+    var gLine = el('g', { fill: 'none', stroke: INK, 'stroke-width': 1.1, 'stroke-linejoin': 'round' }, svg);
     var gSel = el('g', { fill: 'none' }, svg);
     var gLab = el('g', {}, svg);
     var gHit = el('g', {}, svg);
@@ -107,7 +145,7 @@
 
     data.areas.forEach(function (a, i) {
       washes.push(el('path', { d: a.d }, gWash));
-      edges.push(el('path', { d: a.d, 'stroke-width': 4, 'stroke-opacity': 0.55 }, gEdge));
+      edges.push(el('path', { d: a.d, 'clip-path': rimClip(dfs, 'pl-', i, a.d) }, gEdge));
       el('path', { d: a.d }, gLine);
       var lab = el('g', { class: 'pl-lab', transform: 'translate(' + a.lx + ',' + a.ly + ')' }, gLab);
       var num = el('text', { class: 'pl-svg-mono pl-lab-num', 'text-anchor': 'middle' }, lab);
@@ -131,7 +169,7 @@
     var deco = el('g', { class: 'pl-deco' }, svg);
     var NA = view.north || [40, view.h - 120], SB = view.scale || [20, view.h - 30];
     northArrow(deco, NA[0], NA[1], 1.25);
-    scaleBar(deco, view, SB[0], SB[1], 2);
+    var sbar = null;
 
     // Label sizes are set in screen pixels, so they stay legible at any width.
     var labelsWide = true;
@@ -163,6 +201,11 @@
           });
       }
       deco.setAttribute('font-size', (11 * unit).toFixed(2));
+      // The rule keeps a steady drawn thickness at any width.
+      if (sbar) deco.removeChild(sbar);
+      sbar = scaleBar(deco, view, SB[0], SB[1] - 2 * unit, 2, 4 * unit);
+      dfs.tune(unit);
+      gEdge.setAttribute('stroke-width', (6 * unit).toFixed(2));
       layoutGen++;
       drawMultiples();
     }
@@ -548,7 +591,7 @@
         if (k < 0) return { y: y, v: null };
         return { y: y, v: a >= 0 ? pm.areas[a][k] : pm.city[k] };
       });
-      var mark = bars(f, vals, 'New-building permits issued in the year before each roll', '#48704b');
+      var mark = bars(f, vals, 'New-building permits issued in the year before each roll', '#55704f');
       var cap = h('p', 'pl-panel-v', '', f.fig);
       return {
         update: function () {
@@ -597,40 +640,93 @@
 
   // The roll years tick by and the areas recolour, beside two bars: the city's median land
   // value and median building value of a lot. Real values in base-year dollars, precomputed.
+  // The card carries the sheet's furniture: a cartouche, a north arrow, a scale bar and
+  // small-caps names on three of the largest areas.
+
+  // The card's data shares the page's projection (the same 1000-unit-wide view), so the
+  // page's metres per unit and label points apply. tests/test_preview_style.js checks both
+  // against data/plat.json.
+  var PV_M_PER_UNIT = 14.639;
+  var PV_NAMES = [
+    { i: 1, name: 'Downtown', x: 564.3, y: 116 },
+    { i: 9, name: 'Kitsilano', x: 305, y: 221 },
+    { i: 7, name: 'Kerrisdale', x: 310.9, y: 541.4 }
+  ];
+
   function initPreview(pv) {
     stage.textContent = '';
     stage.classList.add('pl-pv');
     var s = el('svg', { viewBox: '0 0 ' + pv.w + ' ' + pv.h, preserveAspectRatio: 'xMidYMid meet', class: 'pl-pv-map', role: 'img', 'aria-label': 'Vancouver local areas shaded by real median land value, roll by roll' }, null);
     var wrap = h('div', 'pl-pv-wrap', null, stage);
     wrap.appendChild(s);
-    defs(s, 'pv-');
-    var gW = el('g', { filter: 'url(#pv-wash)' }, s);
-    var gE = el('g', { filter: 'url(#pv-wash)', fill: 'none', 'stroke-width': 5, 'stroke-opacity': 0.55 }, s);
-    var gL = el('g', { fill: 'none', stroke: '#22201b', 'stroke-width': 1.3, 'stroke-linejoin': 'round' }, s);
+    var dfs = defs(s, 'pv-');
+    var gW = el('g', { filter: 'url(#pv-wash)', 'fill-opacity': 0.88 }, s);
+    var gE = el('g', { filter: 'url(#pv-pool)', fill: 'none', class: 'pl-pool' }, s);
+    var gL = el('g', { fill: 'none', stroke: INK, 'stroke-width': 0.9, 'stroke-linejoin': 'round', 'vector-effect': 'non-scaling-stroke' }, s);
     var rims = [];
-    var paths = pv.areas.map(function (d) {
-      el('path', { d: d }, gL);
-      rims.push(el('path', { d: d }, gE));
+    var paths = pv.areas.map(function (d, i) {
+      el('path', { d: d, 'vector-effect': 'non-scaling-stroke' }, gL);
+      rims.push(el('path', { d: d, 'clip-path': rimClip(dfs, 'pv-', i, d) }, gE));
       return el('path', { d: d }, gW);
     });
+    var gN = el('g', { class: 'pl-pv-names' }, s);
+    PV_NAMES.forEach(function (n) {
+      var t = el('text', { x: n.x, y: n.y, 'text-anchor': 'middle', class: 'pl-svg-caps' }, gN);
+      t.textContent = n.name;
+    });
+    var deco = el('g', { class: 'pl-deco' }, s);
 
     var side = h('div', 'pl-pv-side', null, stage);
-    h('div', 'pl-pv-cap', 'Plat of Vancouver', side);
-    var yr = h('div', 'pl-pv-year', '', side);
-    var sub = h('div', 'pl-pv-sub', 'medians for a lot, in ' + pv.base + ' dollars', side);
+    var cart = h('div', 'pl-pv-cart', null, side);
+    h('div', 'pl-pv-cap', 'Plat of Vancouver', cart);
+    var yr = h('div', 'pl-pv-year', '', cart);
+    var sub = h('div', 'pl-pv-sub', 'medians for a lot, in ' + pv.base + ' dollars', cart);
     sub.setAttribute('aria-hidden', 'true');
     // Two bars on one scale, never stacked: a median of land plus building is not the sum
-    // of the two medians.
-    function barRow(cls) {
-      var row = h('div', 'pl-pv-row', null, side);
-      var k = h('span', 'pl-pv-k ' + cls, '', row);
+    // of the two medians. A surveyor's rule beneath them marks that one scale.
+    var bars = h('div', 'pl-pv-bars', null, side);
+    function barRow(cls, word) {
+      var row = h('div', 'pl-pv-row', null, bars);
+      var k = h('span', 'pl-pv-k', null, row);
+      h('span', 'pl-pv-w', word, k);
+      var fig = h('span', 'pl-pv-fig', '', k);
       var track = h('span', 'pl-pv-track', null, row);
-      return { k: k, fill: h('span', 'pl-pv-fill ' + cls, null, track) };
+      return { k: fig, fill: h('span', 'pl-pv-fill ' + cls, null, track) };
     }
-    var rowL = barRow('pl-pv-land'), rowB = barRow('pl-pv-bldg');
+    var rowL = barRow('pl-pv-land', 'Land'), rowB = barRow('pl-pv-bldg', 'Building');
 
     var edges = pv.edges;
     var shares = P.pairBars(pv.city);
+    var top = 0;
+    pv.city.forEach(function (c) { top = Math.max(top, c[0], c[1]); });
+    var rule = h('div', 'pl-pv-rule', null, bars);
+    rule.setAttribute('aria-hidden', 'true');
+    for (var v = 0; v <= top; v += 250000) {
+      var tk = h('span', 'pl-pv-tick' + (v % 1000000 === 0 ? ' is-major' : v % 500000 === 0 ? ' is-half' : ''), null, rule);
+      tk.style.left = (v / top * 100).toFixed(2) + '%';
+      if (v % 1000000 === 0) h('span', 'pl-pv-tl', v ? '$' + v / 1000000 + 'M' : '0', tk);
+    }
+
+    // Lettering and furniture are sized in screen pixels, so they stay legible from the
+    // smallest card up.
+    function fit() {
+      var w = s.getBoundingClientRect().width || 200;
+      var hpx = s.getBoundingClientRect().height || 150;
+      var u = Math.max(pv.w / w, pv.h / hpx); // viewBox units per CSS pixel (meet)
+      dfs.tune(u);
+      gE.setAttribute('stroke-width', (5 * u).toFixed(1));
+      gN.setAttribute('font-size', (Math.min(14, Math.max(11, w * 0.042)) * u).toFixed(1));
+      gN.style.setProperty('--u', u);
+      deco.setAttribute('font-size', (11 * u).toFixed(1));
+      deco.style.setProperty('--u', u);
+      deco.textContent = '';
+      // Lower left, where the city gives way to the Fraser: the arrow, then the rule.
+      var sA = 0.45 * u, r = 17 * sA;
+      var ax = r + 4 * u, ay = pv.h - r - 3 * u;
+      var arrow = northArrow(deco, ax, ay, sA);
+      arrow.querySelector('text').setAttribute('font-size', 25);
+      scaleBar(deco, { m_per_unit: PV_M_PER_UNIT }, ax + r + 7 * u, pv.h - 6.5 * u, 2, 3.5 * u, true);
+    }
 
     function show(k) {
       pv.values.forEach(function (row, i) {
@@ -643,13 +739,16 @@
       var c = pv.city[k];
       rowL.fill.style.width = (shares[k][0] * 100).toFixed(1) + '%';
       rowB.fill.style.width = (shares[k][1] * 100).toFixed(1) + '%';
-      rowL.k.textContent = 'land ' + P.money(c[0]);
-      rowB.k.textContent = 'building ' + P.money(c[1]);
+      rowL.k.textContent = P.money(c[0]);
+      rowB.k.textContent = P.money(c[1]);
     }
 
     var last = pv.years.length - 1;
     var k = last, timer = null;
     show(last);
+    fit();
+    var ft = null;
+    window.addEventListener('resize', function () { clearTimeout(ft); ft = setTimeout(fit, 100); });
     function tick() {
       k = k >= last ? 0 : k + 1;
       show(k);
