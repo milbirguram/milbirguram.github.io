@@ -280,6 +280,18 @@ main > h1 { font-family: "Mirage Serif", Georgia, serif; font-size: 30px; font-w
 /* ---------- preview (card on projects.html) ---------- */
 
 html.kit-preview .mirage-stage { padding: 0; border: 0; background-color: var(--paper); }
-html.kit-preview .mirage-stage::before { inset: 6px; box-shadow: none; }
+/* On the card the platemark is pressed in: inside it the paper sits lower and a shade
+   darker, shadowed along the top and left walls and caught by the light along the
+   bottom and right, so the card reads as a printed plate rather than plain cream. */
+html.kit-preview .mirage-stage::before {
+  inset: 8px;
+  background-color: var(--paper-deep);
+  background-image: inherit;
+  border: 1px solid rgba(91, 70, 54, 0.5);
+  box-shadow:
+    inset 1px 1px 0 rgba(59, 44, 32, 0.2),
+    inset -1px -1px 0 rgba(255, 251, 241, 0.75),
+    1px 1px 0 #fffbf1;
+}
 html.kit-preview .walk, html.kit-preview .intro { display: none; }
 .preview-canvas { display: block; width: 100%; height: 100%; }

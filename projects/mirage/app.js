@@ -346,43 +346,63 @@
     var g = show.garden, counts = sigCounts(g.p);
     var you = M.pathIndex(show.walk);
     var youP = 'p = ' + fmtP(g.p[you]);
-    var LOOP = 10500, raf = 0, t0 = 0, playing = false;
+    // One cycle: grow 0-3.3 s, leaves 3.0-4.1 s, berries 4.2-4.9 s, the walk traced from
+    // 5.2 s, held, then the plant sinks to a faint ghost from 9.9 s. A visitor arriving
+    // starts at START, fully bloomed with the trace running; the regrow comes later.
+    var LOOP = 10500, START = 5600, GHOST = 0.25, raf = 0, t0 = 0, playing = false;
 
     var plate = 'Pl. ' + roman(show.tries) + '.';
+    // Inside the platemark the paper is pressed darker; leaves and the stalk are filled
+    // with that paper so the branches behind them are hidden, as on a printed plate.
+    C.bg = C.paperDeep;
 
-    // The canvas stays transparent so the stage's paper grain and platemark show through.
-    function frame(t) {
-      var fc = fit(canvas), ctx = fc.ctx, w = fc.w, h = fc.h;
-      ctx.clearRect(0, 0, w, h);
-      var wide = w / h > 1.25;
-      var R = wide ? Math.min(h * 0.36, w * 0.28) : Math.min(w, h) * 0.33;
-      var cx = wide ? Math.max(R + 22, w * 0.31) : w / 2, cy = wide ? h * 0.47 : h * 0.42;
-      var sec = t / 1000;
-      var o = {
-        p: g.p, counts: counts, you: you, pre: null, sel: null, cx: cx, cy: cy, R: R, scale: R / 150,
-        bottom: wide ? h - 9 : h - Math.round(clamp(h * 0.065, 12, 18)) * 2.4,
+    function treeAt(sec, geo) {
+      return {
+        p: g.p, counts: counts, you: you, pre: null, sel: null, cx: geo.cx, cy: geo.cy, R: geo.R, scale: geo.R / 150,
+        bottom: geo.bottom,
         grow: clamp(sec / 0.55, 0, NF),
         bloom: clamp((sec - 3.0) / 1.1, 0, 1),
         glow: clamp((sec - 4.2) / 0.7, 0, 1),
         trace: clamp((sec - 5.2) / 0.32, 0, NF),
         pulse: sec > 4.9 ? 0.5 + 0.5 * Math.sin((sec - 4.9) * 3.2) : 0
       };
-      var fade = clamp((10.5 - sec) / 0.6, 0, 1);
+    }
+
+    // The canvas stays transparent so the stage's pressed plate and grain show through.
+    function frame(t) {
+      var fc = fit(canvas), ctx = fc.ctx, w = fc.w, h = fc.h;
+      ctx.clearRect(0, 0, w, h);
+      var wide = w / h > 1.25;
+      var R = wide ? Math.min(h * 0.35, w * 0.28) : Math.min(w, h) * 0.33;
       var small = Math.round(clamp(h * 0.065, 12, 18));
-      // The plate number, engraved in the corner; it stays while the plant regrows.
+      var geo = {
+        R: R, cx: wide ? Math.max(R + 24, w * 0.31) : w / 2, cy: wide ? h * 0.47 : h * 0.42,
+        bottom: wide ? h - 12 : h - small * 2.4
+      };
+      var cx = geo.cx;
+      var sec = t / 1000, end = LOOP / 1000;
+      var o = treeAt(sec, geo);
+      // The finished plant sinks to a ghost at the end of a cycle and stays, faint, while
+      // the next one grows over it; it lifts once the new leaves are out. The plate is
+      // never bare.
+      var sink = clamp((end - sec) / 0.6, 0, 1);
+      var ghost = GHOST * (1 - clamp((sec - 3.4) / 1.0, 0, 1));
+      // The plate number, engraved in the corner.
       ctx.globalAlpha = 1;
       ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'right';
       ctx.fillStyle = C.strong; ctx.font = 'italic ' + small + 'px ' + FONT;
-      ctx.fillText(plate, w - 14, 14 + small);
-      ctx.globalAlpha = fade;
+      ctx.fillText(plate, w - 16, 15 + small);
+      if (ghost > 0) { ctx.globalAlpha = ghost; drawTree(ctx, treeAt(end, geo)); }
+      ctx.globalAlpha = GHOST + (1 - GHOST) * sink;
       drawTree(ctx, o);
+      var fade = sink;
       // Words, never below 12px. Ink for the words; the berry carries the red.
       var ta = clamp((sec - 4.6) / 0.6, 0, 1) * fade;
       if (ta > 0) {
         ctx.globalAlpha = ta;
         var big = Math.round(clamp(h * 0.12, 18, 38));
         if (wide) {
-          var tx = cx + R + Math.max(20, w * 0.06), avail = w - tx - 14;
+          var tx = cx + R + Math.max(20, w * 0.06), avail = w - tx - 16;
           var lines = ['after six', 'sensible choices,', 'in pure noise'];
           ctx.font = big + 'px ' + FONT;
           while (big > 14 && ctx.measureText(youP).width + big * 0.55 > avail) { big--; ctx.font = big + 'px ' + FONT; }
@@ -406,11 +426,14 @@
     }
     function tick(ts) {
       if (!playing) return;
-      if (!t0) t0 = ts;
+      if (!t0) t0 = ts - START;
       frame((ts - t0) % LOOP);
       raf = requestAnimationFrame(tick);
     }
+    // The finished plate: what a paused card and reduced-motion visitors see, and the
+    // first thing drawn on load, before play begins.
     function still() { frame(8600); }
+    still();
     Kit.onPlay(function (on) {
       playing = on;
       cancelAnimationFrame(raf);
