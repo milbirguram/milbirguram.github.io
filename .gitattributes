@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Model and data blobs must never be line-ending converted
+*.bin binary
