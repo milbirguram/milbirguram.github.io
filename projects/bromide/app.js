@@ -4,20 +4,32 @@
   var Kit = window.Kit || { preview: false, reducedMotion: false, onPlay: function (cb) { cb(true); } };
   var B = window.Bromide;
 
-  // Heat scale: bits -> colour. Same stops as the legend gradient (0 to 15 bits).
-  var STOPS = [
-    [0, [0xdf, 0xe9, 0xda]], [3, [0xe9, 0xed, 0xc9]], [6, [0xf4, 0xe3, 0xa8]],
-    [9, [0xf2, 0xc4, 0x8c]], [12, [0xe9, 0xa0, 0x7c]], [15, [0xdc, 0x80, 0x68]]
-  ];
-  function heat(bits) {
+  // Exposure: bits -> optical density of the print. Predictable words print
+  // faint, surprising ones develop dark. The grey behind a word is the paper's
+  // own colour attenuated by 10^-D (D rises with bits, 0 to 1.6); the letters
+  // go from pale silver to black, and turn paper-white once the grey is too
+  // dark to read black on (from 9 bits, where D steps up so both stay above
+  // 5:1 contrast). The legend's test strip is printed by this same rule.
+  var PAPER = [245, 240, 228], FG0 = [106, 101, 94], FG1 = [18, 17, 16], FLIP = 9;
+  function lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  function srgb(v) { v = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; return Math.round(255 * Math.max(0, Math.min(1, v))); }
+  function rgb(c) { return 'rgb(' + c.join(',') + ')'; }
+  function density(bits) {
     var b = Math.max(0, Math.min(15, bits));
-    for (var i = 1; i < STOPS.length; i++) {
-      if (b <= STOPS[i][0]) {
-        var a = STOPS[i - 1], c = STOPS[i], t = (b - a[0]) / (c[0] - a[0]);
-        return 'rgb(' + [0, 1, 2].map(function (k) { return Math.round(a[1][k] + t * (c[1][k] - a[1][k])); }).join(',') + ')';
-      }
-    }
-    return 'rgb(220,128,104)';
+    return b < FLIP ? 0.53 * b / FLIP : 0.85 + 0.75 * (b - FLIP) / (15 - FLIP);
+  }
+  function exposure(bits) {
+    var att = Math.pow(10, -density(bits)), b = Math.max(0, Math.min(15, bits));
+    var bg = PAPER.map(function (c) { return srgb(lin(c) * att); });
+    var f = Math.pow(Math.min(1, b / FLIP), 0.8);
+    var fg = b < FLIP ? FG0.map(function (c, k) { return Math.round(c + f * (FG1[k] - c)); }) : PAPER;
+    return { fg: rgb(fg), bg: b < 0.05 ? 'transparent' : rgb(bg), dark: b >= FLIP };
+  }
+  function print(node, bits) {
+    var e = exposure(bits);
+    node.style.color = e.fg;
+    node.style.backgroundColor = e.bg;
+    node.classList.toggle('is-dark', e.dark);
   }
 
   function $(id) { return document.getElementById(id); }
@@ -74,7 +86,7 @@
         var sp = spans[i];
         var on = i < shown;
         sp.classList.toggle('is-hidden', !on);
-        sp.style.backgroundColor = on && w.bits !== undefined ? heat(w.bits) : '';
+        if (w.bits !== undefined) print(sp, w.bits);
         if (on && w.bits !== undefined) { total += w.bits; n++; }
       });
       num.textContent = n ? fmt(total / n) : '–';
@@ -110,6 +122,7 @@
     Kit.onPlay(function (playing) {
       clearTimeout(timer);
       timer = null;
+      box.classList.toggle('is-still', !playing);
       if (playing) {
         si = 0;
         shown = 0;
@@ -134,6 +147,7 @@
     var narrow = window.matchMedia ? window.matchMedia('(max-width: 820px)') : null;
     var detailHome = detail.parentNode, legend = document.querySelector('.bro-legend');
 
+    testStrip();
     textarea.maxLength = 2000;
     shelfButtons.forEach(function (b) { b.disabled = true; });
 
@@ -143,6 +157,16 @@
     }
     loadBooks();
     loadModel();
+
+    // The legend, printed by the same rule as the words: a darkroom test strip.
+    function testStrip() {
+      var strip = $('bro-strip');
+      [0, 3, 6, 9, 12, 15].forEach(function (b) {
+        var band = el('span', '', b === 0 ? '0 bits' : b === 15 ? '15+' : String(b));
+        print(band, b);
+        strip.appendChild(band);
+      });
+    }
 
     function notBuilt() {
       status.classList.add('is-error');
@@ -310,7 +334,7 @@
             b.classList.add('is-oov');
             b.setAttribute('aria-label', x.display + ': unknown to the books');
           } else {
-            t.style.backgroundColor = heat(x.bits);
+            print(t, x.bits);
             b.setAttribute('aria-label', x.display + ': ' + fmt(x.bits) + ' bits');
           }
           var idx = items.length;

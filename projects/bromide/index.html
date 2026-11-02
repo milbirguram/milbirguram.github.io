@@ -22,7 +22,9 @@
     <div class="bro-app" id="bro-app">
       <div class="bro-main">
         <label class="bro-label" for="bro-text">Your sentence</label>
-        <textarea id="bro-text" class="bro-text" rows="3" spellcheck="false" autocomplete="off" autocapitalize="sentences">The sun rose slowly over the hills, and all was quiet.</textarea>
+        <div class="bro-easel">
+          <textarea id="bro-text" class="bro-text" rows="3" spellcheck="false" autocomplete="off" autocapitalize="sentences">The sun rose slowly over the hills, and all was quiet.</textarea>
+        </div>
 
         <div class="bro-shelf" id="bro-shelf">
           <div class="bro-shelf-row" role="group" aria-labelledby="shelf-tired">
@@ -53,16 +55,10 @@
         <div class="bro-reading" id="bro-reading" role="group" aria-labelledby="reading-label"></div>
 
         <div class="bro-legend">
-          <div class="bro-legend-scale">
-            <span class="bro-legend-end">expected</span>
-            <span class="bro-legend-wrap" aria-hidden="true">
-              <span class="bro-legend-bar"></span>
-              <span class="bro-legend-ticks"><span style="left:0">0</span><span style="left:33.3%">5</span><span style="left:66.7%">10</span><span style="left:100%">15+ bits</span></span>
-            </span>
-            <span class="bro-legend-end">surprising</span>
-          </div>
-          <p class="bro-legend-note">1 bit is a coin-toss guess; 10 bits, about 1 in 1,000. The number under each word says the same as its colour.</p>
-          <div class="bro-legend-unknown"><span class="bro-legend-swatch" aria-hidden="true"></span> unknown to the books: no score, left out of the average</div>
+          <div class="bro-strip" id="bro-strip" role="img" aria-label="Test strip: at 0 bits a word prints faint; by 15 bits or more it prints dark."></div>
+          <div class="bro-strip-ends" aria-hidden="true"><span>faint: expected</span><span>dark: surprising</span></div>
+          <p class="bro-legend-note">Read it as a test strip: predictable words print faint, surprising words develop dark. 1 bit is a coin-toss guess; 10 bits, about 1 in 1,000. The number under each word says the same as its tone.</p>
+          <div class="bro-legend-unknown"><span class="bro-legend-swatch" aria-hidden="true"></span> unknown to the books: not printed, no score, left out of the average</div>
         </div>
       </div>
 
@@ -83,7 +79,7 @@
     </details>
 
     <div class="bro-preview" id="bro-preview" hidden>
-      <p class="pv-label" id="pv-label"></p>
+      <p class="pv-label bro-kicker" id="pv-label"></p>
       <p class="pv-text" id="pv-text"></p>
       <p class="pv-score"><span class="pv-num" id="pv-num"></span> <span class="pv-unit" id="pv-unit">bits per word</span></p>
     </div>

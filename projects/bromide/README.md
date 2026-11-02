@@ -40,7 +40,11 @@ On the page, writing one of these lines shows its figures with a verdict from `B
 - `shipped.test.js`: the model is under 4 MB; the book list matches the header; the preview scores are the shipped model’s own; the tired preview line scores more than a bit per word below the fresher one (4.8 against 10.8) with no unknown words; the rounding bound is under 0.25 bits; every memorisation probe matches the page’s scorer, and no verdict contradicts the score beside it.
 - `strip.test.js`: a made-up Gutenberg file loses its header, licence, table of contents and list of illustrations, and keeps its prose.
 
-**What would change the conclusion.** A different shelf. Modern prose would make different words surprising, and a model that reads further back, like today’s large language models, finds far more of any sentence predictable. A longer context would also memorise lines read once. The colours say how a few dozen old books would have guessed, nothing more.
+**What would change the conclusion.** A different shelf. Modern prose would make different words surprising, and a model that reads further back, like today’s large language models, finds far more of any sentence predictable. A longer context would also memorise lines read once. The tones say how a few dozen old books would have guessed, nothing more.
+
+## How it looks
+
+The stage is a darkroom print. Surprisal is shown as exposure: each word is printed at an optical density that rises with its bits (D from 0 to 1.6; the grey is the paper colour attenuated by 10^−D), so predictable words print faint and surprising ones develop dark. From 9 bits the density steps up and the letters turn paper-white, so every step keeps text contrast above 5:1; the number under each word carries the same information for anyone who cannot read the tones. The legend is a test strip printed by the same function (`exposure` in `app.js`). The text box is an enlarger easel; red safelight marks interface elements, never data. The type is EB Garamond (SIL Open Font License; `fonts/OFL.txt`), self-hosted as three Latin-subset WOFF2 files (regular, italic, medium; 67 kB) from Fontsource 5.1.0.
 
 ## Rebuilding
 
