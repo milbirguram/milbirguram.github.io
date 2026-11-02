@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A model promises that the true delivery time will fall inside its band for a chosen share of trips. Watch the promise hold, shift the data until it breaks, then try conformal repairs.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Warrant — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/warrant/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Warrant</h1>
+  <p class="kit-lede">A model predicts how long a delivery will take and makes a promise: for a chosen share of new trips, the true time will fall inside its band. Watch the promise hold, shift the trips until it quietly breaks, then try three repairs. The promise rests on one assumption, that new trips are exchangeable with the old ones. The trips here are simulated, so the page knows exactly how the world changed; with real data you only ever see the symptoms.</p>
+
+  <section class="kit-stage kit-wide wa-stage" data-kit-stage aria-label="Prediction band simulator">
+    <div class="wa-steps" role="group" aria-label="Steps">
+      <button type="button" class="wa-step" data-step="1" aria-pressed="true"><span class="wa-step-n" aria-hidden="true">1</span>The promise</button>
+      <button type="button" class="wa-step" data-step="2" aria-pressed="false"><span class="wa-step-n" aria-hidden="true">2</span>Shift</button>
+      <button type="button" class="wa-step" data-step="3" aria-pressed="false"><span class="wa-step-n" aria-hidden="true">3</span>Repair</button>
+    </div>
+
+    <div class="wa-layout">
+      <div class="wa-plots">
+        <div class="wa-canvas wa-scatter-box">
+          <canvas id="wa-scatter" role="img" aria-label="Scatter of delivery time against distance, with the prediction band"></canvas>
+        </div>
+        <div id="wa-slot" class="wa-slot"></div>
+        <ul class="wa-legend" aria-label="Legend">
+          <li><span class="wa-key wa-key-hit" aria-hidden="true"></span>inside the band</li>
+          <li><span class="wa-key wa-key-miss" aria-hidden="true">×</span>outside</li>
+          <li><span class="wa-key wa-key-band" aria-hidden="true"></span>band</li>
+          <li><span class="wa-key wa-key-cal" aria-hidden="true"></span>calibration trips</li>
+          <li><span class="wa-key wa-key-ghost" aria-hidden="true"></span><span id="wa-ghost-label">unrepaired band</span></li>
+        </ul>
+        <div class="wa-canvas wa-history-box">
+          <canvas id="wa-history" role="img" aria-label="Running coverage and band width over recent trips"></canvas>
+        </div>
+      </div>
+
+      <div class="wa-panel">
+        <div class="wa-promise">
+          <label for="wa-alpha" id="wa-promise-text"></label>
+          <input type="range" id="wa-alpha">
+        </div>
+
+        <dl class="wa-readout" id="wa-readout">
+          <div><dt id="wa-r-cov-label">Coverage</dt><dd><span id="wa-r-cov"></span> <span class="wa-flag" id="wa-r-flag"></span></dd></div>
+          <div><dt>Expected if nothing changed</dt><dd id="wa-r-range"></dd></div>
+          <div><dt id="wa-r-split-label">Short trips · long trips</dt><dd id="wa-r-split"></dd></div>
+          <div><dt>Band width, median</dt><dd id="wa-r-width"></dd></div>
+          <div><dt>Input check <span class="wa-dim">(AUC; chance is one half)</span></dt><dd id="wa-r-auc"></dd></div>
+        </dl>
+
+        <div class="wa-block" data-steps="1">
+          <p id="wa-copy-1a"></p>
+          <p id="wa-copy-1b" class="wa-dim"></p>
+        </div>
+
+        <div class="wa-block" id="wa-controls" data-steps="2 3">
+          <p class="wa-chip" id="wa-chip" aria-hidden="true"></p>
+          <p class="wa-dim" data-steps="2">Move a slider. From now on the world drifts that way; the band stays as it was calibrated.</p>
+          <div class="wa-slider">
+            <label for="wa-s-median">Typical distance <output id="wa-o-median" for="wa-s-median"></output></label>
+            <input type="range" id="wa-s-median">
+          </div>
+          <div class="wa-slider">
+            <label for="wa-s-noise">Long trips noisier <output id="wa-o-noise" for="wa-s-noise"></output></label>
+            <input type="range" id="wa-s-noise">
+          </div>
+          <div class="wa-slider">
+            <label for="wa-s-drift">Each km takes longer <output id="wa-o-drift" for="wa-s-drift"></output></label>
+            <input type="range" id="wa-s-drift">
+          </div>
+          <p class="wa-row"><button type="button" class="kit-button wa-small" id="wa-restore">Back to the old world</button></p>
+          <div data-steps="3">
+            <fieldset class="wa-field">
+              <legend>Band shown</legend>
+              <label class="wa-radio"><input type="radio" name="wa-method" value="split" checked> No repair (split conformal)</label>
+              <label class="wa-radio"><input type="radio" name="wa-method" value="weighted"> Weighted conformal</label>
+              <label class="wa-radio"><input type="radio" name="wa-method" value="aci"> Adaptive (ACI)</label>
+              <label class="wa-radio"><input type="radio" name="wa-method" value="cqr"> Quantile bands (CQR)</label>
+            </fieldset>
+            <fieldset class="wa-field wa-sub" id="wa-weights" hidden>
+              <legend>Likelihood ratio</legend>
+              <label class="wa-radio"><input type="radio" name="wa-wmode" value="true" checked> True (known from the simulation)</label>
+              <label class="wa-radio"><input type="radio" name="wa-wmode" value="estimated"> Estimated by a classifier</label>
+            </fieldset>
+            <fieldset class="wa-field wa-sub" id="wa-ascores" hidden>
+              <legend>Rank each new error against</legend>
+              <label class="wa-radio"><input type="radio" name="wa-ascores" value="fixed" checked> the calibration trips (ACI alone)</label>
+              <label class="wa-radio"><input type="radio" name="wa-ascores" value="recent"> the latest <span id="wa-recal-n"></span> trips (ACI with recalibration)</label>
+            </fieldset>
+            <div class="wa-slider wa-sub" id="wa-gamma-box" hidden>
+              <label for="wa-gamma">Step size γ <output id="wa-o-gamma" for="wa-gamma"></output></label>
+              <input type="range" id="wa-gamma">
+            </div>
+          </div>
+        </div>
+
+        <div id="wa-diagnosis" class="wa-block wa-diagnosis" data-steps="2"></div>
+        <div id="wa-method-copy" class="wa-block wa-method-copy" data-steps="3"></div>
+
+        <div class="wa-bar">
+          <button type="button" class="kit-button wa-small" id="wa-play">Pause</button>
+          <label class="wa-speed" for="wa-speed">Speed
+            <select id="wa-speed"></select>
+          </label>
+          <button type="button" class="kit-button wa-small" id="wa-redraw">New past data</button>
+        </div>
+      </div>
+    </div>
+    <p class="wa-sr" id="wa-live" aria-live="polite"></p>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

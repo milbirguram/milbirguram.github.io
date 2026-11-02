@@ -1,0 +1,113 @@
+/* Warrant: page-specific styles. The site chrome comes from ../kit.css. */
+
+.wa-stage {
+  --hit: #343630;
+  --miss: #a3402a;
+  --band: #58705a;
+  --cal: #b5bdaf;
+  --plot: #fdfcf9;
+}
+
+/* Steps */
+.wa-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.wa-step {
+  appearance: none; font: inherit; font-size: 15px; line-height: 1.4; color: var(--muted);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 14px 6px 8px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+}
+.wa-step:hover { color: var(--ink-strong); border-color: var(--line-strong); background: var(--wash); }
+.wa-step[aria-pressed="true"] { color: var(--bg); background: var(--ink-strong); border-color: var(--ink-strong); }
+.wa-step-n {
+  display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%;
+  border: 1px solid currentColor; font-size: 12px; line-height: 1;
+}
+
+/* Layout: plots on the left, panel on the right; stacked on narrow screens */
+.wa-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; }
+@media (max-width: 880px) {
+  .wa-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+}
+
+.wa-canvas { position: relative; width: 100%; background: var(--plot); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.wa-canvas canvas { display: block; width: 100%; height: 100%; }
+.wa-scatter-box { aspect-ratio: 16 / 10; }
+.wa-history-box { height: 190px; margin-top: 12px; }
+@media (max-width: 600px) {
+  .wa-scatter-box { aspect-ratio: 5 / 4; }
+  .wa-history-box { height: 170px; }
+}
+
+.wa-legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.wa-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.wa-legend li[hidden] { display: none; }
+.wa-key { display: inline-block; flex: none; }
+.wa-key-hit { width: 7px; height: 7px; border-radius: 50%; background: var(--hit); }
+.wa-key-miss { color: var(--miss); font-weight: 600; font-size: 15px; line-height: 1; width: 9px; text-align: center; }
+.wa-key-band { width: 16px; height: 9px; background: rgba(88, 112, 90, 0.18); border-top: 1.5px solid var(--band); border-bottom: 1.5px solid var(--band); }
+.wa-key-cal { width: 5px; height: 5px; border-radius: 50%; background: var(--cal); }
+.wa-key-ghost { width: 16px; height: 9px; border-top: 1.5px dashed #8b9185; border-bottom: 1.5px dashed #8b9185; }
+
+/* Panel */
+.wa-panel { font-size: 15px; line-height: 1.6; min-width: 0; }
+.wa-panel p { margin: 0 0 10px; }
+.wa-dim { color: var(--muted); }
+
+.wa-promise { padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--wash); margin-bottom: 14px; }
+.wa-promise label { display: block; color: var(--ink-strong); margin-bottom: 4px; }
+.wa-promise strong { font-weight: 600; }
+
+.wa-stage input[type="range"] { width: 100%; margin: 4px 0 0; accent-color: var(--accent); height: 24px; }
+
+.wa-readout { margin: 0 0 16px; border-top: 1px solid var(--line); }
+.wa-readout > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.wa-readout dt { color: var(--muted); font-size: 14px; }
+.wa-readout dt .wa-dim { font-size: 13px; }
+.wa-readout dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-strong); white-space: nowrap; }
+.wa-flag { display: block; font-size: 13px; color: var(--muted); }
+.wa-flag.is-low { color: var(--miss); }
+
+.wa-block { margin-bottom: 14px; }
+.wa-slider { margin: 0 0 10px; }
+.wa-slider label { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--ink); }
+.wa-slider output { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wa-row { margin: 4px 0 12px; }
+.wa-small { font-size: 14px; padding: 5px 12px; }
+
+.wa-diagnosis p { margin: 0 0 8px; font-size: 14px; }
+.wa-diagnosis p:first-child { color: var(--ink-strong); }
+
+.wa-field { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
+.wa-field legend { padding: 0; margin-bottom: 4px; color: var(--muted); font-size: 14px; }
+.wa-radio { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 14px; cursor: pointer; }
+.wa-radio input { margin: 0; accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
+.wa-sub { padding-left: 12px; border-left: 2px solid var(--line); }
+
+.wa-method-copy { font-size: 14px; }
+.wa-method-copy p { margin: 0 0 8px; }
+.wa-method-copy b { font-weight: 600; color: var(--ink-strong); }
+
+.wa-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+.wa-speed { color: var(--muted); font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.wa-speed select { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+
+/* Narrow screens: the shift and repair controls sit under the scatter, led by a coverage chip. */
+.wa-chip { display: none; }
+.wa-slot > .wa-block { margin: 14px 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--line); font-size: 15px; line-height: 1.6; }
+.wa-slot > .wa-block p { margin: 0 0 10px; }
+.wa-slot .wa-chip:not([hidden]) {
+  display: block; position: sticky; top: 0; z-index: 1; margin: 0 0 10px; padding: 6px 10px;
+  font-size: 14px; color: var(--ink-strong); background: var(--wash); border: 1px solid var(--line); border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.wa-slot .wa-chip.is-low { color: var(--miss); }
+
+.wa-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; }
+
+/* Preview: the scatter fills the frame and carries its own small coverage strip. */
+html.kit-preview .wa-steps,
+html.kit-preview .wa-panel,
+html.kit-preview .wa-legend,
+html.kit-preview .wa-history-box { display: none; }
+html.kit-preview .wa-layout { display: block; height: 100%; }
+html.kit-preview .wa-plots { height: 100%; }
+html.kit-preview .wa-scatter-box { aspect-ratio: auto; height: 100%; border: 0; border-radius: 0; }
