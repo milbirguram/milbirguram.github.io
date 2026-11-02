@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Example tests pass on a buggy function. State a property, let a property-based tester throw random inputs at it until one fails, then watch that failure whittled down to the smallest input that still breaks it.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Whittle — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/whittle/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Whittle</h1>
+  <p class="kit-lede">Each function below has a small bug, and every example test passes anyway. State a property that should hold for every input, and a property-based tester will throw random inputs at the code until one fails, then whittle that failure down to the smallest input that still breaks it. The bugs are planted and the functions small. And a property that survives is not proven: it has only outlasted many honest attempts to refute it.</p>
+
+  <section class="kit-stage kit-wide wh-stage" data-kit-stage aria-label="Property-based testing workbench">
+    <div class="wh-app" id="wh-app">
+      <div class="wh-fns" id="wh-fns" role="group" aria-label="Function under test"></div>
+
+      <div class="wh-grid">
+        <div class="wh-area wh-area-code">
+          <div class="wh-card">
+            <div class="wh-card-head">
+              <span class="wh-file" id="wh-file"></span>
+              <div class="wh-version" role="group" aria-label="Version of the code">
+                <button type="button" class="wh-toggle" id="wh-buggy" aria-pressed="true">As written</button>
+                <button type="button" class="wh-toggle" id="wh-fixed" aria-pressed="false">Fixed</button>
+              </div>
+            </div>
+            <pre class="wh-code" id="wh-code" tabindex="0" aria-label="Source code of the function under test"></pre>
+            <p class="wh-code-note" id="wh-code-note" hidden></p>
+          </div>
+        </div>
+
+        <div class="wh-area wh-area-tests">
+          <dl class="wh-score" aria-label="Scoreboard">
+            <div><dt>Example tests</dt><dd id="wh-sb-ex"></dd></div>
+            <div><dt>Property</dt><dd id="wh-sb-prop"></dd></div>
+            <div><dt>Shrinking</dt><dd id="wh-sb-shrink"></dd></div>
+          </dl>
+          <div class="wh-card">
+            <div class="wh-card-head">
+              <span class="wh-card-title">Example tests</span>
+              <span class="wh-pill" id="wh-ex-count"></span>
+            </div>
+            <ul class="wh-examples" id="wh-examples"></ul>
+          </div>
+        </div>
+
+        <div class="wh-area wh-area-props">
+          <fieldset class="wh-props">
+            <legend>State a property</legend>
+            <p class="wh-micro">A claim that should be true for every input. Some are too weak to catch the bug.</p>
+            <div id="wh-props"></div>
+          </fieldset>
+          <p class="wh-micro" id="wh-inputs"></p>
+          <div class="wh-actions">
+            <button type="button" class="kit-button is-primary" id="wh-go">Try to break it</button>
+            <button type="button" class="kit-button" id="wh-skip" hidden>Skip ahead</button>
+          </div>
+        </div>
+
+        <div class="wh-area wh-area-run">
+          <div class="wh-stream-wrap">
+            <div class="wh-stream" id="wh-stream" aria-hidden="true"></div>
+            <p class="wh-counter" id="wh-counter" aria-hidden="true"></p>
+          </div>
+          <p class="wh-sr" id="wh-live" aria-live="polite"></p>
+
+          <div class="wh-shrink" id="wh-shrink" hidden>
+            <p class="wh-micro">The tester kept the random choices behind the failing input. It now cuts and lowers them, keeping each change that still fails.</p>
+            <ol class="wh-steps" id="wh-steps"></ol>
+            <dl class="wh-verdict" id="wh-verdict" hidden>
+              <div><dt>Smallest failing input</dt><dd id="wh-v-input"></dd></div>
+              <div><dt>Expected</dt><dd id="wh-v-exp"></dd></div>
+              <div><dt>Actual</dt><dd id="wh-v-act"></dd></div>
+            </dl>
+          </div>
+
+          <p class="wh-lesson" id="wh-lesson" hidden></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wh-preview" id="wh-preview" aria-hidden="true" hidden>
+      <p class="wh-p-head"><span id="wh-p-fn"></span><span id="wh-p-count"></span></p>
+      <div class="wh-p-stream" id="wh-p-stream"></div>
+      <div class="wh-p-foot">
+        <p class="wh-p-label" id="wh-p-label"></p>
+        <p class="wh-p-big" id="wh-p-big"></p>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
