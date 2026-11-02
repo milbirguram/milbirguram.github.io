@@ -176,6 +176,27 @@
   };
   PREVIEW.barns.forEach(function (b, i) { b.x = i * PREVIEW.spacing; });
   PREVIEW.period = PREVIEW.barns.length * PREVIEW.spacing;
+  PREVIEW.speed = 62;                                 // world units per second
+  PREVIEW.loop = PREVIEW.period / PREVIEW.speed;      // seconds; the card repeats with the barns
+  // The card's beats, in seconds into the loop: it fades in, the two blanks fill, the stamp
+  // lands, the verdict shows, and it fades out.
+  PREVIEW.card = { show: 4.4, claim: 5.2, basis: 5.9, stamp: 6.6, verdict: 7.3, hide: 9.4 };
+  PREVIEW.stampPast = 40; // how far (world units) the camera is past the real barn when the stamp lands
+
+  // How far round a preview barn has swung (0 to 1), from its position across the frame
+  // (0 = left edge, 1 = right edge). Each one turns as it passes from 74% to 48% across.
+  function previewSwing(xFrac) {
+    var t = (0.74 - xFrac) / 0.26;
+    return t < 0 ? 0 : t > 1 ? 1 : t;
+  }
+
+  // Seconds into the card's loop, worked out from the camera, so the card can never drift
+  // away from the barns: the stamp always lands just after the real barn has turned.
+  function previewClock(cam) {
+    var real = PREVIEW.barns.filter(function (b) { return b.real; })[0];
+    var k = (cam - real.x - PREVIEW.stampPast) / PREVIEW.speed + PREVIEW.card.stamp;
+    return ((k % PREVIEW.loop) + PREVIEW.loop) % PREVIEW.loop;
+  }
 
   var MAX_SWING = 118 * Math.PI / 180;
   var LIFT = 0.32; // how far the viewpoint rises as it swings round, so roofs and struts read
@@ -268,6 +289,8 @@
     numberWord: Num,
     VALLEY: VALLEY,
     PREVIEW: PREVIEW,
+    previewSwing: previewSwing,
+    previewClock: previewClock,
     MAX_SWING: MAX_SWING,
     project: project,
     frontPlane: frontPlane,

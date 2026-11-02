@@ -16,13 +16,17 @@
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Facade</h1>
-  <p class="kit-lede">A short drive and ten small cases, scored twice: once for being right, once for knowing.</p>
+  <p class="kit-lede">A short drive through barn country, then ten small cases. In each, look round the scene, pick up what you find, and finish the sentence: your answer, and the evidence you are going on. Every case is scored twice, once for being right and once for knowing. The game counts it as knowing only when your answer was true because of that evidence, not by luck; philosophers dispute that rule in some cases, fake barns among them.</p>
 
-  <section class="kit-stage kit-wide fc-stage" data-kit-stage aria-label="Facade game">
+  <section class="kit-stage kit-wide fc-stage" data-kit-stage aria-label="Facade">
     <!-- Part one: the drive -->
     <div class="fc-drive" id="fc-drive">
       <div class="fc-view">
         <canvas id="fc-canvas" role="img" aria-label="Farmland seen from a car on a country road. Barns stand in the fields."></canvas>
+        <div class="fc-pv" id="fc-pv" aria-hidden="true" hidden>
+          <p class="fc-pv-line"><span class="fc-pv-blank" id="fc-pv-claim">That is a barn</span> — because <span class="fc-pv-blank" id="fc-pv-basis">it looks like one</span>.</p>
+          <p class="fc-pv-foot"><span class="fc-pv-stamp" id="fc-pv-stamp">Filed</span><span class="fc-pv-verdict" id="fc-pv-verdict">≈ Right by luck</span></p>
+        </div>
       </div>
       <div class="fc-caption" id="fc-caption">
         <p class="fc-say" id="fc-say" aria-live="polite">You are driving through farmland on a clear afternoon. Now and then you will be asked what you see.</p>
@@ -33,82 +37,99 @@
       </div>
     </div>
 
-    <!-- Part two: the cases -->
-    <div class="fc-cases" id="fc-cases" hidden>
-      <p class="fc-rule" id="fc-rule">For each case, give your answer and then say what you are going on. <b>Right</b> counts answers that were true. <b>Knew</b> counts only answers that were true because of the evidence you went on, not by luck.</p>
-      <div class="fc-board" aria-label="Score so far">
-        <p class="fc-progress" id="fc-progress">Case 1 of 10</p>
-        <dl class="fc-tally">
-          <div><dt>Right</dt><dd id="fc-right">0</dd></div>
-          <div><dt>Knew</dt><dd id="fc-knew">0</dd></div>
-        </dl>
-      </div>
-      <article class="fc-card">
-        <h2 class="fc-title" id="fc-title" tabindex="-1">Case</h2>
-        <p class="fc-story" id="fc-story"></p>
-        <fieldset class="fc-ask" id="fc-ask-answer">
-          <legend class="fc-question" id="fc-question"></legend>
-          <div class="fc-choices" id="fc-answers"></div>
-        </fieldset>
-        <fieldset class="fc-ask" id="fc-ask-basis" hidden>
-          <legend class="fc-question">What are you going on?</legend>
-          <div class="fc-choices fc-choices-stack" id="fc-bases"></div>
-        </fieldset>
-        <div class="fc-reveal" id="fc-reveal" hidden tabindex="-1">
-          <p class="fc-outcome" id="fc-outcome"></p>
-          <ul class="fc-checks" id="fc-checks"></ul>
-          <p class="fc-facts" id="fc-facts"></p>
-          <dl class="fc-links" id="fc-links"></dl>
-          <button type="button" class="kit-button is-primary" id="fc-next">Next case</button>
+    <!-- Part two: the cases, at a desk -->
+    <div class="fc-desk" id="fc-cases" hidden>
+      <div class="fc-main">
+        <div class="fc-head">
+          <p class="fc-progress" id="fc-progress">Case 1 of 10</p>
+          <h2 class="fc-title" id="fc-title" tabindex="-1">Case</h2>
+          <p class="fc-rule" id="fc-rule" hidden><b>Right</b> counts true answers. <b>Knew</b> counts only those true because of the evidence you went on.</p>
+          <p class="fc-story" id="fc-story"></p>
         </div>
-      </article>
+
+        <div class="fc-scene" id="fc-scene">
+          <div class="fc-flip" id="fc-flip">
+            <div class="fc-face fc-front" id="fc-front"></div>
+            <div class="fc-face fc-back" id="fc-back" aria-hidden="true">
+              <div class="fc-back-art" id="fc-back-art"></div>
+            </div>
+          </div>
+          <p class="fc-back-cap" id="fc-back-cap" hidden></p>
+          <div class="fc-inspect" id="fc-inspect" role="dialog" aria-modal="false" aria-labelledby="fc-inspect-title" hidden>
+            <div class="fc-slip">
+              <div class="fc-slip-art" id="fc-slip-art"></div>
+              <div class="fc-slip-body">
+                <p class="fc-slip-title" id="fc-slip-title"><span id="fc-inspect-title"></span></p>
+                <p class="fc-slip-note" id="fc-slip-note"></p>
+                <p class="fc-slip-added">Added to your notes.</p>
+                <button type="button" class="kit-button" id="fc-slip-close">Put it down</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="fc-hint" id="fc-look-hint"></p>
+
+        <div class="fc-card" id="fc-card">
+          <p class="fc-question" id="fc-question"></p>
+          <div class="fc-claimline">
+            <p class="fc-sentence" id="fc-sentence">
+              <button type="button" class="fc-blank" id="fc-blank-claim" data-slot="claim"><span class="fc-blank-text">your answer</span></button>
+              <span class="fc-because">— because</span>
+              <button type="button" class="fc-blank" id="fc-blank-basis" data-slot="basis"><span class="fc-blank-text">what you are going on</span></button><span class="fc-dot">.</span>
+            </p>
+            <span class="fc-stamp" id="fc-stamp" aria-hidden="true">Filed</span>
+          </div>
+          <div class="fc-bank" id="fc-bank">
+            <p class="fc-bank-label" id="fc-claims-label">Answers</p>
+            <div class="fc-chips" id="fc-claims" role="group" aria-labelledby="fc-claims-label"></div>
+            <p class="fc-bank-label" id="fc-notes-label">Your notes</p>
+            <div class="fc-chips" id="fc-notes" role="group" aria-labelledby="fc-notes-label"></div>
+          </div>
+          <p class="fc-hint" id="fc-hint" aria-live="polite"></p>
+          <div class="fc-file-row" id="fc-file-row">
+            <button type="button" class="kit-button is-primary" id="fc-file" disabled>File it</button>
+          </div>
+          <div class="fc-verdict" id="fc-verdict" tabindex="-1" hidden>
+            <p class="fc-outcome" id="fc-outcome"></p>
+            <p class="fc-why" id="fc-why"></p>
+            <details class="fc-more"><summary>The whole story</summary><p id="fc-facts"></p></details>
+            <button type="button" class="kit-button is-primary" id="fc-next">Next case</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="fc-book" id="fc-book" aria-label="Casebook">
+        <div class="fc-book-head">
+          <p class="fc-book-title">Casebook</p>
+          <button type="button" class="kit-button fc-book-close" id="fc-book-close">Close</button>
+        </div>
+        <table class="fc-ledger" id="fc-ledger"></table>
+      </aside>
+      <button type="button" class="kit-button fc-book-toggle" id="fc-book-toggle" aria-controls="fc-book" aria-expanded="false">Casebook</button>
     </div>
 
-    <!-- Part three: the two scores -->
+    <!-- Part three: the open casebook -->
     <div class="fc-final" id="fc-final" hidden>
-      <h2 class="fc-title" id="fc-final-title" tabindex="-1">Two scores</h2>
-      <div class="fc-big" id="fc-big"></div>
-      <div class="fc-reflect" id="fc-reflect"></div>
-      <h3 class="fc-sub">Case by case</h3>
-      <ol class="fc-list" id="fc-list"></ol>
-      <div class="fc-actions">
-        <button type="button" class="kit-button is-primary" id="fc-replay">Play the cases again</button>
-        <button type="button" class="kit-button" id="fc-redrive">Take the drive again</button>
+      <div class="fc-spread">
+        <div class="fc-page fc-page-totals">
+          <h2 class="fc-title" id="fc-final-title" tabindex="-1">Two scores</h2>
+          <div class="fc-big" id="fc-big"></div>
+          <div class="fc-reflect" id="fc-reflect"></div>
+          <div class="fc-actions">
+            <button type="button" class="kit-button is-primary" id="fc-replay">Play the cases again</button>
+            <button type="button" class="kit-button" id="fc-redrive">Take the drive again</button>
+          </div>
+        </div>
+        <div class="fc-page fc-page-ledger">
+          <p class="fc-book-title">Casebook</p>
+          <table class="fc-ledger" id="fc-final-ledger"></table>
+        </div>
       </div>
     </div>
-  </section>
-
-  <section class="kit-notes">
-    <h2>What it’s for</h2>
-    <p>Being right and knowing are easy to run together, because from the inside they feel the same. Facade keeps two scores so you can watch them come apart. In most of its cases you can reason well, be right, and still not know, and the gap between the two numbers is the thing to notice.</p>
-
-    <h2>How I know</h2>
-    <p>Each case is a small world written out in full in <a href="cases.js">cases.js</a>. For every answer and every piece of evidence you can pick, the file records two things: whether the answer is true, and whether that evidence is connected to the fact that makes it true. Connected means that if the fact had been different, the evidence would have been different too. Take away the cold and the thermometer does not read −4°C; take away the landing and the message is not sent.</p>
-    <p>The game scores by one rule, which I call the no-luck rule. If your answer is false, you were wrong. If it is true and the evidence you relied on is connected to what made it true, you knew. If it is true and the evidence is not connected, you were right by luck. This is a plain stand-in for several more careful ideas, among them causal theories of knowledge and the conditions philosophers call sensitivity and safety, which differ in the details and on some cases.</p>
-    <p>The opening barn is one of those cases. On a causal theory you knew it was a barn, because that real barn caused what you saw. The rule here asks a different question: had a facade stood in its place, would the view have been any different? It would not, so the game calls it luck. That is the point of Goldman’s 1976 paper, which used the fake barns against his own earlier causal theory.</p>
-    <p>Philosophers disagree about parts of this. Fake-barn cases are contested: some hold that you do know a real barn when you see one clearly, whatever stands around it, and surveys have found many people outside philosophy say the same. Some reject the starting point, that knowledge is justified true belief plus some further condition. Knowledge-first views treat knowledge as basic and explain evidence and justification in terms of it. The game takes one side so that it can keep score. It does not settle the question.</p>
-    <p>What is simplified: real evidence is rarely all or nothing, and people usually go on several things at once. Here you pick one. Each case has a single fact of the matter, written by me, and the scores are only as good as my judgement of which evidence is connected to which fact. Every one of those judgements is in the cases file, where you can check it.</p>
-    <p>What I checked: Node tests read the cases file and confirm that the four Gettier cases are justified, true and lucky; the three ordinary cases are justified, true and not lucky; the two false cases are false; and every answer and evidence pair leads to exactly one outcome, the one written in the file. A test plays every possible game (1,048,576 of them) and confirms no play scores more than four on Knew. The same test reads the closing reflection for every play, and checks that it names only the evidence you actually chose. Another test confirms that, seen from the road, a facade and a real barn are drawn from exactly the same front: the drawing adds depth only when the view turns.</p>
-    <p>What would change the result: if you think justified true belief is enough for knowledge, every lucky answer that rested on evidence becomes Knew, while lucky hunches stay lucky. If you follow the evidence on offer all the way through, the two numbers then meet at eight. If you think a usually reliable kind of source gives knowledge even when this particular one has failed, the station clock and the forecast move across. If you think a well-trained hunch counts as evidence, some lucky answers in the false cases look different too.</p>
-
-    <h2>Sources</h2>
-    <ul class="kit-sources">
-      <li>Alvin I. Goldman, “Discrimination and Perceptual Knowledge”, <i>Journal of Philosophy</i> 73 (1976). The fake-barn case, which Goldman credits to Carl Ginet.</li>
-      <li>Edmund L. Gettier, “Is Justified True Belief Knowledge?”, <i>Analysis</i> 23 (1963).</li>
-      <li>Bertrand Russell, <i>Human Knowledge: Its Scope and Limits</i> (1948). The stopped clock.</li>
-      <li>Roderick M. Chisholm, <i>Theory of Knowledge</i> (1966; second edition 1977). The sheep in the field.</li>
-      <li>Jonathan Jenkins Ichikawa and Matthias Steup, “<a href="https://plato.stanford.edu/entries/knowledge-analysis/">The Analysis of Knowledge</a>”, <i>Stanford Encyclopedia of Philosophy</i>.</li>
-      <li>Alvin I. Goldman, “A Causal Theory of Knowing”, <i>Journal of Philosophy</i> 64 (1967).</li>
-      <li>Robert Nozick, <i>Philosophical Explanations</i> (1981). Sensitivity.</li>
-      <li>Ernest Sosa, “How to Defeat Opposition to Moore”, <i>Philosophical Perspectives</i> 13 (1999). Safety.</li>
-      <li>Timothy Williamson, <i>Knowledge and Its Limits</i> (2000). Knowledge first.</li>
-      <li>Tamar Szabó Gendler and John Hawthorne, “The Real Guide to Fake Barns: A Catalogue of Gifts for Your Epistemic Enemies”, <i>Philosophical Studies</i> 124 (2005).</li>
-      <li>David Colaço, Wesley Buckwalter, Stephen Stich and Edouard Machery, “Epistemic Intuitions in Fake-Barn Thought Experiments”, <i>Episteme</i> 11 (2014).</li>
-    </ul>
-    <p class="kit-sources">The scenarios are my own. The clock, the sheep and the barns borrow their shapes from the cases above.</p>
   </section>
 </main>
 <script src="cases.js"></script>
+<script src="scenes.js"></script>
 <script src="model.js"></script>
 <script src="app.js"></script>
 </body>

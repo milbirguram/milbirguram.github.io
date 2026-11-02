@@ -670,7 +670,7 @@
   function unitPreview() { return H / 370; }
   function pvStill() {
     var real = PV.barns.filter(function (b) { return b.real; })[0];
-    return real.x + PV.period + (0.17 * W) / unitPreview();
+    return real.x + PV.period + (0.21 * W) / unitPreview();
   }
 
   function drawPreview() {
@@ -693,20 +693,39 @@
         var sx = W / 2 + (b.x + n * PV.period - cam) * u;
         if (sx < -220 * u || sx > W + 80 * u) return;
         // Passing by, each one swings round to show what is behind it.
-        var t = clamp((W * 0.74 - sx) / (W * 0.26), 0, 1);
+        var t = F.previewSwing(sx / W);
         drawBarn(b, sx, L.gy, u, ease(t) * F.MAX_SWING, PV.depth);
         var tagX = sx + ((b.real ? PV.depth : b.h) * Math.sin(F.MAX_SWING) * u) / 2 * ease(t);
         labels.push([b.real ? 'real barn' : 'facade', tagX, clamp((t - 0.55) / 0.35, 0, 1), b.real, dropBelow(b, PV.depth) * u * ease(t)]);
       });
     }
-    labels.forEach(function (l) { label(l[0], l[1], L.gy + l[4] + 4 + 12, 12, l[3] ? 600 : 400, l[2]); });
+    // A still frame shows no half-faded tags: each is either fully there or not at all.
+    var still = !Kit.playing;
+    labels.forEach(function (l) { label(l[0], l[1], L.gy + l[4] + 4 + 12, 12, l[3] ? 600 : 400, still ? (l[2] > 0.15 ? 1 : 0) : l[2]); });
     drawForeground(cam * u, u, 1, cam / 7);
   }
 
   function stepPreview(dt) {
-    pv.cam += 62 * dt;
+    pv.cam += PV.speed * dt;
     if (pv.cam > 1e6) pv.cam -= Math.floor(pv.cam / PV.period - 2) * PV.period;
     return true;
+  }
+
+  // The preview's second beat: a sentence card is filled in and stamped, then the verdict.
+  // Its clock comes from the camera (F.previewClock), so it stays in step with the barns.
+  var PVC = PV.card;
+  var pvEls = { card: $('fc-pv'), claim: $('fc-pv-claim'), basis: $('fc-pv-basis'), stamp: $('fc-pv-stamp'), verdict: $('fc-pv-verdict') };
+  function pvCard(still) {
+    var k = still ? PVC.hide - 0.4 : F.previewClock(pv.cam);
+    var shown = ease((k - PVC.show) / 0.5) * (1 - ease((k - PVC.hide) / 0.5));
+    pvEls.card.style.opacity = shown.toFixed(3);
+    pvEls.card.style.transform = 'translateY(' + ((1 - shown) * -10).toFixed(1) + 'px)';
+    pvEls.claim.classList.toggle('is-filled', k > PVC.claim);
+    pvEls.basis.classList.toggle('is-filled', k > PVC.basis);
+    var s = ease((k - PVC.stamp) / 0.22);
+    pvEls.stamp.style.opacity = s.toFixed(3);
+    pvEls.stamp.style.transform = 'rotate(-7deg) scale(' + (1.7 - 0.7 * s).toFixed(3) + ')';
+    pvEls.verdict.style.opacity = ease((k - PVC.verdict) / 0.4).toFixed(3);
   }
 
   // ---- Animation loop ------------------------------------------------------------------
@@ -717,7 +736,7 @@
     if (!W || !H) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    if (Kit.preview) drawPreview(); else drawDrive();
+    if (Kit.preview) { drawPreview(); pvCard(!Kit.playing); } else drawDrive();
   }
 
   function frame(t) {
@@ -744,45 +763,371 @@
 
   function requestDraw() { if (!raf) draw(); }
 
-  // ---- The cases ----------------------------------------------------------------------
+  // ---- The cases: a scene, a sentence card and a casebook -----------------------------
+  //
+  // cases.js says what each case means; scenes.js draws it. Here the visitor picks things up
+  // in the scene (each becomes a chip in their notes), completes the sentence
+  // "[answer] — because [evidence]", and files it. The scene then turns round to show what
+  // was hidden, and F.outcome() gives the verdict by the one scoring rule in model.js.
 
-  var game = { i: 0, responses: {}, answer: null };
+  var SC = window.FacadeScenes;
+  var VB = '0 0 ' + SC.VW + ' ' + SC.VH;
+  var SVG_OPEN = '<svg xmlns="http://www.w3.org/2000/svg" focusable="false" font-family="-apple-system, BlinkMacSystemFont, \'Segoe UI\', Helvetica, Arial, sans-serif" ';
+
+  var game = { i: 0, responses: {}, revealed: {}, claim: null, basis: null, selected: null, seen: [], filed: false, suppressClick: false };
   var els = {
     drive: $('fc-drive'), cases: $('fc-cases'), final: $('fc-final'),
-    progress: $('fc-progress'), right: $('fc-right'), knew: $('fc-knew'),
-    title: $('fc-title'), story: $('fc-story'), question: $('fc-question'),
-    askAnswer: $('fc-ask-answer'), askBasis: $('fc-ask-basis'),
-    answers: $('fc-answers'), bases: $('fc-bases'),
-    reveal: $('fc-reveal'), outcome: $('fc-outcome'), checks: $('fc-checks'),
-    facts: $('fc-facts'), links: $('fc-links'), next: $('fc-next')
+    progress: $('fc-progress'), rule: $('fc-rule'), title: $('fc-title'), story: $('fc-story'),
+    flip: $('fc-flip'), front: $('fc-front'), back: $('fc-back'), backArt: $('fc-back-art'), backCap: $('fc-back-cap'),
+    inspect: $('fc-inspect'), slipArt: $('fc-slip-art'), slipTitle: $('fc-inspect-title'), slipNote: $('fc-slip-note'), slipClose: $('fc-slip-close'),
+    lookHint: $('fc-look-hint'), card: $('fc-card'), question: $('fc-question'),
+    blankClaim: $('fc-blank-claim'), blankBasis: $('fc-blank-basis'), stamp: $('fc-stamp'),
+    claims: $('fc-claims'), notes: $('fc-notes'), hint: $('fc-hint'), fileRow: $('fc-file-row'), file: $('fc-file'),
+    verdict: $('fc-verdict'), outcome: $('fc-outcome'), why: $('fc-why'), facts: $('fc-facts'), next: $('fc-next'),
+    book: $('fc-book'), ledger: $('fc-ledger'), bookToggle: $('fc-book-toggle'), bookClose: $('fc-book-close')
   };
 
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
   }
+  function reduced() { return Kit.reducedMotion; }
+  function later(fn, ms) { if (reduced()) fn(); else setTimeout(fn, ms); }
 
   function show(which) {
     els.drive.hidden = which !== 'drive';
     els.cases.hidden = which !== 'cases';
     els.final.hidden = which !== 'final';
     if (which !== 'drive') stop();
+    if (which !== 'cases') closeBook(false);
   }
 
   function scrollToStage() {
     var stage = document.querySelector('[data-kit-stage]');
     var r = stage.getBoundingClientRect();
     if (r.top < 0 || r.top > window.innerHeight * 0.4) {
-      stage.scrollIntoView({ behavior: Kit.reducedMotion ? 'auto' : 'smooth', block: 'start' });
+      stage.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
     }
   }
 
-  function startCases() {
-    game.i = 0;
-    game.responses = {};
-    show('cases');
-    renderCase();
-    scrollToStage();
-    els.title.focus({ preventScroll: true });
+  // ---- Lookups (all meaning comes from cases.js) ----
+
+  function current() { return CASES[game.i]; }
+  function ownerOf(c, basisId) {
+    for (var i = 0; i < c.answers.length; i++) if (F.findBasis(c.answers[i], basisId)) return c.answers[i].id;
+    return null;
+  }
+  function basisOf(c, basisId) { return F.findBasis(F.findAnswer(c, ownerOf(c, basisId)), basisId); }
+  function spotOf(c, basisId) { return SC.byId[c.id].hotspots.filter(function (h) { return h.basis === basisId; })[0]; }
+
+  function lowerFirst(s) {
+    if (/^(I|Amara|Dana|Gord|Theo)\b/.test(s)) return s;
+    return /^[A-Z](?![A-Z0-9])/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+  }
+  function sentence(c, r) {
+    return F.findAnswer(c, r.answer).text + ' — because ' + lowerFirst(basisOf(c, r.basis).text) + '.';
+  }
+
+  // ---- The scene ----
+
+  function svg(markup, viewBox, extra) {
+    return SVG_OPEN + 'viewBox="' + viewBox + '" ' + (extra || '') + '>' + markup + '</svg>';
+  }
+
+  function renderScene(c) {
+    var sc = SC.byId[c.id];
+    var html = svg(sc.front('f' + game.i), VB, 'role="img" aria-label="' + esc(sc.alt) + '"');
+    sc.hotspots.forEach(function (h) {
+      var style = 'left:' + (h.x / SC.VW * 100) + '%;top:' + (h.y / SC.VH * 100) + '%;width:' + (h.w / SC.VW * 100) + '%;height:' + (h.h / SC.VH * 100) + '%';
+      // Where the hover tag goes, so it stays inside the picture.
+      var place = (h.y + h.h > SC.VH * 0.72 ? ' is-low' : '') +
+        (h.x + h.w / 2 < 70 ? ' is-left' : h.x + h.w / 2 > SC.VW - 70 ? ' is-right' : '');
+      html += '<button type="button" class="fc-spot' + (h.thought ? ' is-thought' : '') + place + '" data-basis="' + esc(h.basis) + '" data-tag="' + esc(h.label) +
+        '" style="' + style + '" aria-label="' + esc((h.thought ? 'Think it over: ' : 'Pick up: ') + h.label) + '"><span class="fc-pin" aria-hidden="true"></span></button>';
+    });
+    els.front.innerHTML = html;
+    els.backArt.innerHTML = svg(sc.back('b' + game.i), VB, 'role="img" aria-label="' + esc(sc.backAlt) + '"');
+    els.backCap.textContent = '';
+    els.backCap.hidden = true;
+    setTurned(false, true);
+  }
+
+  function setTurned(on, instant) {
+    if (instant) {
+      els.flip.classList.add('is-instant');
+      els.flip.classList.toggle('is-turned', on);
+      void els.flip.offsetWidth;
+      els.flip.classList.remove('is-instant');
+    } else {
+      els.flip.classList.toggle('is-turned', on);
+    }
+    els.front.setAttribute('aria-hidden', on ? 'true' : 'false');
+    els.back.setAttribute('aria-hidden', on ? 'false' : 'true');
+    Array.prototype.forEach.call(els.front.querySelectorAll('.fc-spot'), function (b) { b.tabIndex = on ? -1 : 0; });
+  }
+
+  els.front.addEventListener('click', function (e) {
+    var b = e.target.closest('.fc-spot');
+    if (b && !game.filed) inspect(b.getAttribute('data-basis'), b);
+  });
+
+  var lastSpot = null;
+
+  function inspect(basisId, spotEl) {
+    var c = current(), h = spotOf(c, basisId), b = basisOf(c, basisId);
+    lastSpot = spotEl;
+    if (game.seen.indexOf(basisId) < 0) {
+      game.seen.push(basisId);
+      spotEl.classList.add('is-seen');
+      renderChips();
+    }
+    els.inspect.classList.toggle('is-thought', h.thought);
+    els.inspect.classList.toggle('is-wide', SC.focusOf(c.id, basisId).wide);
+    els.slipTitle.textContent = h.label;
+    els.slipNote.textContent = (h.thought ? 'A thought: ' : '') + '“' + b.text + '”';
+    els.slipArt.innerHTML = '';
+    els.inspect.hidden = false;
+    // A close-up: the same drawing, cropped round the thing you picked up, close enough
+    // that any writing on it can be read (SC.closeUp works that out for this box size).
+    var box = els.slipArt.getBoundingClientRect();
+    var crop = SC.closeUp(c.id, basisId, Math.max(1, box.width), Math.max(1, box.height));
+    els.slipArt.innerHTML = svg(SC.byId[c.id].front('z' + game.i), [crop.x, crop.y, crop.w, crop.h].map(function (v) { return Math.round(v * 10) / 10; }).join(' '), 'aria-hidden="true"');
+    els.slipClose.focus({ preventScroll: true });
+    if (game.seen.length === 1) setHint(game.i === 0 ? 'It is in your notes now. Pick up more, or start the sentence.' : '');
+  }
+
+  function closeInspect() {
+    if (els.inspect.hidden) return;
+    els.inspect.hidden = true;
+    if (lastSpot && document.body.contains(lastSpot)) lastSpot.focus({ preventScroll: true });
+  }
+  els.slipClose.addEventListener('click', closeInspect);
+
+  // ---- Chips and blanks ----
+
+  function chip(kind, id, text, thought) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'fc-chip is-' + kind + (thought ? ' is-thought' : '');
+    b.setAttribute('data-kind', kind);
+    b.setAttribute('data-id', id);
+    b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = '<span class="fc-chip-text">' + esc(text) + '</span><span class="fc-chip-tag"></span>';
+    return b;
+  }
+
+  function renderChips() {
+    var c = current();
+    els.claims.innerHTML = '';
+    c.answers.forEach(function (a) { els.claims.appendChild(chip('claim', a.id, a.text, false)); });
+    els.notes.innerHTML = '';
+    if (!game.seen.length) {
+      els.notes.innerHTML = '<span class="fc-empty">Nothing yet. What you pick up in the picture lands here.</span>';
+    }
+    game.seen.forEach(function (id) {
+      var b = basisOf(c, id);
+      els.notes.appendChild(chip('basis', id, b.text, b.source === 'hunch'));
+    });
+    refresh();
+  }
+
+  function slotEl(kind) { return kind === 'claim' ? els.blankClaim : els.blankBasis; }
+
+  function canPlace(kind, id) {
+    var c = current();
+    if (kind === 'claim') return !game.basis || ownerOf(c, game.basis) === id;
+    return !game.claim || ownerOf(c, id) === game.claim;
+  }
+
+  function refresh() {
+    var c = current();
+    var ans = game.claim && F.findAnswer(c, game.claim);
+    var bas = game.basis && basisOf(c, game.basis);
+    fillBlank(els.blankClaim, ans ? ans.text : null, 'your answer', 'Answer blank');
+    fillBlank(els.blankBasis, bas ? lowerFirst(bas.text) : null, 'what you are going on', 'Evidence blank');
+    els.blankBasis.classList.toggle('is-thought', !!(bas && bas.source === 'hunch'));
+    Array.prototype.forEach.call(document.querySelectorAll('#fc-claims .fc-chip, #fc-notes .fc-chip'), function (b) {
+      var kind = b.getAttribute('data-kind'), id = b.getAttribute('data-id');
+      var used = (kind === 'claim' ? game.claim : game.basis) === id;
+      var fits = canPlace(kind, id);
+      b.disabled = game.filed || used || !fits;
+      b.classList.toggle('is-used', used);
+      b.classList.toggle('is-other', !used && !fits);
+      b.querySelector('.fc-chip-tag').textContent = used ? 'in the sentence' : !fits ? 'goes with the other answer' : '';
+      b.setAttribute('aria-pressed', game.selected && game.selected.kind === kind && game.selected.id === id ? 'true' : 'false');
+    });
+    ['claim', 'basis'].forEach(function (kind) {
+      slotEl(kind).classList.toggle('is-target', !!(game.selected && game.selected.kind === kind));
+      slotEl(kind).disabled = game.filed;
+    });
+    els.file.disabled = !(game.claim && game.basis) || game.filed;
+  }
+
+  function fillBlank(el, value, placeholder, name) {
+    el.classList.toggle('is-filled', !!value);
+    el.querySelector('.fc-blank-text').textContent = value || placeholder;
+    el.setAttribute('aria-label', name + ': ' + (value ? value + '. Press to take it out.' : 'empty.'));
+  }
+
+  function setHint(t) { els.hint.textContent = t; }
+
+  function place(kind, id) {
+    if (game.filed || !canPlace(kind, id)) return false;
+    if (kind === 'claim') game.claim = id; else game.basis = id;
+    game.selected = null;
+    refresh();
+    if (game.claim && game.basis) setHint('Ready to file. To swap a chip, press its blank to take it out.');
+    else if (game.claim) setHint(game.seen.length ? 'Now what are you going on? Put a note in the second blank.' : 'Now look round the picture for what you are going on.');
+    else setHint('Now choose your answer for the first blank.');
+    return true;
+  }
+
+  function onChipClick(e) {
+    var b = e.target.closest('.fc-chip');
+    if (!b || b.disabled) return;
+    if (game.suppressClick) { game.suppressClick = false; return; }
+    var kind = b.getAttribute('data-kind'), id = b.getAttribute('data-id');
+    if (game.selected && game.selected.kind === kind && game.selected.id === id) {
+      game.selected = null;
+      setHint('');
+    } else {
+      game.selected = { kind: kind, id: id };
+      setHint(kind === 'claim' ? 'Now choose the first blank, “your answer”.' : 'Now choose the second blank, “what you are going on”.');
+    }
+    refresh();
+  }
+  els.claims.addEventListener('click', onChipClick);
+  els.notes.addEventListener('click', onChipClick);
+
+  [els.blankClaim, els.blankBasis].forEach(function (el) {
+    el.addEventListener('click', function () {
+      if (game.filed) return;
+      var kind = el.getAttribute('data-slot');
+      if (game.selected) {
+        if (game.selected.kind === kind) { place(kind, game.selected.id); el.focus({ preventScroll: true }); return; }
+        setHint('That chip goes in the other blank.');
+        return;
+      }
+      if (kind === 'claim' ? game.claim : game.basis) {
+        if (kind === 'claim') game.claim = null; else game.basis = null;
+        refresh();
+        setHint('Taken out. Choose another chip.');
+        return;
+      }
+      setHint(kind === 'claim' ? 'Choose an answer chip first, then this blank.' : (game.seen.length ? 'Choose a note first, then this blank.' : 'Your notes are empty. Pick something up in the picture first.'));
+    });
+  });
+
+  // Dragging a chip onto a blank. A press without movement stays a click.
+  // On touch, chips let the page scroll (touch-action: pan-y): a drag starts on a sideways
+  // move, or on a short hold, and an upward or downward swipe scrolls as usual.
+  var drag = null;
+  function onDown(e) {
+    var b = e.target.closest('.fc-chip');
+    if (!b || b.disabled || e.button !== 0) return;
+    drag = { el: b, kind: b.getAttribute('data-kind'), id: b.getAttribute('data-id'), x: e.clientX, y: e.clientY, pid: e.pointerId, ghost: null,
+      touch: e.pointerType === 'touch', hold: 0 };
+    try { b.setPointerCapture(e.pointerId); } catch (err) { /* not supported: fine */ }
+    if (drag.touch) {
+      var d = drag;
+      d.hold = setTimeout(function () { if (drag === d && !d.ghost) { startGhost(d); moveGhost(d.x, d.y); } }, 380);
+    }
+  }
+  function startGhost(d) {
+    clearTimeout(d.hold);
+    d.ghost = d.el.cloneNode(true);
+    d.ghost.className += ' fc-ghost';
+    d.ghost.removeAttribute('aria-pressed');
+    d.ghost.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(d.ghost);
+    d.el.classList.add('is-dragging');
+    slotEl(d.kind).classList.add('is-target');
+  }
+  function moveGhost(x, y) {
+    var r = drag.ghost.getBoundingClientRect();
+    drag.ghost.style.transform = 'translate(' + (x - r.width / 2) + 'px,' + (y - r.height / 2) + 'px)';
+    var over = overBlank(x, y, drag.kind);
+    els.blankClaim.classList.toggle('is-over', over === els.blankClaim);
+    els.blankBasis.classList.toggle('is-over', over === els.blankBasis);
+  }
+  function overBlank(x, y, kind) {
+    var t = document.elementFromPoint(x, y);
+    t = t && t.closest ? t.closest('.fc-blank') : null;
+    return t && t.getAttribute('data-slot') === kind ? t : null;
+  }
+  function onMove(e) {
+    if (!drag || e.pointerId !== drag.pid) return;
+    if (!drag.ghost) {
+      var dx = Math.abs(e.clientX - drag.x), dy = Math.abs(e.clientY - drag.y);
+      if (dx + dy < 7) return;
+      // A vertical swipe on a touch screen is a scroll, not a drag.
+      if (drag.touch && dy > dx) { clearTimeout(drag.hold); drag = null; return; }
+      startGhost(drag);
+    }
+    moveGhost(e.clientX, e.clientY);
+  }
+  function endDrag(e, cancelled) {
+    if (!drag || (e && e.pointerId !== drag.pid)) return;
+    var d = drag;
+    drag = null;
+    clearTimeout(d.hold);
+    if (!d.ghost) return;
+    d.ghost.remove();
+    d.el.classList.remove('is-dragging');
+    els.blankClaim.classList.remove('is-over');
+    els.blankBasis.classList.remove('is-over');
+    game.suppressClick = true;
+    setTimeout(function () { game.suppressClick = false; }, 0);
+    var placed = !cancelled && overBlank(e.clientX, e.clientY, d.kind) && place(d.kind, d.id);
+    if (!placed) refresh();
+  }
+  [els.claims, els.notes].forEach(function (box) {
+    box.addEventListener('pointerdown', onDown);
+    box.addEventListener('pointermove', onMove);
+    box.addEventListener('pointerup', function (e) { endDrag(e, false); });
+    box.addEventListener('pointercancel', function (e) { endDrag(e, true); });
+    // Once a chip is being dragged, the finger moves the chip, not the page.
+    box.addEventListener('touchmove', function (e) { if (drag && drag.ghost && e.cancelable) e.preventDefault(); }, { passive: false });
+  });
+
+  // ---- Filing, the turn-around and the verdict ----
+
+  els.file.addEventListener('click', function () {
+    var c = current();
+    if (game.filed || !game.claim || !game.basis) return;
+    game.filed = true;
+    game.selected = null;
+    game.responses[c.id] = { answer: game.claim, basis: game.basis };
+    closeInspect();
+    refresh();
+    Array.prototype.forEach.call(els.front.querySelectorAll('.fc-spot'), function (b) { b.disabled = true; });
+    els.fileRow.hidden = true;
+    els.lookHint.textContent = '';
+    els.card.classList.add('is-filed');
+    els.stamp.classList.remove('is-down');
+    els.card.classList.remove('is-thunk');
+    void els.stamp.offsetWidth;
+    els.stamp.classList.add('is-down');
+    els.card.classList.add('is-thunk');
+    setHint('Filed. Now the scene turns round.');
+    renderLedger();
+    // The stamp lands first; then bring the picture into view, if it has scrolled away, and turn it.
+    later(function () { later(turnScene, bringSceneIntoView() ? 450 : 0); }, 650);
+  });
+
+  // Scrolls so the whole scene is on screen. Returns true if it had to move.
+  function bringSceneIntoView() {
+    var r = $('fc-scene').getBoundingClientRect();
+    if (r.top >= 0 && r.bottom <= window.innerHeight) return false;
+    window.scrollTo({ top: window.pageYOffset + r.top - 12, behavior: reduced() ? 'auto' : 'smooth' });
+    return true;
+  }
+
+  function turnScene() {
+    var c = current();
+    els.backCap.innerHTML = '<span>Behind the scene:</span> ' + esc(SC.byId[c.id].backCaption);
+    els.backCap.hidden = false;
+    setTurned(true, reduced());
+    later(showVerdict, 1150);
   }
 
   function outcomeHTML(o) {
@@ -790,93 +1135,20 @@
     return '<span class="fc-mark is-' + o + '" aria-hidden="true">' + info.mark + '</span><span class="is-' + o + '">' + info.label + '</span>';
   }
 
-  function choiceButton(text, onClick) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'kit-button';
-    b.textContent = text;
-    b.setAttribute('aria-pressed', 'false');
-    b.addEventListener('click', onClick);
-    return b;
-  }
-
-  function press(container, btn) {
-    Array.prototype.forEach.call(container.children, function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
-  }
-
-  function updateTally(bump) {
-    var s = F.score(CASES, game.responses);
-    if (bump && String(s.right) !== els.right.textContent) flash(els.right);
-    if (bump && String(s.knew) !== els.knew.textContent) flash(els.knew);
-    els.right.textContent = s.right;
-    els.knew.textContent = s.knew;
-  }
-
-  function flash(el) {
-    el.classList.remove('is-bumped');
-    void el.offsetWidth;
-    el.classList.add('is-bumped');
-  }
-
-  function renderCase() {
-    var c = CASES[game.i];
-    game.answer = null;
-    els.progress.textContent = 'Case ' + (game.i + 1) + ' of ' + CASES.length;
-    $('fc-rule').hidden = game.i !== 0;
-    els.title.textContent = c.title;
-    els.story.textContent = c.story;
-    els.question.textContent = c.question;
-    els.answers.innerHTML = '';
-    c.answers.forEach(function (a) {
-      var b = choiceButton(a.text, function () { chooseAnswer(a, b); });
-      els.answers.appendChild(b);
-    });
-    els.askBasis.hidden = true;
-    els.bases.innerHTML = '';
-    els.reveal.hidden = true;
-    updateTally(false);
-  }
-
-  function chooseAnswer(a, btn) {
-    if (game.responses[CASES[game.i].id]) return;
-    game.answer = a;
-    press(els.answers, btn);
-    els.bases.innerHTML = '';
-    a.bases.forEach(function (bs) {
-      var b = choiceButton(bs.text, function () { chooseBasis(bs, b); });
-      els.bases.appendChild(b);
-    });
-    var wasHidden = els.askBasis.hidden;
-    els.askBasis.hidden = false;
-    if (wasHidden) els.bases.firstChild.focus({ preventScroll: false });
-  }
-
-  function chooseBasis(bs, btn) {
-    var c = CASES[game.i];
-    if (game.responses[c.id] || !game.answer) return;
-    press(els.bases, btn);
-    var a = game.answer;
-    game.responses[c.id] = { answer: a.id, basis: bs.id };
-    var o = F.outcome(c, a.id, bs.id);
-    Array.prototype.forEach.call(els.answers.children, function (b) { b.disabled = true; });
-    Array.prototype.forEach.call(els.bases.children, function (b) { b.disabled = true; });
-
+  function showVerdict() {
+    var c = current(), r = game.responses[c.id];
+    var o = F.outcome(c, r.answer, r.basis);
+    game.revealed[c.id] = true;
     els.outcome.innerHTML = outcomeHTML(o);
-    var checks = '<li>Was your answer true? <b>' + (a.correct ? 'Yes' : 'No') + '</b></li>';
-    if (a.correct) checks += '<li>Was it true because of what you went on? <b>' + (bs.tracks ? 'Yes' : 'No') + '</b></li>';
-    else checks += '<li>Was it reasonable, given what you could see? <b>' + (bs.source === 'evidence' ? 'Yes' : 'Not really') + '</b></li>';
-    els.checks.innerHTML = checks;
+    els.why.textContent = basisOf(c, r.basis).why;
     els.facts.textContent = c.facts;
-    els.links.innerHTML =
-      '<dt>You went on</dt><dd>' + esc(bs.text) + '. ' + esc(bs.why) + '</dd>' +
-      '<dt>' + (a.correct ? 'What made it true' : 'What was actually the case') + '</dt><dd>' + esc(c.truthmaker) + '</dd>';
-    els.next.textContent = game.i < CASES.length - 1 ? 'Next case' : 'See your two scores';
-    els.reveal.hidden = false;
-    updateTally(true);
-    els.reveal.focus({ preventScroll: true });
-    if (els.reveal.getBoundingClientRect().top > window.innerHeight * 0.6) {
-      els.reveal.scrollIntoView({ behavior: Kit.reducedMotion ? 'auto' : 'smooth', block: 'start' });
-    }
+    els.next.textContent = game.i < CASES.length - 1 ? 'Next case' : 'Open the casebook';
+    setHint('');
+    els.verdict.hidden = false;
+    renderLedger(c.id);
+    els.verdict.focus({ preventScroll: true });
+    var vr = els.verdict.getBoundingClientRect();
+    if (vr.bottom > window.innerHeight) els.verdict.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'nearest' });
   }
 
   els.next.addEventListener('click', function () {
@@ -890,33 +1162,144 @@
     }
   });
 
-  // ---- The two scores -----------------------------------------------------------------
+  // ---- The casebook ----
+
+  var MARKS = {
+    right: { knew: ['✓', 'right'], lucky: ['✓', 'right'], wrong: ['✗', 'wrong'] },
+    knew: { knew: ['✓', 'knew'], lucky: ['–', 'did not know'], wrong: ['–', 'did not know'] }
+  };
+
+  function tally() {
+    var r = {};
+    CASES.forEach(function (c) { if (game.revealed[c.id]) r[c.id] = game.responses[c.id]; });
+    return F.score(CASES, r);
+  }
+
+  function ledgerHTML(fresh, final) {
+    var s = tally(), N = CASES.length;
+    var rows = CASES.map(function (c, i) {
+      var r = game.responses[c.id], shown = game.revealed[c.id];
+      var state = shown ? 'is-ink' : r ? 'is-pencil' : 'is-blank';
+      if (!final && i === game.i) state += ' is-current';
+      if (c.id === fresh) state += ' is-fresh';
+      var line = r ? '<span class="fc-l-line">' + esc(sentence(c, r)) + '</span>' : '';
+      var cells;
+      if (shown) {
+        var o = F.outcome(c, r.answer, r.basis);
+        cells = ['right', 'knew'].map(function (col) {
+          var m = MARKS[col][o];
+          return '<td class="fc-l-mark is-' + (m[0] === '–' ? 'dash' : m[0] === '✗' ? 'cross' : 'tick') + '"><span aria-hidden="true">' + m[0] + '</span><span class="fc-sr">' + m[1] + '</span></td>';
+        }).join('');
+      } else if (r) {
+        cells = '<td class="fc-l-mark is-pencil"><span aria-hidden="true">?</span><span class="fc-sr">not yet known</span></td>' +
+          '<td class="fc-l-mark is-pencil"><span aria-hidden="true">?</span><span class="fc-sr">not yet known</span></td>';
+      } else {
+        cells = '<td class="fc-l-mark"></td><td class="fc-l-mark"></td>';
+      }
+      return '<tr class="' + state + '"><th scope="row"><span class="fc-l-n">' + (i + 1) + '</span><span class="fc-l-title">' + esc(c.title) + '</span>' + line + '</th>' + cells + '</tr>';
+    }).join('');
+    return '<caption class="fc-sr">' + (final ? 'Your casebook' : 'Your cases so far') + ': Right ' + s.right + ', Knew ' + s.knew + ', of ' + N + '</caption>' +
+      '<thead><tr><th scope="col">Case</th><th scope="col">Right</th><th scope="col">Knew</th></tr></thead><tbody>' + rows + '</tbody>' +
+      '<tfoot><tr><th scope="row">' + (final ? 'Total' : 'So far') + '</th><td class="fc-l-total">' + s.right + '</td><td class="fc-l-total">' + s.knew + '</td></tr></tfoot>';
+  }
+
+  function renderLedger(fresh) {
+    els.ledger.innerHTML = ledgerHTML(fresh, false);
+    var s = tally();
+    els.bookToggle.textContent = 'Casebook · Right ' + s.right + ' · Knew ' + s.knew;
+  }
+
+  // On a phone the casebook is a drawer.
+  var scrim = document.createElement('div');
+  scrim.className = 'fc-scrim';
+  scrim.hidden = true;
+  els.cases.appendChild(scrim);
+
+  function openBook() {
+    els.book.classList.add('is-open');
+    scrim.hidden = false;
+    els.bookToggle.setAttribute('aria-expanded', 'true');
+    els.bookClose.focus({ preventScroll: true });
+  }
+  function closeBook(refocus) {
+    if (!els.book.classList.contains('is-open')) return;
+    els.book.classList.remove('is-open');
+    scrim.hidden = true;
+    els.bookToggle.setAttribute('aria-expanded', 'false');
+    if (refocus) els.bookToggle.focus({ preventScroll: true });
+  }
+  els.bookToggle.addEventListener('click', openBook);
+  els.bookClose.addEventListener('click', function () { closeBook(true); });
+  scrim.addEventListener('click', function () { closeBook(true); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!els.inspect.hidden) closeInspect();
+    else closeBook(true);
+  });
+
+  // ---- A case ----
+
+  function startCases() {
+    game.i = 0;
+    game.responses = {};
+    game.revealed = {};
+    show('cases');
+    renderCase();
+    scrollToStage();
+    els.title.focus({ preventScroll: true });
+  }
+
+  function renderCase() {
+    var c = current();
+    game.claim = null;
+    game.basis = null;
+    game.selected = null;
+    game.seen = [];
+    game.filed = false;
+    els.progress.textContent = 'Case ' + (game.i + 1) + ' of ' + CASES.length;
+    els.rule.hidden = game.i !== 0;
+    els.title.textContent = c.title;
+    els.story.textContent = c.story;
+    els.question.textContent = c.question;
+    els.inspect.hidden = true;
+    renderScene(c);
+    els.lookHint.textContent = game.i === 0
+      ? 'Press anything marked in the picture to pick it up. Clouds are your own thoughts.'
+      : 'Look round the picture. What you pick up goes into your notes.';
+    setHint(game.i === 0 ? 'Finish the sentence: drag a chip into a blank, or choose a chip and then a blank.' : '');
+    els.card.classList.remove('is-filed', 'is-thunk');
+    els.stamp.classList.remove('is-down');
+    els.fileRow.hidden = false;
+    els.verdict.hidden = true;
+    renderChips();
+    renderLedger();
+  }
+
+  // ---- The open casebook ----
 
   function renderFinal() {
     var s = F.score(CASES, game.responses);
     var N = CASES.length;
     var outs = CASES.map(function (c) { var r = game.responses[c.id]; return F.outcome(c, r.answer, r.basis); });
 
-    function box(name, n, on) {
-      var cells = outs.map(function (o) { return '<span class="fc-cell' + (on(o) ? ' is-on' : '') + '"></span>'; }).join('');
+    // One cell per case, in order, so the two bars line up. In the Right bar the cases that
+    // were right by luck are hatched: they are the gap between the two numbers.
+    function box(name, n, cls) {
+      var cells = outs.map(function (o) { var k = cls(o); return '<span class="fc-cell' + (k ? ' ' + k : '') + '"></span>'; }).join('');
       return '<div class="fc-score"><p class="fc-score-label">' + name + '</p>' +
         '<p class="fc-score-num">' + n + ' <span>of ' + N + '</span></p>' +
         '<div class="fc-cells" aria-hidden="true">' + cells + '</div></div>';
     }
     var big = $('fc-big');
-    big.innerHTML = box('Right', s.right, function (o) { return o !== 'wrong'; }) + box('Knew', s.knew, function (o) { return o === 'knew'; });
+    var lucky = s.right - s.knew;
+    big.innerHTML = box('Right', s.right, function (o) { return o === 'knew' ? 'is-on' : o === 'lucky' ? 'is-luck' : ''; }) +
+      box('Knew', s.knew, function (o) { return o === 'knew' ? 'is-on' : ''; }) +
+      (lucky ? '<p class="fc-cells-key" aria-hidden="true"><i></i>right by luck: ' + lucky + '</p>' : '');
     big.setAttribute('aria-label', 'Right: ' + s.right + ' of ' + N + '. Knew: ' + s.knew + ' of ' + N + '.');
     big.setAttribute('role', 'group');
-
     $('fc-reflect').innerHTML = F.reflect(CASES, game.responses).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
-
-    $('fc-list').innerHTML = CASES.map(function (c, i) {
-      var r = game.responses[c.id];
-      var a = F.findAnswer(c, r.answer), b = F.findBasis(a, r.basis);
-      return '<li><span class="fc-li-title">' + (i + 1) + '. ' + esc(c.title) + '</span>' +
-        '<span class="fc-li-out">' + outcomeHTML(outs[i]) + '</span>' +
-        '<span class="fc-li-detail">' + esc(c.question) + ' You said “' + esc(a.text) + '”, going on “' + esc(b.text) + '”.</span></li>';
-    }).join('');
+    $('fc-final-ledger').innerHTML = ledgerHTML(null, true);
 
     show('final');
     scrollToStage();
@@ -946,7 +1329,8 @@
   });
 
   if (Kit.preview) {
-    describe('Barn fronts glide past a country road. As each passes, the view swings round: most are flat facades propped up on beams; one is a real barn.');
+    $('fc-pv').hidden = false;
+    describe('Barn fronts glide past a country road. As each passes, the view swings round: most are flat facades propped up on beams; one is a real barn. Then a card reads “That is a barn, because it looks like one”, is stamped Filed, and marked Right by luck.');
   }
 
   resize();
