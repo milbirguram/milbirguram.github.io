@@ -160,12 +160,20 @@
       svg.setAttribute('viewBox', '0 0 ' + g.w + ' ' + g.h);
       svg.textContent = '';
       var ink = css('--ink') || '#1f1b16', ink3 = css('--ink-3') || '#8c8274';
-      if (cfg.hatch) {
-        // a ruled hatch in black ink, for readings the contract set aside
+      if (cfg.hatch || cfg.spotHatch) {
         var defs = svgEl('defs', {});
-        var pat = svgEl('pattern', { id: cfg.hatch, width: 4, height: 4, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
-        pat.appendChild(svgEl('rect', { width: 1.6, height: 4, fill: ink }));
-        defs.appendChild(pat);
+        if (cfg.hatch) {
+          // a ruled hatch in black ink, for readings the contract set aside
+          var pat = svgEl('pattern', { id: cfg.hatch, width: 4, height: 4, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
+          pat.appendChild(svgEl('rect', { width: 1.6, height: 4, fill: ink }));
+          defs.appendChild(pat);
+        }
+        if (cfg.spotHatch) {
+          // the spot colour is never laid flat: high-risk hours are a ruled hatch in smoke orange
+          var sp = svgEl('pattern', { id: cfg.spotHatch, width: 3.4, height: 3.4, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
+          sp.appendChild(svgEl('rect', { width: 1.5, height: 3.4, fill: cfg.spot }));
+          defs.appendChild(sp);
+        }
         svg.appendChild(defs);
       }
       var y = function (v) { return g.m.t + g.ph - (v / cfg.max) * g.ph; };
@@ -181,8 +189,12 @@
           if (!s.v) return;
           var a = { x: x.toFixed(2), y: y(base + s.v).toFixed(2), width: bw.toFixed(2), height: (y(base) - y(base + s.v)).toFixed(2) };
           if (s.outline) { a.fill = 'none'; a.stroke = s.color; a['stroke-width'] = 0.8; a['stroke-dasharray'] = '1 2'; } else a.fill = s.color;
-          if (s.rule) { a.stroke = s.rule; a['stroke-width'] = 0.6; }
+          if (s.rule) { a.stroke = s.rule; a['stroke-width'] = s.ruleWidth || 0.6; }
           svg.appendChild(svgEl('rect', a));
+          if (s.cap) {
+            // the letterpress bite: ink gathers at the edge the type struck first
+            svg.appendChild(svgEl('rect', { x: a.x, y: a.y, width: a.width, height: Math.min(1.6, +a.height).toFixed(2), fill: s.cap }));
+          }
           base += s.v;
         });
         if (cfg.marker && cfg.marker(i)) {
@@ -190,6 +202,11 @@
         }
       }
       svg.appendChild(svgEl('line', { x1: g.m.l, x2: g.m.l + g.pw, y1: y(0), y2: y(0), stroke: ink, 'stroke-width': 1.2 }));
+      if (cfg.frame) {
+        // a black-ruled frame round the plot, thick at the foot, as an almanac boxes its tables
+        svg.appendChild(svgEl('rect', { x: g.m.l - 0.5, y: y(cfg.max) - 0.5, width: g.pw + 1, height: g.ph + 1, fill: 'none', stroke: ink, 'stroke-width': 1 }));
+        svg.appendChild(svgEl('line', { x1: g.m.l - 1, x2: g.m.l + g.pw + 1, y1: y(0) + 1.5, y2: y(0) + 1.5, stroke: ink, 'stroke-width': 2 }));
+      }
       (cfg.lines || []).forEach(function (L) {
         svg.appendChild(svgEl('line', { x1: g.m.l, x2: g.m.l + g.pw, y1: y(L.v), y2: y(L.v), stroke: L.color, 'stroke-width': 1.2, 'stroke-dasharray': '6 3' }));
         svg.appendChild(svgEl('text', { x: g.m.l + 6, y: y(L.v) - 6, 'class': 'halo', style: 'fill:' + L.color }, L.label));
@@ -249,11 +266,11 @@
     var s = state.summary, id = state.city, ser = s.series[id];
     var keep = charts.hi ? charts.hi.index : -1;
     var svg = $('hi-chart');
-    var hi = css('--spot') || '#d9662a', warn = css('--ink') || '#1f1b16';
+    var hi = css('--spot') || '#d9662a', deep = css('--spot-deep') || '#a3441a', warn = css('--ink') || '#1f1b16';
     var fresh = !charts.hi;
     charts.hi = barChart(svg, {
-      n: s.dates.length, max: 24, ticks: [0, 12, 24], dates: s.dates,
-      segments: function (i) { return [{ v: ser.hi[i] || 0, color: hi }]; },
+      n: s.dates.length, max: 24, ticks: [0, 12, 24], dates: s.dates, spotHatch: 'almanac-spot', spot: hi, frame: true,
+      segments: function (i) { return [{ v: ser.hi[i] || 0, color: 'url(#almanac-spot)', rule: hi, ruleWidth: 0.9, cap: deep }]; },
       marker: function (i) { return ser.n[i] !== null && ser.n[i] < 18; },
       markerColor: warn,
       readout: function (i) {
@@ -438,14 +455,26 @@
     cells = [];
     grid.months.forEach(function (m) {
       var s = el('span', 'mlabel', m.label);
-      s.style.gridColumn = String(m.col + 1);
+      s.style.gridColumn = String(m.col + 2);
       s.setAttribute('aria-hidden', 'true');
       box.appendChild(s);
     });
-    [['Mon', 0], ['Wed', 2], ['Fri', 4]].forEach(function (w) {
-      var s = el('span', 'wlabel', w[0]);
+    // the date of each week's Monday heads its column, in old-style numerals
+    var first = M.parse(cal[0].date) - ((new Date(M.parse(cal[0].date)).getUTCDay() + 6) % 7) * 864e5;
+    for (var wk = 0; wk < grid.weeks; wk++) {
+      var dn = el('span', 'dnum', String(new Date(first + wk * 7 * 864e5).getUTCDate()));
+      dn.style.gridColumn = String(wk + 2);
+      dn.setAttribute('aria-hidden', 'true');
+      box.appendChild(dn);
+    }
+    var corner = el('span', 'wcorner');
+    corner.setAttribute('aria-hidden', 'true');
+    box.appendChild(corner);
+    // weekday heads in small capitals, Monday first; they stay put when the weeks scroll
+    ['m', 't', 'w', 't', 'f', 's', 's'].forEach(function (w, r) {
+      var s = el('span', 'wlabel', w);
       s.setAttribute('aria-hidden', 'true');
-      s.style.top = 'calc(16px + var(--gap) + ' + w[1] + ' * (var(--cell) + var(--gap)))';
+      s.style.gridRow = String(r + 3);
       box.appendChild(s);
     });
     grid.cells.forEach(function (c, i) {
@@ -453,8 +482,8 @@
       var b = el('button', 'cell s-' + d.status + (d.kinds && d.kinds.indexOf('scheduled') >= 0 ? ' is-sched' : ''));
       b.appendChild(mark(M.STATUS[d.status] ? d.status : 'none'));
       b.type = 'button';
-      b.style.gridColumn = String(c.col + 1);
-      b.style.gridRow = String(c.row + 2);
+      b.style.gridColumn = String(c.col + 2);
+      b.style.gridRow = String(c.row + 3);
       b.setAttribute('aria-label', M.describeDay(d));
       b.setAttribute('aria-pressed', String(i === state.day));
       b.tabIndex = i === state.day ? 0 : -1;
@@ -615,8 +644,9 @@
   // ======================================================================== preview
 
   function startPreview() {
-    // The card: an almanac sheet printing itself. Each day's run glyph is stamped into the
-    // calendar in turn while the smoke-orange bars of high-risk hours rise beneath.
+    // The card: an almanac sheet. It opens finished (the answer, every run's glyph in its
+    // weekday row, the hatched high-risk chart) and holds; then the press goes over it again:
+    // the sheet dims to a blind impression and each day's glyph and bar is re-inked in turn.
     var P = window.ALMANAC_PREVIEW;
     var canvas = $('preview');
     canvas.hidden = false;
@@ -625,15 +655,52 @@
     if (!P) return;
     var ctx = canvas.getContext('2d');
     var n = P.cal.length;
-    var firstDow = (new Date(Date.parse(P.first + 'T00:00:00Z')).getUTCDay() + 6) % 7;
+    var DAY = 864e5;
+    var start = Date.parse(P.first + 'T00:00:00Z');
+    var firstDow = (new Date(start).getUTCDay() + 6) % 7; // Monday = 0
     var weeks = Math.floor((n - 1 + firstDow) / 7) + 1;
-    var FILL = 6400, HOLD = 2600, FADE = 500, LOOP = FILL + HOLD + FADE;
-    var INK = css('--ink') || '#1f1b16', INK2 = css('--ink-2') || '#574e43', INK3 = css('--ink-3') || '#8c8274';
-    var SPOT = css('--spot') || '#d9662a';
+    var monday0 = start - firstDow * DAY;
+    var HOLD0 = 1200, DIM = 400, FILL = 5600, HOLD1 = 2200;
+    var LOOP = HOLD0 + DIM + FILL + HOLD1; // 9.4 s
+    var BLIND = 0.2; // a blind impression: the sheet before the ink goes on again
+    var INK = css('--ink') || '#1f1b16', INK2 = css('--ink-2') || '#574e43', INK3 = css('--ink-3') || '#8a7f62';
+    var SPOT = css('--spot') || '#d9662a', DEEP = css('--spot-deep') || '#a3441a';
+    var PRESSED = '#3b342b'; // black ink a little starved in the middle of a large face
     var SERIF = '"Libre Caslon Text", Georgia, serif', DISPLAY = '"Libre Caslon Display", "Libre Caslon Text", Georgia, serif';
-    var W = 0, H = 0, dpr = 1, raf = 0, t0 = 0, playing = false;
+    var LEAF = typeof Path2D === 'function' ? new Path2D('M-5 0C-10 4-7 11 0 9C5 7.5 8 3 13 0C8-3 5-7.5 0-9C-7-11-10-4-5 0Z') : null;
+    var STEM = typeof Path2D === 'function' ? new Path2D('M-5 0C-10 0-13-4-11-7C-9.5-9-6.5-8-7.5-5.5') : null;
+    var W = 0, H = 0, dpr = 1, raf = 0, t0 = 0, playing = false, L = null;
+    var cum = [0];
+    for (var c0 = 0; c0 < n; c0++) cum.push(cum[c0] + (P.hi[c0] || 0));
+    var ran = 0, sched = 0; // worked out from the log: never call a scheduled run backfilled
+    for (var m0 = 0; m0 < n; m0++) {
+      if (P.cal.charAt(m0) === 'n') continue;
+      ran++;
+      if (P.backfill.charAt(m0) === 's') sched++;
+    }
+    var runsText = ran + (ran === 1 ? ' run' : ' runs') + (ran === 0 ? '' : sched === 0 ? ', all backfilled' : ', ' + sched + ' on schedule');
 
-    function still() { draw(LOOP - FADE - 1); }
+    function still() { draw(0); }
+
+    function layout() {
+      var s = Math.min(W / 320, H / 200);
+      var fs = Math.max(11, Math.round(11 * s));
+      var pad = 13 * s, top = 12 * s;
+      var wc = fs * 1.2 + 7 * s;
+      var R = Math.max(98 * s, W * 0.31);
+      var p = Math.min((W - 2 * pad - wc - R - 12 * s) / weeks, (H * 0.46) / 7);
+      var calX = pad + wc;
+      var gridTop = top + 2 * fs + 6 * s;
+      var gridBottom = gridTop + 7 * p;
+      var histBottom = H - 14 * s;
+      var histTop = Math.min(gridBottom + 21 * s, histBottom - 24 * s);
+      var rx = calX + weeks * p + 15 * s;
+      return {
+        s: s, fs: fs, pad: pad, top: top, wc: wc, p: p, calX: calX, calW: weeks * p,
+        gridTop: gridTop, gridBottom: gridBottom, ornY: (gridBottom + histTop) / 2 + 0.5 * s,
+        histTop: histTop, histBottom: histBottom, rx: rx, rw: W - pad - rx
+      };
+    }
 
     function resize() {
       var r = canvas.getBoundingClientRect();
@@ -641,6 +708,7 @@
       W = Math.max(1, r.width); H = Math.max(1, r.height);
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      L = layout();
       if (!playing) still();
     }
 
@@ -657,92 +725,205 @@
       else if (code === 'r') { var d = ri * 0.72; ctx.beginPath(); ctx.moveTo(x - d, y - d); ctx.lineTo(x + d, y + d); ctx.stroke(); }
     }
 
-    function draw(t) {
-      ctx.clearRect(0, 0, W, H); // the stock and its grain show through from the stage
-      var alpha = Math.max(0, t > FILL + HOLD ? 1 - (t - FILL - HOLD) / FADE : 1);
-      ctx.globalAlpha = alpha;
-      var pad = Math.round(Math.min(W, H) * 0.095);
-      var per = FILL / n;
-      var shown = Math.min(n, t / per);
-      var small = Math.max(11, Math.round(H * 0.058));
-      // calendar, top left
-      var calH = H * 0.5;
-      var gap = Math.max(1.5, Math.min(W, H) * 0.012);
-      var cell = Math.floor(Math.min((calH - 6 * gap) / 7, (W * 0.54 - (weeks - 1) * gap) / weeks));
-      cell = Math.max(5, cell);
-      var cx = pad, cy = pad;
-      for (var i = 0; i < n; i++) {
-        var k = i + firstDow, col = Math.floor(k / 7), row = k % 7;
-        var x = cx + col * (cell + gap) + cell / 2, y = cy + row * (cell + gap) + cell / 2;
-        var p = ease((shown - i) * 1.6);
-        var rad = cell * 0.4;
-        if (p <= 0) {
-          ctx.fillStyle = INK3; ctx.globalAlpha = 0.5 * alpha;
-          ctx.fillRect(x - 0.5, y - 0.5, 1, 1);
-          ctx.globalAlpha = alpha;
-          continue;
-        }
-        // stamped in: the mark lands a little large and settles, like a pressed impression
-        glyph(P.cal.charAt(i), x, y, rad * (1 + 0.5 * (1 - p)));
-        if (P.backfill.charAt(i) === 's') {
-          ctx.strokeStyle = INK; ctx.lineWidth = 1;
-          ctx.strokeRect(x - cell / 2 + 0.5, y - cell / 2 + 0.5, cell - 1, cell - 1);
-        }
-      }
-      var days = Math.min(n, Math.floor(shown));
-      var total = 0;
-      for (var j = 0; j < days; j++) total += P.hi[j];
-      if (shown >= n) total = P.total;
-      var calW = weeks * (cell + gap) - gap;
-      var calBottom = cy + 7 * (cell + gap) - gap;
-      ctx.fillStyle = INK2;
-      ctx.font = 'italic ' + small + 'px ' + SERIF;
-      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      var ran = 0, sched = 0; // worked out from the log: never call a scheduled run backfilled
-      for (var m = 0; m < days; m++) {
-        if (P.cal.charAt(m) === 'n') continue;
-        ran++;
-        if (P.backfill.charAt(m) === 's') sched++;
-      }
-      fitText(ran + (ran === 1 ? ' run' : ' runs') + (ran === 0 ? '' : sched === 0 ? ', all backfilled' : ', ' + sched + ' on schedule'), cx, calBottom + small + 2, calW + pad);
-      // the running answer, top right
-      var rx = cx + calW + pad * 0.9, rw = W - rx - pad;
-      var big = Math.round(Math.min(H * 0.27, rw * 0.46));
-      ctx.fillStyle = INK;
-      ctx.font = big + 'px ' + DISPLAY;
-      var numY = cy + big * 0.78;
-      ctx.fillText(String(total), rx, numY);
-      var nw = ctx.measureText(String(total)).width;
-      ctx.fillStyle = SPOT;
-      ctx.fillRect(rx, numY + big * 0.1, Math.max(nw, big * 0.5), Math.max(2, big * 0.07));
-      ctx.fillStyle = INK;
-      ctx.font = 'italic ' + small + 'px ' + SERIF;
-      fitText('high-risk hours', rx, numY + big * 0.17 + small * 1.15, rw);
-      ctx.fillStyle = INK2;
-      ctx.font = small + 'px ' + SERIF;
-      fitText(P.city, rx, numY + big * 0.17 + small * 2.45, rw);
-      fitText('since ' + M.dayLabel(P.first), rx, numY + big * 0.17 + small * 3.6, rw);
-      // the bars, along the foot of the sheet
-      var by = H - pad * 0.85, bx = pad, bwid = W - 2 * pad;
-      var bh = Math.max(10, by - (calBottom + small * 1.9));
-      var band = bwid / n;
-      ctx.fillStyle = INK3;
-      for (var dx = bx; dx < bx + bwid; dx += 4) ctx.fillRect(dx, by - bh, 1, 0.8); // the 24-hour line, dotted
-      ctx.fillStyle = SPOT;
-      for (var b = 0; b < n; b++) {
-        var q = ease((shown - b) * 1.2);
-        if (q <= 0 || !P.hi[b]) continue;
-        var hgt = (P.hi[b] / 24) * bh * q;
-        ctx.fillRect(bx + b * band, by - hgt, Math.max(1, band - (band > 3 ? 1 : 0)), hgt);
-      }
-      ctx.fillStyle = INK;
-      ctx.fillRect(bx, by, bwid, 1.2);
-      ctx.globalAlpha = 1;
+    function hline(x0, x1, y, w, color) { ctx.fillStyle = color; ctx.fillRect(x0, y - w / 2, x1 - x0, w); }
+
+    // The press. Returns how day i stands at time t:
+    //   { ink: 0..1 how dark its finished impression is, stamp: 0..1 how far its re-inking has gone }
+    var IN_FILL = HOLD0 + DIM, END_FILL = HOLD0 + DIM + FILL;
+    function press(t, i) {
+      if (t < HOLD0 || t >= END_FILL) return { ink: 1, stamp: 0 };
+      if (t < IN_FILL) return { ink: 1 - (1 - BLIND) * (t - HOLD0) / DIM, stamp: 0 };
+      var shown = (t - IN_FILL) / FILL * (n + 2);
+      return { ink: BLIND, stamp: ease((shown - i) * 1.6) };
+    }
+    // days re-inked so far (the whole sheet outside the re-inking)
+    function daysInked(t) {
+      if (t < IN_FILL || t >= END_FILL) return n;
+      return Math.max(0, Math.min(n, Math.floor((t - IN_FILL) / FILL * (n + 2))));
     }
 
-    function fitText(s, x, y, w) {
-      while (s.length > 4 && ctx.measureText(s).width > w) s = s.slice(0, -2) + '…';
-      ctx.fillText(s, x, y);
+    function draw(t) {
+      var g = L, s = g.s, fs = g.fs;
+      ctx.clearRect(0, 0, W, H); // the stock and its grain show through from the stage
+      ctx.textBaseline = 'alphabetic';
+      var spacing = 'letterSpacing' in ctx;
+
+      // ---- the calendar: month heads, Monday numerals, weekday heads, one glyph per day
+      ctx.font = fs + 'px ' + SERIF;
+      ctx.textAlign = 'left';
+      var lastMonth = -1, lastRight = -1;
+      for (var i = 0; i < n; i++) {
+        var mo = new Date(start + i * DAY).getUTCMonth();
+        if (mo === lastMonth) continue;
+        lastMonth = mo;
+        var mx = g.calX + Math.floor((i + firstDow) / 7) * g.p;
+        if (mx < lastRight) continue;
+        var label = M.MONTHS[mo].toUpperCase();
+        if (spacing) ctx.letterSpacing = (0.1 * fs).toFixed(1) + 'px';
+        if (mx + 3 * s + ctx.measureText(label).width > g.calX + g.calW + 2 * s) continue; // no room left of the answer
+        ctx.fillStyle = INK;
+        ctx.fillText(label, mx + 3 * s, g.top + fs * 0.78);
+        ctx.fillRect(mx, g.top - 1 * s, Math.max(0.8, 0.8 * s), fs * 0.95);
+        lastRight = mx + ctx.measureText(label).width + 8 * s;
+      }
+      if (spacing) ctx.letterSpacing = '0px';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = INK2;
+      var every = ctx.measureText('28').width + 1.5 * s > g.p ? 2 : 1;
+      for (var w = 0; w < weeks; w += every) {
+        ctx.fillText(String(new Date(monday0 + w * 7 * DAY).getUTCDate()), g.calX + (w + 0.5) * g.p, g.top + fs * 1.85);
+      }
+      ctx.fillStyle = INK;
+      ['M', 'T', 'W', 'T', 'F', 'S', 'S'].forEach(function (d, r) {
+        ctx.fillText(d, g.pad + (g.wc - 3 * s) / 2, g.gridTop + (r + 0.5) * g.p + fs * 0.34);
+      });
+      // hairline rules: under the heads, at the foot, after the weekday column, between weeks
+      var hair = Math.max(0.8, 0.8 * s);
+      hline(g.pad, g.calX + g.calW, g.gridTop - 1.5 * s, hair, INK);
+      hline(g.pad, g.calX + g.calW, g.gridBottom + 1.5 * s, hair, INK);
+      ctx.fillRect(g.calX - 2 * s, g.gridTop - 1.5 * s, Math.max(0.7, 0.7 * s), g.gridBottom - g.gridTop + 3 * s);
+      ctx.fillStyle = INK3;
+      for (var v = 1; v < weeks; v++) ctx.fillRect(g.calX + v * g.p - 0.25, g.gridTop, 0.5, g.gridBottom - g.gridTop);
+
+      var rad = g.p * 0.36;
+      for (var j = 0; j < n; j++) {
+        var kk = j + firstDow, cx = g.calX + (Math.floor(kk / 7) + 0.5) * g.p, cy = g.gridTop + (kk % 7 + 0.5) * g.p;
+        var pr = press(t, j), code = P.cal.charAt(j);
+        ctx.globalAlpha = pr.ink;
+        glyph(code, cx, cy, rad);
+        if (pr.stamp > 0) {
+          // stamped in: the mark lands a little large and settles, like a pressed impression
+          ctx.globalAlpha = pr.stamp;
+          glyph(code, cx, cy, rad * (1 + 0.45 * (1 - pr.stamp)));
+        }
+        ctx.globalAlpha = 1;
+        if (P.backfill.charAt(j) === 's') {
+          ctx.strokeStyle = INK; ctx.lineWidth = 1;
+          ctx.strokeRect(cx - g.p / 2 + 0.5, cy - g.p / 2 + 0.5, g.p - 1, g.p - 1);
+        }
+      }
+
+      // ---- the ornament between the glyphs and the chart: swelled rules and a hedera
+      ornament(g.pad + (g.wc + g.calW) / 2, g.ornY, s);
+
+      // ---- the answer, right of the calendar. The figure never resets: it is the answer.
+      var big = Math.round(Math.min(58 * s, g.rw / 1.62));
+      var numY = g.top + big * 0.66;
+      ctx.textAlign = 'left';
+      ctx.font = big + 'px ' + DISPLAY;
+      var num = String(P.total);
+      ctx.fillStyle = PRESSED;
+      ctx.fillText(num, g.rx, numY);
+      ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, 1.1 * s); ctx.lineJoin = 'round';
+      ctx.strokeText(num, g.rx, numY); // the bite: the ink gathers at the edges of the face
+      var nw = ctx.measureText(num).width;
+      // its rule: a black-ruled box hatched in the spot, filling as the press re-counts the hours
+      var ry = numY + 7 * s, rh = 7 * s, rbw = Math.max(nw, big);
+      var frac = P.total ? cum[daysInked(t)] / P.total : 1;
+      if (t >= HOLD0 && t < IN_FILL) frac = 1;
+      hatch(g.rx, ry, rbw * frac, rh, s, null);
+      ctx.strokeStyle = INK; ctx.lineWidth = 1;
+      ctx.strokeRect(g.rx + 0.5, ry + 0.5, rbw - 1, rh - 1);
+      var ly = ry + rh + fs * 1.5, lh = fs * 1.28;
+      ctx.fillStyle = INK; ctx.font = 'italic ' + (fs + 1) + 'px ' + SERIF;
+      fitText('high-risk hours', g.rx, ly, g.rw);
+      ctx.font = fs + 'px ' + SERIF;
+      var where = wrapped(P.city + ', since ' + M.dayLabel(P.first), g.rw);
+      where.forEach(function (line, li) { ctx.fillText(line, g.rx, ly + lh * (1 + li)); });
+      ctx.fillStyle = INK2; ctx.font = 'italic ' + fs + 'px ' + SERIF;
+      var after = 1 + where.length + 0.25;
+      wrapped(runsText, g.rw).forEach(function (line, li) { ctx.fillText(line, g.rx, ly + lh * (after + li)); });
+
+      // ---- the chart: hatched smoke-orange hours inside a black-ruled frame
+      var x0 = g.pad, x1 = W - g.pad, yt = g.histTop, yb = g.histBottom;
+      var band = (x1 - x0 - 2) / n, ph = yb - yt - 3 * s;
+      var whole = [], fresh = [], ghost = 1;
+      for (var b = 0; b < n; b++) {
+        var hb = (P.hi[b] || 0) / 24 * ph, pb = press(t, b);
+        whole.push(hb);
+        fresh.push(hb * pb.stamp);
+        ghost = pb.ink;
+      }
+      ctx.globalAlpha = ghost;
+      bars(whole, x0 + 1, yb, band, s);
+      ctx.globalAlpha = 1;
+      if (t >= IN_FILL && t < END_FILL) bars(fresh, x0 + 1, yb, band, s);
+      ctx.strokeStyle = INK; ctx.lineWidth = 1;
+      ctx.strokeRect(x0 + 0.5, yt + 0.5, x1 - x0 - 1, yb - yt);
+      hline(x0, x1, yb + Math.max(1, s), 2 * Math.max(1, s), INK);
+      // the 12-hour line, dotted in a screen of black
+      ctx.fillStyle = INK3;
+      var y12 = yb - ph / 2;
+      for (var dx = x0 + 3; dx < x1 - 2; dx += 4 * s) ctx.fillRect(dx, y12, 1, 0.8);
+    }
+
+    function hatch(x, y, w, h, s, clip) {
+      if (w <= 0 || h <= 0) return;
+      ctx.save();
+      ctx.beginPath();
+      if (clip) clip(); else ctx.rect(x, y, w, h);
+      ctx.clip();
+      var k = Math.max(1, s * 0.9);
+      ctx.strokeStyle = SPOT; ctx.lineWidth = 1.25 * k;
+      ctx.beginPath();
+      for (var u = x - h; u < x + w + h; u += 3.2 * k) { ctx.moveTo(u, y + h); ctx.lineTo(u + h, y); }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function bars(hs, x0, yb, band, s) {
+      // one step outline per run of high-risk days: hatched inside, a darker spot edge round it
+      function outline() {
+        for (var i = 0; i < hs.length; i++) {
+          if (hs[i] < 0.3) continue;
+          var a = i;
+          while (i + 1 < hs.length && hs[i + 1] >= 0.3) i++;
+          ctx.moveTo(x0 + a * band, yb);
+          for (var j = a; j <= i; j++) { ctx.lineTo(x0 + j * band, yb - hs[j]); ctx.lineTo(x0 + (j + 1) * band, yb - hs[j]); }
+          ctx.lineTo(x0 + (i + 1) * band, yb);
+          ctx.closePath();
+        }
+      }
+      var top = 0;
+      for (var k = 0; k < hs.length; k++) top = Math.max(top, hs[k]);
+      if (top < 0.3) return;
+      hatch(x0, yb - top, hs.length * band, top, s, outline);
+      ctx.beginPath(); outline();
+      ctx.strokeStyle = DEEP; ctx.lineWidth = Math.max(1, 1.1 * s); ctx.lineJoin = 'miter';
+      ctx.stroke();
+    }
+
+    function ornament(cx, cy, s) {
+      // a swelled rule each side of a hedera, the printer's ivy-leaf fleuron
+      var half = Math.min(L.calW * 0.34, 64 * s), sw = 1.5 * s;
+      ctx.fillStyle = INK;
+      [-1, 1].forEach(function (sgn) {
+        var a = cx + sgn * 10 * s, b = cx + sgn * (10 * s + half), mid = (a + b) / 2;
+        ctx.beginPath();
+        ctx.moveTo(a, cy); ctx.quadraticCurveTo(mid, cy - sw * 2, b, cy); ctx.quadraticCurveTo(mid, cy + sw * 2, a, cy);
+        ctx.fill();
+      });
+      if (!LEAF) return;
+      ctx.save();
+      ctx.translate(cx + s, cy);
+      ctx.scale(0.62 * s, 0.62 * s);
+      ctx.fill(LEAF);
+      ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+      ctx.stroke(STEM);
+      ctx.strokeStyle = css('--stock') || '#ede0a6'; ctx.lineWidth = 1.1; ctx.lineCap = 'butt';
+      ctx.beginPath(); ctx.moveTo(-3, 0); ctx.lineTo(8, 0); ctx.stroke(); // the leaf's vein, left as bare stock
+      ctx.restore();
+    }
+
+    function wrapped(str, w) {
+      if (ctx.measureText(str).width <= w) return [str];
+      var cut = str.indexOf(', ');
+      return cut > 0 ? [str.slice(0, cut + 1), str.slice(cut + 2)] : [str];
+    }
+
+    function fitText(str, x, y, w) {
+      while (str.length > 4 && ctx.measureText(str).width > w) str = str.slice(0, -2) + '…';
+      ctx.fillText(str, x, y);
     }
 
     function frame(ts) {

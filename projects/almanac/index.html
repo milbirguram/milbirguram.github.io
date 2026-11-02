@@ -19,7 +19,18 @@
   <p class="kit-lede">A small data pipeline meant to run once a day: it fetches the hourly Air Quality Health Index for seven western Canadian cities, checks each day against a written contract, stores it, and reports on itself. The answer comes first, then the pipeline’s own health, run by run. The readings are real-time and unverified, and the record begins on 4 August 2026, so the counts are hours since then, not this year. Data Source: Environment and Climate Change Canada, under its <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">data licence</a>.</p>
 
   <section class="kit-stage kit-wide almanac" data-kit-stage aria-label="Almanac: the answer and the pipeline’s health">
-    <canvas id="preview" class="preview" hidden role="img" aria-label="The pipeline's run calendar filling in day by day, mostly full discs (passed) with some half discs (warnings), while an orange bar chart of daily high-risk hours draws beneath a running total."></canvas>
+    <canvas id="preview" class="preview" hidden role="img" aria-label="An almanac sheet: the total of high-risk hours, the pipeline's run calendar under weekday heads, mostly full discs (passed) with some half discs (warnings), re-inked day by day, and an orange hatched chart of daily high-risk hours in a ruled frame."></canvas>
+    <!-- the letterpress bite for the big figure: the ink lies solid at the edges and a little
+         starved in the middle, as where type is pressed into the paper -->
+    <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <filter id="ink-bite" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceAlpha" operator="erode" radius="2" result="inner"/>
+        <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="4" result="noise"/>
+        <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.93  0 0 0 0 0.88  0 0 0 0 0.65  2.4 0 0 0 -1.38" result="specks"/>
+        <feComposite in="specks" in2="inner" operator="in" result="starved"/>
+        <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="starved"/></feMerge>
+      </filter>
+    </svg>
 
     <div id="full">
       <p class="loading" id="loading">Loading the latest aggregates…</p>

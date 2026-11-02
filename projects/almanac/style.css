@@ -1,7 +1,9 @@
 /* Almanac. Page chrome comes from ../kit.css; this file styles the stage as a
-   two-colour almanac sheet: cream stock, black ink, one spot colour (wildfire-smoke
-   orange) used only where the air was high-risk. Runs are marked with shape-coded
-   glyphs, so nothing depends on colour. */
+   two-colour almanac sheet: canary almanac stock, black ink, one spot colour
+   (wildfire-smoke orange) used only where the air was high-risk, always as a ruled
+   hatch, never a flat fill. Runs are marked with shape-coded glyphs, so nothing
+   depends on colour. Rules are letterpress: thick-and-thin, swelled, and the big
+   figure is printed with a slight bite (see the #ink-bite filter in index.html). */
 
 @font-face {
   font-family: "Libre Caslon Text";
@@ -32,13 +34,13 @@ main > h1 {
 
 .almanac {
   /* the palette: five inks on one stock */
-  --stock: #f3ecdc;            /* cream paper */
+  --stock: #ede0a6;            /* canary almanac stock, the colour of a farmer's almanac cover */
   --ink: #1f1b16;              /* black ink */
   --ink-2: #574e43;            /* black, lighter impression: secondary text (7.0:1 on stock) */
-  --ink-3: #8c8274;            /* a 55% screen of black: rules, bars that are not smoke */
+  --ink-3: #8a7f62;            /* a 55% screen of black on the stock: rules, bars that are not smoke */
   --spot: #d9662a;             /* wildfire-smoke orange: high-risk hours, nothing else */
   --spot-deep: #a3441a;        /* the spot overprinted dark, for spot-coloured text (5.1:1) */
-  --spot-tint: #f2c9a8;        /* the spot as a light screen */
+  --hatch: repeating-linear-gradient(135deg, var(--spot) 0 1.5px, transparent 1.5px 4px); /* the spot as a ruled hatch */
   --serif: "Libre Caslon Text", Georgia, "Times New Roman", serif;
   --display: "Libre Caslon Display", "Libre Caslon Text", Georgia, serif;
   --cell: 22px; /* with the 3px gap, a 24px target circle around each day touches no other */
@@ -47,11 +49,12 @@ main > h1 {
   color: var(--ink);
   font-family: var(--serif);
   font-variant-numeric: oldstyle-nums;
+  font-synthesis: small-caps; /* the Caslon files carry no small capitals; let the browser cut them */
   background-color: var(--stock);
   /* paper grain: fractal noise, multiplied in lightly */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .28 0 0 0 0 .18 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
-  /* the printed border: a heavy rule outside, a hairline inside */
-  border: 2px solid var(--ink);
+  /* the printed border: a thick-and-thin rule, as round an almanac's month page */
+  border: 3px solid var(--ink);
   outline: 1px solid var(--ink);
   outline-offset: -8px;
   border-radius: 0;
@@ -81,18 +84,22 @@ main > h1 {
 /* ---------- the answer ---------- */
 
 .eyebrow {
+  /* a reversed-out band, the way an almanac heads each month: stock letters cut from black */
   display: flex; align-items: center; gap: 12px;
-  color: var(--ink); font-size: 13px; text-transform: uppercase; letter-spacing: 0.2em;
+  margin: 0 -2px !important; padding: 3px 12px 2px;
+  background: var(--ink); color: var(--stock);
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.24em; line-height: 1.7;
 }
-.eyebrow::after { content: ""; flex: 1; height: 0; border-top: 1px solid var(--ink); }
+.eyebrow::after { content: ""; flex: 1; height: 3px; border-top: 1px solid var(--stock); border-bottom: 1px solid var(--stock); opacity: 0.8; }
 .question {
   margin-top: 10px !important; color: var(--ink); font-family: var(--display);
   font-size: 27px; line-height: 1.3; max-width: 760px;
 }
 .question strong {
   font-weight: 400; font-style: normal; color: var(--ink);
-  /* the spot colour, laid under the words like a screened highlight */
-  background: linear-gradient(transparent 58%, var(--spot-tint) 58%, var(--spot-tint) 92%, transparent 92%);
+  /* the spot colour, ruled under the words as a hatched band */
+  background: var(--hatch) left bottom / 100% 0.32em no-repeat;
+  padding-bottom: 0.08em;
 }
 
 /* the city chooser, set as an almanac table: name, dot leaders, figure */
@@ -119,7 +126,13 @@ main > h1 {
 
 .headline { margin: 22px 0 6px; }
 .big { color: var(--ink); font-family: var(--display); font-weight: 400; font-size: 112px; line-height: 0.95; font-variant-numeric: lining-nums; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 14px; }
-#big-n { padding-bottom: 6px; border-bottom: 6px solid var(--spot); }
+/* the figure is printed, not typed: a slight bite at its edges (filter in index.html), and a
+   hatched spot rule in a black frame beneath it, the same mark as the high-risk bars */
+#big-n { position: relative; padding-bottom: 16px; filter: url(#ink-bite); }
+#big-n::after {
+  content: ""; position: absolute; left: 2px; right: 2px; bottom: 0; height: 8px;
+  border: 1px solid var(--ink); background: var(--hatch);
+}
 .big-unit { font-family: var(--serif); font-style: italic; font-size: 26px; color: var(--ink); }
 .big-sub { margin-top: 14px !important; font-size: 17px; line-height: 1.6; max-width: 680px; }
 .big-sub b { font-weight: 400; font-variant: small-caps; letter-spacing: 0.04em; font-size: 1.06em; }
@@ -136,7 +149,7 @@ main > h1 {
 .legend { margin-top: 6px !important; color: var(--ink-2); font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
 .lg { display: inline-block; width: 12px; height: 10px; margin-left: 10px; }
 .lg:first-child { margin-left: 0; }
-.lg-hi { background: var(--spot); }
+.lg-hi { background: var(--hatch); outline: 1px solid var(--ink); outline-offset: 0; }
 .lg-gap { width: auto; height: auto; color: var(--ink); font-size: 14px; line-height: 1; }
 .lg-in { background: var(--ink-3); }
 .lg-q { background: repeating-linear-gradient(135deg, var(--ink) 0 1.5px, transparent 1.5px 4px); outline: 1px solid var(--ink); outline-offset: -1px; }
@@ -147,14 +160,17 @@ main > h1 {
 /* ---------- health ---------- */
 
 .health { margin-top: 56px; }
-/* the printer's ornament between the answer and the pipeline: rule, lozenge, rule */
+/* the printer's ornament between the answer and the pipeline: swelled rules either side of
+   a hedera (the ivy-leaf fleuron), with hairlines running out to the margins */
 .health::before {
-  content: ""; display: block; height: 14px; margin-bottom: 30px;
+  content: ""; display: block; height: 16px; margin-bottom: 30px;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='14' viewBox='0 0 64 14'%3E%3Cpath d='M32 1 L38 7 L32 13 L26 7Z' fill='%231f1b16'/%3E%3Cpath d='M32 4.5 L34.5 7 L32 9.5 L29.5 7Z' fill='%23f3ecdc'/%3E%3Ccircle cx='17' cy='7' r='1.6' fill='%231f1b16'/%3E%3Ccircle cx='47' cy='7' r='1.6' fill='%231f1b16'/%3E%3C/svg%3E") center / 64px 14px no-repeat,
-    linear-gradient(var(--ink), var(--ink)) left center / calc(50% - 40px) 1px no-repeat,
-    linear-gradient(var(--ink), var(--ink)) right center / calc(50% - 40px) 1px no-repeat;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='16' viewBox='0 0 240 16'%3E%3Cpath d='M6 8Q55 5.4 104 8Q55 10.6 6 8ZM136 8Q185 5.4 234 8Q185 10.6 136 8Z' fill='%231f1b16'/%3E%3Cg transform='translate(121 8) scale(.64)'%3E%3Cpath d='M-5 0C-10 4-7 11 0 9C5 7.5 8 3 13 0C8-3 5-7.5 0-9C-7-11-10-4-5 0Z' fill='%231f1b16'/%3E%3Cpath d='M-5 0C-10 0-13-4-11-7C-9.5-9-6.5-8-7.5-5.5' fill='none' stroke='%231f1b16' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M-3 0L8 0' stroke='%23ede0a6' stroke-width='1.1'/%3E%3C/g%3E%3C/svg%3E") center / 240px 16px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left center / calc(50% - 117px) 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) right center / calc(50% - 117px) 1px no-repeat;
 }
+/* the section head under a thick-and-thin rule */
+.health > .h { padding-top: 10px; border-top: 3px solid var(--ink); box-shadow: inset 0 3px 0 var(--stock), inset 0 4px 0 var(--ink); }
 .row { margin-top: 36px; }
 .row-status { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px 40px; align-items: start; }
 .row-runs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 32px 44px; align-items: start; }
@@ -193,9 +209,26 @@ main > h1 {
 /* calendar */
 .cal-box { position: relative; min-width: 0; }
 .cal-scroll { overflow-x: auto; margin-top: 12px; padding: 4px 2px 8px 2px; }
-.cal { position: relative; display: grid; grid-template-rows: 18px repeat(7, var(--cell)); grid-auto-columns: var(--cell); column-gap: var(--gap); row-gap: var(--gap); width: max-content; padding-left: 34px; }
-.cal .mlabel { grid-row: 1; font-size: 13px; line-height: 16px; color: var(--ink); font-variant: small-caps; letter-spacing: 0.06em; white-space: nowrap; border-left: 1px solid var(--ink); padding-left: 3px; }
-.cal .wlabel { position: absolute; left: 0; font-size: 12px; font-style: italic; color: var(--ink-2); line-height: var(--cell); }
+.cal {
+  /* an almanac month table: month heads, then the Monday of each week in numerals, then one
+     row per weekday under small-capital heads, the weeks parted by hairlines */
+  --heads: calc(31px + 2 * var(--gap));
+  position: relative; display: grid; grid-template-rows: 16px 15px repeat(7, var(--cell)); grid-auto-columns: var(--cell);
+  --col1: calc(var(--cell) + var(--gap));
+  column-gap: var(--gap); row-gap: var(--gap); width: max-content;
+  background:
+    linear-gradient(var(--ink), var(--ink)) 0 calc(var(--heads) - 2px) / 100% 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 0 calc(var(--heads) + 7 * (var(--cell) + var(--gap)) - 1px) / 100% 1px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 calc(var(--cell) + 1px), var(--ink-3) calc(var(--cell) + 1px) calc(var(--cell) + 2px), transparent calc(var(--cell) + 2px) calc(var(--cell) + var(--gap)))
+      var(--col1) var(--heads) / calc(100% - var(--col1)) calc(7 * (var(--cell) + var(--gap)) - var(--gap)) no-repeat;
+}
+.cal .mlabel { grid-row: 1; font-size: 13px; line-height: 16px; color: var(--ink); font-variant: small-caps; letter-spacing: 0.08em; white-space: nowrap; border-left: 1px solid var(--ink); padding-left: 3px; }
+.cal .dnum { grid-row: 2; font-size: 12px; line-height: 15px; color: var(--ink-2); text-align: center; white-space: nowrap; font-variant-numeric: oldstyle-nums; }
+.cal .wlabel {
+  grid-column: 1; position: sticky; left: 0; z-index: 1; text-align: center;
+  font-size: 15px; font-variant: small-caps; letter-spacing: 0.04em; color: var(--ink); line-height: var(--cell);
+  background: var(--stock); border-right: 1px solid var(--ink); box-shadow: var(--gap) 0 0 var(--stock);
+}
 .cell {
   appearance: none; font: inherit; padding: 0; margin: 0; color: var(--ink);
   width: var(--cell); height: var(--cell); border-radius: 0; cursor: pointer;
@@ -295,3 +328,6 @@ main > h1 {
 .preview { display: block; width: 100%; height: 100%; }
 html.kit-preview .almanac.almanac { border-width: 2px; padding: 0; outline-offset: -6px; background-color: var(--stock); }
 html.kit-preview #full { display: none; }
+.almanac > svg.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+/* the blank corner over the weekday heads, so scrolled weeks' numerals pass beneath it */
+.cal .wcorner { grid-column: 1; grid-row: 1 / span 2; position: sticky; left: 0; z-index: 1; background: var(--stock); box-shadow: var(--gap) 0 0 var(--stock); }
