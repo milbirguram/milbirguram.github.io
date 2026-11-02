@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cut a flatworm made of over a thousand cells and watch each piece rebuild a whole body from rules each cell follows. Then rewrite the cells’ voltage memory and grow a two-headed worm.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Blastema — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/blastema/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Blastema</h1>
+  <p class="kit-lede">A flatworm of over a thousand cells, each following the same few rules and reading only its six neighbours. Cut it, and each piece rebuilds a whole, smaller worm. Touch it with the rewrite brush, then cut again: the same cells with the same rules grow a second head, because the body’s target is held in the cells’ shared memory, not in a stored picture. This is a toy model inspired by planarian research, not a biological simulation; real regeneration is far more complex and partly unknown.</p>
+
+  <section class="kit-stage kit-wide bl-stage" data-kit-stage aria-label="Flatworm regeneration">
+    <ol class="bl-steps" aria-label="What to try">
+      <li data-step="1">Cut</li>
+      <li data-step="2">Watch</li>
+      <li data-step="3">Rewrite</li>
+      <li data-step="4">Cut again</li>
+    </ol>
+    <p class="bl-caption" id="bl-caption">Drag across the worm to cut it.</p>
+
+    <div class="bl-view" id="bl-view">
+      <canvas class="bl-gl" id="bl-gl" role="img" aria-label="A flatworm made of glowing cells on a dark field" aria-describedby="bl-status"></canvas>
+      <canvas class="bl-ui" id="bl-ui" tabindex="0" role="application" aria-label="Worm. Drag across it to cut. With the keyboard, the arrow keys move a guide line and Enter cuts or paints along it." aria-describedby="bl-status bl-caption"></canvas>
+      <p class="bl-legend" id="bl-legend" hidden></p>
+    </div>
+
+    <div class="bl-bar">
+      <div class="bl-group" role="group" aria-label="Tool">
+        <button type="button" class="kit-button" id="bl-knife" aria-pressed="true">Knife</button>
+        <button type="button" class="kit-button" id="bl-brush" aria-pressed="false">Rewrite brush</button>
+      </div>
+      <div class="bl-group" role="group" aria-label="Field lens">
+        <span class="bl-label" aria-hidden="true">Lens</span>
+        <button type="button" class="kit-button" data-lens="0" aria-pressed="true">Off</button>
+        <button type="button" class="kit-button" data-lens="1" aria-pressed="false">Gradients</button>
+        <button type="button" class="kit-button" data-lens="2" aria-pressed="false">Voltage</button>
+      </div>
+      <div class="bl-group bl-end">
+        <label class="bl-label" for="bl-speed">Speed</label>
+        <select id="bl-speed" class="bl-select">
+          <option value="0">Paused</option>
+          <option value="0.5">½×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+          <option value="4">4×</option>
+        </select>
+        <button type="button" class="kit-button" id="bl-reset">Reset</button>
+      </div>
+    </div>
+    <p class="bl-status" id="bl-status" aria-live="polite">One worm: one head, one tail.</p>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
