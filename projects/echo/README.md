@@ -48,3 +48,4 @@ Two other incidents on Wikipedia’s list did not become case files. Ronnie Hazl
 - MediaWiki, “API:Etiquette”. https://www.mediawiki.org/wiki/API:Etiquette
 - Wikipedia, “Help:Citation Style 1”, for the citation template fields. https://en.wikipedia.org/wiki/Help:Citation_Style_1
 - Wikipedia text shown on the page is from the linked articles and revisions, under CC BY-SA 4.0. https://creativecommons.org/licenses/by-sa/4.0/
+- Type: Newsreader, by Production Type for Google Fonts, under the SIL Open Font License 1.1 (licence in `fonts/OFL.txt`). Self-hosted Latin subsets from Fontsource 5.2.10: the variable roman (weights 200–800) and the 400 italic. https://github.com/productiontype/Newsreader

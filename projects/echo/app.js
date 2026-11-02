@@ -10,9 +10,11 @@
   var MON = MONTHS.map(function (m) { return m.slice(0, 3); });
 
   // ------------------------------------------------------------------ timeline drawing
-  var INK = '#252821', TEXT = '#343630', MUTED = '#686d62', LINE = '#dedfd7', BG = '#faf9f6';
-  var WIKI = '#4d6a50', SOURCE = '#9a4b2f', LOOP = '#252821';
-  var VERDICT_COLOUR = { echo: '#9a4b2f', first: '#4d6a50', later: '#7d5d10', unknown: '#686d62' };
+  // The archive's inks: newsprint, black, grey ink, encyclopedia blue for citations, red for the loop.
+  var PAPER = '#f1ede4', SLIP = '#f8f5ee', INK = '#1c1a17', MUTED = '#57524a', RULE = '#b9b09e';
+  var CITE = '#3366cc', LOOP = '#b3261e';
+  var VERDICT_COLOUR = { echo: LOOP, first: INK, later: INK, unknown: MUTED };
+  var SERIF = '"Newsreader", Georgia, "Times New Roman", serif';
 
   function isoLabel(ts) { var d = new Date(ts); return d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); }
   function monthYear(day) { var d = new Date(day * 86400000); return MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); }
@@ -113,6 +115,9 @@
     return steps;
   }
 
+  // The timeline is drawn as a dated clippings file: each event is a scissor-cut slip with its
+  // date in tabular figures. The source lane is screened in halftone (print); the Wikipedia lane
+  // is plain. Citations are encyclopedia blue, and the loop, when the dates close one, is red.
   function drawTimeline(canvas, d, t, opts) {
     opts = opts || {};
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -122,7 +127,7 @@
     var ctx = canvas.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = BG;
+    ctx.fillStyle = PAPER;
     ctx.fillRect(0, 0, W, H);
     var compact = W < 560;
     var steps = d._steps || (d._steps = schedule(d));
@@ -131,11 +136,12 @@
     var fade = t > 0.94 ? 1 - clamp((t - 0.94) / 0.06) : 1;
     ctx.globalAlpha = fade;
 
-    var fs = compact ? 12 : 13, font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-    var top = opts.title ? (compact ? 34 : 40) : 14;
-    var padX = compact ? 16 : 28;
-    var axisY = H - (compact ? 20 : 26);
-    var wikiY = top + (axisY - top) * 0.36, srcY = top + (axisY - top) * 0.78;
+    var fs = compact ? 12.5 : 14;
+    var top = opts.title ? (compact ? 40 : 46) : 16;
+    var padX = compact ? 14 : 28;
+    var axisY = H - (compact ? 22 : 28);
+    var wikiY = top + (axisY - top) * 0.36, srcY = top + (axisY - top) * 0.7;
+    var slipH = fs + 11;
 
     // Day scale with padding.
     var days = [d.claim.day];
@@ -144,45 +150,59 @@
     var lo = Math.min.apply(null, days), hi = Math.max.apply(null, days);
     var span = Math.max(hi - lo, 60);
     lo -= span * 0.12; hi += span * 0.12;
-    var x0 = padX + (compact ? 0 : 74), x1 = W - padX;
+    var x0 = padX + (compact ? 0 : 84), x1 = W - padX;
     function X(day) { return x0 + (day - lo) / (hi - lo) * (x1 - x0); }
 
-    // On a small card the verdict takes the title's place when it arrives.
+    // The card's headline, under the nameplate rules. On a small card the verdict stamp takes its place.
+    if (opts.title) {
+      ctx.fillStyle = INK;
+      ctx.fillRect(0, 0, W, 3);
+      ctx.fillRect(0, 5, W, 1);
+      ctx.fillStyle = RULE;
+      ctx.fillRect(padX, top - 9, W - padX * 2, 1);
+    }
     var titleAlpha = compact ? 1 - (P.verdict || 0) : 1;
     if (opts.title && titleAlpha > 0) {
       ctx.globalAlpha = fade * titleAlpha;
       ctx.fillStyle = INK;
-      ctx.font = '500 ' + (compact ? 13 : 15) + 'px ' + font;
-      ctx.textBaseline = 'top';
+      // Set the headline as large as fits, down to 12.5px, before cutting it.
+      var hs = compact ? 15 : 17;
+      ctx.font = '700 ' + hs + 'px ' + SERIF;
+      while (hs > 12.5 && tw(ctx, opts.title) > W - padX * 2) { hs -= 0.5; ctx.font = '700 ' + hs + 'px ' + SERIF; }
+      ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'left';
-      ctx.fillText(fitText(ctx, opts.title, W - padX * 2), padX, compact ? 12 : 14);
+      tt(ctx, fitText(ctx, opts.title, W - padX * 2), padX, compact ? 26 : 30);
       ctx.globalAlpha = fade;
     }
 
-    // Lanes and axis.
+    // Lanes and axis. The source lane is a strip of halftone: print.
     var lanes = P.lanes || 0;
     ctx.globalAlpha = fade * lanes;
+    var bandH = compact ? 20 : 24;
+    ctx.fillStyle = dots(ctx, dpr);
+    ctx.fillRect(x0, srcY - bandH / 2, x1 - x0, bandH);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = LINE;
-    [wikiY, srcY].forEach(function (y) { ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); });
-    ctx.strokeStyle = '#b5bdaf';
-    ctx.beginPath(); ctx.moveTo(x0, axisY); ctx.lineTo(x1, axisY); ctx.stroke();
-    ctx.font = (compact ? 11 : 12) + 'px ' + font;
+    ctx.strokeStyle = RULE;
+    ctx.beginPath(); ctx.moveTo(x0, wikiY); ctx.lineTo(x1, wikiY); ctx.stroke();
+    ctx.strokeStyle = INK;
+    ctx.beginPath(); ctx.moveTo(x0, axisY + 0.5); ctx.lineTo(x1, axisY + 0.5); ctx.stroke();
+    ctx.font = (compact ? 11.5 : 13) + 'px ' + SERIF;
     ctx.fillStyle = MUTED;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     var ticks = niceTicks(lo, hi, compact ? 4 : 7), lastX = -1e9;
     ticks.forEach(function (tk) {
       var x = X(tk.day);
-      ctx.beginPath(); ctx.moveTo(x, axisY); ctx.lineTo(x, axisY + 4); ctx.stroke();
-      if (x - lastX > 34) { ctx.fillText(tk.label, x, axisY + 6); lastX = x; }
+      ctx.beginPath(); ctx.moveTo(x, axisY); ctx.lineTo(x, axisY + 5); ctx.stroke();
+      if (x - lastX > 36) { tt(ctx, tk.label, x, axisY + 7); lastX = x; }
     });
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.font = '500 ' + (compact ? 11 : 12) + 'px ' + font;
     if (!compact) {
-      ctx.fillStyle = WIKI; ctx.fillText('Wikipedia', padX, wikiY);
-      ctx.fillStyle = SOURCE; ctx.fillText('Source', padX, srcY);
+      ctx.font = '700 12px ' + SERIF;
+      ctx.fillStyle = INK;
+      spaced(ctx, 'WIKIPEDIA', padX, wikiY);
+      spaced(ctx, 'SOURCE', padX, srcY);
     }
     ctx.globalAlpha = fade;
 
@@ -190,27 +210,27 @@
     var cursorDay = null;
     steps.forEach(function (s) { if (s.id === 'sweep' && t >= s.a) cursorDay = s.from + (s.to - s.from) * ease((t - s.a) / (s.b - s.a)); });
     var claimX = X(d.claim.day);
-    // Wikipedia lane: the claim lives on from the moment it appears.
+    // Wikipedia lane: the claim stays in print from the moment it appears.
     if (P.claim > 0) {
       var endDay = cursorDay != null ? Math.max(cursorDay, d.claim.day) : d.claim.day;
       if (P.verdict > 0 || (P.loop || 0) > 0) endDay = Math.max(endDay, d.cite ? d.cite.day : endDay, d.source ? d.source.hi : endDay);
       var endX = Math.min(X(endDay), x1);
-      ctx.strokeStyle = WIKI;
-      ctx.lineWidth = 3;
-      ctx.globalAlpha = fade * 0.35;
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 2.5;
+      ctx.globalAlpha = fade * 0.8;
       ctx.beginPath(); ctx.moveTo(claimX, wikiY); ctx.lineTo(endX, wikiY); ctx.stroke();
       ctx.globalAlpha = fade;
     }
     if (cursorDay != null && t < (stepStart(steps, 'loop') || stepStart(steps, 'verdict') || 1)) {
       var cx = X(cursorDay);
-      ctx.strokeStyle = '#b5bdaf';
+      ctx.strokeStyle = MUTED;
       ctx.lineWidth = 1;
       ctx.setLineDash([2, 3]);
-      ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx, axisY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx, top - 4); ctx.lineTo(cx, axisY); ctx.stroke();
       ctx.setLineDash([]);
     }
 
-    // Source: a diamond for a day, a band for a coarser date.
+    // Source: a cut column of print for a dated day; a screened band for a coarser date.
     var sx = null;
     if (d.source && P.source > 0) {
       var a = P.source;
@@ -218,60 +238,55 @@
       var sx2 = X(d.source.hi);
       ctx.globalAlpha = fade * a;
       if (sx2 - sx > 6) {
-        ctx.fillStyle = 'rgba(154, 75, 47, 0.16)';
-        roundRect(ctx, sx, srcY - 7, sx2 - sx, 14, 4); ctx.fill();
-        ctx.strokeStyle = SOURCE; ctx.lineWidth = 1.5;
-        roundRect(ctx, sx, srcY - 7, sx2 - sx, 14, 4); ctx.stroke();
+        ctx.fillStyle = SLIP; ctx.fillRect(sx, srcY - 8, sx2 - sx, 16);
+        ctx.fillStyle = dots(ctx, dpr, true); ctx.fillRect(sx, srcY - 8, sx2 - sx, 16);
+        ctx.strokeStyle = INK; ctx.lineWidth = 1.25; ctx.strokeRect(sx, srcY - 8, sx2 - sx, 16);
         sx = (sx + sx2) / 2;
       } else {
-        diamond(ctx, sx, srcY, 7 * (0.6 + 0.4 * a), SOURCE);
+        column(ctx, sx, srcY, 0.6 + 0.4 * a);
       }
-      ctx.fillStyle = SOURCE;
-      ctx.font = '500 ' + fs + 'px ' + font;
-      ctx.textBaseline = 'top';
-      placeLabel(ctx, (d.source.name || 'Source') + ' · ' + d.source.label, sx, srcY + 12, x0, x1);
+      ctx.font = '600 ' + fs + 'px ' + SERIF;
+      var stext = (d.source.name || 'Source') + ' · ' + d.source.label;
+      var sw = tw(ctx, stext);
+      var slx = Math.max(x0 - 2, Math.min(sx - sw / 2, x1 - sw));
+      clipping(ctx, stext, slx, srcY + 13 + slipH / 2, fs, INK);
       ctx.globalAlpha = fade;
     }
 
-    // Claim: a circle on the Wikipedia lane, labelled just right of it.
-    ctx.font = '500 ' + fs + 'px ' + font;
+    // Claim: an ink dot on the Wikipedia lane, its clipping just above and to the right.
+    ctx.font = '600 ' + fs + 'px ' + SERIF;
     var claimText = (compact ? 'On Wikipedia · ' : 'Claim first seen · ') + d.claim.label;
-    var claimLabelX = Math.min(claimX + 12, W - padX - ctx.measureText(claimText).width);
-    var claimLabelEnd = claimLabelX + ctx.measureText(claimText).width;
+    var claimW = tw(ctx, claimText);
+    var claimLabelX = Math.min(claimX + 12, W - padX - claimW);
+    var claimLabelEnd = claimLabelX + claimW;
     if (P.claim > 0) {
       ctx.globalAlpha = fade * P.claim;
-      circle(ctx, claimX, wikiY, 7 * (0.6 + 0.4 * P.claim), WIKI);
-      ctx.fillStyle = WIKI;
-      ctx.textBaseline = 'bottom';
-      ctx.textAlign = 'left';
-      ctx.fillText(claimText, claimLabelX, wikiY - 10);
+      circle(ctx, claimX, wikiY, 6.5 * (0.6 + 0.4 * P.claim), INK);
+      clipping(ctx, claimText, claimLabelX, wikiY - 11 - slipH / 2, fs, INK);
       ctx.globalAlpha = fade;
     }
 
-    // Citation: a square on the Wikipedia lane, labelled beside it where there is room.
+    // Citation: a blue citation bracket on the Wikipedia lane, its clipping beside it where there is room.
     var citeX = null;
     if (d.cite && !d.cite.same && P.cite > 0) {
       citeX = X(d.cite.day);
       ctx.globalAlpha = fade * P.cite;
-      square(ctx, citeX, wikiY, 6.5 * (0.6 + 0.4 * P.cite), INK);
-      ctx.fillStyle = INK;
-      ctx.font = '500 ' + fs + 'px ' + font;
-      ctx.textAlign = 'left';
-      var ct = 'Cited · ' + d.cite.label, cw = ctx.measureText(ct).width;
-      var cxl = citeX + 12, cy = wikiY - 10;
-      if (cxl + cw > W - padX) cxl = citeX - 12 - cw;
-      if (cxl < claimLabelEnd + 8 && cxl + cw > claimLabelX - 8) { cxl = Math.max(x0, citeX - 12 - cw); cy = wikiY + 12 + fs; }
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(ct, cxl, cy);
+      bracket(ctx, citeX, wikiY, 6.5 * (0.6 + 0.4 * P.cite), CITE);
+      ctx.font = '600 ' + fs + 'px ' + SERIF;
+      var ct = 'Cited · ' + d.cite.label, cw = tw(ctx, ct);
+      var cxl = citeX + 14, cy = wikiY - 11 - slipH / 2;
+      if (cxl + cw > W - padX) cxl = citeX - 14 - cw;
+      if (cxl < claimLabelEnd + 14 && cxl + cw > claimLabelX - 14) { cxl = Math.max(x0, citeX - 14 - cw); cy = wikiY + 13 + slipH / 2; }
+      clipping(ctx, ct, cxl, cy, fs, CITE);
       ctx.globalAlpha = fade;
     } else if (d.cite && d.cite.same) citeX = claimX;
 
-    // Arrows: the possible copy (dashed), and the citation pointing back.
-    if (d.source && sx != null && P.copy > 0) arrow(ctx, claimX, wikiY + 9, sx, srcY - 10, P.copy, SOURCE, true, compact ? null : 'repeats it?', fs, font, W - padX);
-    if (d.source && sx != null && citeX != null && P.citeArrow > 0) arrow(ctx, sx, srcY - 10, citeX, wikiY + 9, P.citeArrow, INK, false, compact ? null : 'cited for it', fs, font, W - padX);
+    // Arrows: the possible copy (dashed grey ink), and the citation pointing back (blue).
+    if (d.source && sx != null && P.copy > 0) arrow(ctx, claimX, wikiY + 9, sx, srcY - 10, P.copy, MUTED, true, compact ? null : 'repeats it?', fs, W - padX);
+    if (d.source && sx != null && citeX != null && P.citeArrow > 0) arrow(ctx, sx, srcY - 10, citeX, wikiY + 9, P.citeArrow, CITE, false, compact ? null : 'cited for it', fs, W - padX);
     if (d.code === 'echo' && P.loop > 0 && citeX != null) {
       // Close the loop: from the citation back over the top to the claim it now supports.
-      var yTop = Math.max(top + 2, wikiY - 46), r = 10, yEnd = wikiY - 10;
+      var yTop = Math.max(top + 2, wikiY - 11 - slipH - 10), r = 10, yEnd = wikiY - 10;
       var path = [];
       function seg(x, y) { path.push([x, y]); }
       seg(citeX, yEnd);
@@ -283,57 +298,124 @@
       var lens = [0];
       for (var i = 1; i < path.length; i++) lens.push(lens[i - 1] + Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]));
       var want = lens[lens.length - 1] * clamp(P.loop);
-      ctx.strokeStyle = LOOP; ctx.lineWidth = 1.75;
+      ctx.strokeStyle = LOOP; ctx.lineWidth = compact ? 2 : 2.25; ctx.lineJoin = 'round';
       ctx.beginPath(); ctx.moveTo(path[0][0], path[0][1]);
-
       for (var k = 1; k < path.length; k++) {
         if (lens[k] <= want) { ctx.lineTo(path[k][0], path[k][1]); continue; }
         var f = (want - lens[k - 1]) / Math.max(1e-6, lens[k] - lens[k - 1]);
-        var px2 = path[k - 1][0] + (path[k][0] - path[k - 1][0]) * f, py2 = path[k - 1][1] + (path[k][1] - path[k - 1][1]) * f;
-        ctx.lineTo(px2, py2);
+        ctx.lineTo(path[k - 1][0] + (path[k][0] - path[k - 1][0]) * f, path[k - 1][1] + (path[k][1] - path[k - 1][1]) * f);
         break;
       }
       ctx.stroke();
       if (P.loop > 0.98) head(ctx, path[path.length - 2][0], path[path.length - 2][1], path[path.length - 1][0], path[path.length - 1][1] + 1, LOOP);
     }
 
-    // Verdict.
+    // Verdict: a rubber stamp on the file.
     if (P.verdict > 0) {
       ctx.globalAlpha = fade * P.verdict;
-      ctx.font = '500 ' + (compact ? 13 : 14) + 'px ' + font;
+      var col = VERDICT_COLOUR[d.code] || MUTED;
+      var vfs = compact ? 13 : 14.5;
+      ctx.font = '700 ' + vfs + 'px ' + SERIF;
       var vtext = d.verdict + (d.claim.messy ? ' (messy history)' : '') + (compact && opts.title && d.title ? ' · ' + d.title : '');
-      var vw = ctx.measureText(vtext).width;
-      var vy = opts.title ? (compact ? 12 : 14) : top;
-      var vh = compact ? 12 : 14;
-      var vx = compact && opts.title ? padX + 18 + vw : W - padX;
-      ctx.fillStyle = BG;
-      ctx.fillRect(vx - vw - 26, vy - 3, vw + 30, vh + 8);
-      ctx.fillStyle = VERDICT_COLOUR[d.code] || MUTED;
-      verdictIcon(ctx, d.code, vx - vw - 12, vy + vh / 2, VERDICT_COLOUR[d.code] || MUTED);
-      ctx.fillStyle = VERDICT_COLOUR[d.code] || MUTED;
-      ctx.font = '500 ' + (compact ? 13 : 14) + 'px ' + font;
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'top';
-      ctx.fillText(vtext, vx, vy);
-      ctx.textAlign = 'left';
+      vtext = vtext.toUpperCase();
+      var setSp = 'letterSpacing' in ctx;
+      if (setSp) ctx.letterSpacing = '0.06em';
+      var vw = tw(ctx, vtext), iconW = 20, pad = 8, bw = vw + iconW + pad * 2, bh = vfs + 12;
+      var bx = compact && opts.title ? padX : W - padX - bw;
+      var by = opts.title ? (compact ? 9 : 11) : top - 6;
+      ctx.save();
+      ctx.translate(bx + bw / 2, by + bh / 2);
+      ctx.rotate(-0.02);
+      ctx.fillStyle = SLIP; ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+      ctx.strokeStyle = col; ctx.lineWidth = 1.75; ctx.strokeRect(-bw / 2 + 1, -bh / 2 + 1, bw - 2, bh - 2);
+      verdictIcon(ctx, d.code, -bw / 2 + pad + 6, 0, col);
+      ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      tt(ctx, vtext, -bw / 2 + pad + iconW, 1);
+      ctx.restore();
+      if (setSp) ctx.letterSpacing = '0px';
     }
     ctx.globalAlpha = 1;
   }
   function stepStart(steps, id) { var s = steps.filter(function (x) { return x.id === id; })[0]; return s ? s.a : null; }
-  function fitText(ctx, s, w) { if (ctx.measureText(s).width <= w) return s; while (s.length > 4 && ctx.measureText(s + '…').width > w) s = s.slice(0, -1); return s + '…'; }
-  function placeLabel(ctx, text, x, y, minX, maxX, bias) {
-    var w = ctx.measureText(text).width, lx;
-    if (bias === 'left-ish') lx = x - 10;
-    else if (bias === 'right-ish') lx = x - w + 10;
-    else lx = x - w / 2;
-    lx = Math.max(minX - 4, Math.min(lx, maxX - w + 4));
-    ctx.textAlign = 'left';
-    ctx.fillText(text, lx, y);
+
+  // Tabular figures on canvas: digits sit in equal cells, so dates line up like a printed index.
+  function runs(s) { return String(s).match(/\d|[^\d]+/g) || []; }
+  function tw(ctx, s) {
+    var dw = ctx.measureText('0').width, w = 0;
+    runs(s).forEach(function (r) { w += /\d/.test(r) ? dw : ctx.measureText(r).width; });
+    return w;
   }
-  function circle(ctx, x, y, r, c) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = BG; ctx.lineWidth = 2; ctx.stroke(); }
-  function square(ctx, x, y, r, c) { ctx.fillStyle = c; ctx.fillRect(x - r, y - r, r * 2, r * 2); ctx.strokeStyle = BG; ctx.lineWidth = 2; ctx.strokeRect(x - r, y - r, r * 2, r * 2); }
-  function diamond(ctx, x, y, r, c) { ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(x, y - r * 1.25); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r * 1.25); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill(); }
-  function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function tt(ctx, s, x, y) {
+    var w = tw(ctx, s), al = ctx.textAlign, dw = ctx.measureText('0').width;
+    var lx = al === 'center' ? x - w / 2 : (al === 'right' || al === 'end') ? x - w : x;
+    ctx.textAlign = 'left';
+    runs(s).forEach(function (r) {
+      if (/\d/.test(r)) { ctx.fillText(r, lx + (dw - ctx.measureText(r).width) / 2, y); lx += dw; }
+      else { ctx.fillText(r, lx, y); lx += ctx.measureText(r).width; }
+    });
+    ctx.textAlign = al;
+  }
+  function spaced(ctx, s, x, y) {
+    if ('letterSpacing' in ctx) { ctx.letterSpacing = '0.12em'; ctx.fillText(s, x, y); ctx.letterSpacing = '0px'; }
+    else ctx.fillText(s, x, y);
+  }
+  function fitText(ctx, s, w) { if (tw(ctx, s) <= w) return s; while (s.length > 4 && tw(ctx, s + '…') > w) s = s.slice(0, -1); return s + '…'; }
+
+  // A halftone screen as a canvas pattern, cached per pixel ratio.
+  var screens = {};
+  function dots(ctx, dpr, dense) {
+    var key = dpr + (dense ? 'd' : 'l');
+    if (screens[key]) return screens[key];
+    var step = dense ? 3.5 : 5, c = document.createElement('canvas'), s = Math.round(step * dpr);
+    c.width = c.height = s;
+    var g = c.getContext('2d');
+    g.fillStyle = dense ? 'rgba(28, 26, 23, 0.55)' : 'rgba(28, 26, 23, 0.2)';
+    g.beginPath(); g.arc(s / 2, s / 2, (dense ? 0.85 : 0.95) * dpr, 0, Math.PI * 2); g.fill();
+    var p = ctx.createPattern(c, 'repeat');
+    if (p.setTransform && window.DOMMatrix) p.setTransform(new DOMMatrix([1 / dpr, 0, 0, 1 / dpr, 0, 0]));
+    screens[key] = p;
+    return p;
+  }
+  // A scissor-cut slip: zigzag top and bottom edges.
+  function slip(ctx, x, y, w, h) {
+    var tooth = 3, n = Math.max(2, Math.round(w / 7)), st = w / n;
+    ctx.beginPath(); ctx.moveTo(x, y + tooth);
+    for (var i = 0; i < n; i++) { ctx.lineTo(x + st * (i + 0.5), y); ctx.lineTo(x + st * (i + 1), y + tooth); }
+    ctx.lineTo(x + w, y + h - tooth);
+    for (var j = n; j > 0; j--) { ctx.lineTo(x + st * (j - 0.5), y + h); ctx.lineTo(x + st * (j - 1), y + h - tooth); }
+    ctx.closePath();
+    ctx.fillStyle = SLIP; ctx.fill();
+    ctx.strokeStyle = RULE; ctx.lineWidth = 0.75; ctx.stroke();
+  }
+  // A clipping: the slip, then its text (left edge lx, vertical centre cy).
+  function clipping(ctx, text, lx, cy, fs, colour) {
+    var w = tw(ctx, text), h = fs + 11;
+    slip(ctx, lx - 6, cy - h / 2, w + 12, h);
+    ctx.fillStyle = colour; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    tt(ctx, text, lx, cy + 0.5);
+  }
+  function circle(ctx, x, y, r, c) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = PAPER; ctx.lineWidth = 2; ctx.stroke(); }
+  // A column of print cut from a page: an ink block with a scissor-cut top.
+  function column(ctx, x, y, s) {
+    var w = 11 * s, h = 15 * s, l = x - w / 2, tp = y - h / 2, n = 3, st = w / n;
+    ctx.beginPath(); ctx.moveTo(l, tp + 2.5);
+    for (var i = 0; i < n; i++) { ctx.lineTo(l + st * (i + 0.5), tp); ctx.lineTo(l + st * (i + 1), tp + 2.5); }
+    ctx.lineTo(l + w, tp + h); ctx.lineTo(l, tp + h); ctx.closePath();
+    ctx.fillStyle = INK; ctx.fill();
+    ctx.fillStyle = SLIP;
+    for (var k = 0; k < 3; k++) ctx.fillRect(l + 2, tp + 5 + k * 3.2 * s, w - 4, 1);
+  }
+  // A citation marker: square brackets around a point, in encyclopedia blue.
+  function bracket(ctx, x, y, r, c) {
+    var h = r * 1.25, w = r * 0.95, tk = 3;
+    ctx.fillStyle = PAPER; ctx.fillRect(x - w - 2, y - h - 2, w * 2 + 4, h * 2 + 4);
+    ctx.strokeStyle = c; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - w + tk, y - h); ctx.lineTo(x - w, y - h); ctx.lineTo(x - w, y + h); ctx.lineTo(x - w + tk, y + h);
+    ctx.moveTo(x + w - tk, y - h); ctx.lineTo(x + w, y - h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w - tk, y + h);
+    ctx.stroke();
+    ctx.fillStyle = c; ctx.fillRect(x - 1.75, y - 1.75, 3.5, 3.5);
+  }
   function head(ctx, ax, ay, bx, by, c) {
     var ang = Math.atan2(by - ay, bx - ax), s = 8;
     ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(bx, by);
@@ -341,7 +423,7 @@
     ctx.lineTo(bx - s * Math.cos(ang + 0.45), by - s * Math.sin(ang + 0.45));
     ctx.closePath(); ctx.fill();
   }
-  function arrow(ctx, ax, ay, bx, by, p, colour, dashed, label, fs, font, maxX) {
+  function arrow(ctx, ax, ay, bx, by, p, colour, dashed, label, fs, maxX) {
     // A gentle curve from a to b, bowed to its right-hand side, drawn up to fraction p.
     var dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len, bow = Math.min(40, len * 0.18);
     var mx = (ax + bx) / 2 + nx * bow, my = (ay + by) / 2 + ny * bow;
@@ -357,21 +439,23 @@
     if (p > 0.98) head(ctx, px, py, qx, qy, colour);
     if (label && p > 0.6) {
       var hx = 0.25 * ax + 0.5 * mx + 0.25 * bx, hy = 0.25 * ay + 0.5 * my + 0.25 * by;
-      ctx.font = 'italic ' + (fs - 1) + 'px ' + font; ctx.textBaseline = 'middle';
+      ctx.font = 'italic 400 ' + fs + 'px ' + SERIF; ctx.textBaseline = 'middle';
       var w = ctx.measureText(label).width;
       var lx = nx >= 0 ? hx + 8 : hx - 8 - w;
       if (maxX) lx = Math.min(lx, maxX - w);
-      ctx.fillStyle = BG; ctx.fillRect(lx - 3, hy - fs / 2 - 1, w + 6, fs + 2);
+      ctx.fillStyle = PAPER; ctx.fillRect(lx - 3, hy - fs / 2 - 1, w + 6, fs + 3);
       ctx.fillStyle = colour; ctx.textAlign = 'left';
       ctx.fillText(label, lx, hy);
     }
   }
   function verdictIcon(ctx, code, x, y, c) {
-    ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineWidth = 1.75;
+    ctx.save();
+    ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineWidth = 2;
     if (code === 'echo') { ctx.beginPath(); ctx.arc(x, y, 5, 0.3, Math.PI * 1.85); ctx.stroke(); head(ctx, x + 4, y - 5.5, x + 5, y - 1.5, c); }
     else if (code === 'first') { ctx.beginPath(); ctx.moveTo(x - 5, y); ctx.lineTo(x - 1, y + 4); ctx.lineTo(x + 5, y - 4); ctx.stroke(); }
     else if (code === 'later') { ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y - 3); ctx.lineTo(x, y); ctx.lineTo(x + 2.5, y + 1.5); ctx.stroke(); }
-    else { ctx.font = '600 13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', x, y); ctx.textAlign = 'right'; ctx.textBaseline = 'top'; }
+    else { ctx.font = '700 15px ' + SERIF; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', x, y + 1); }
+    ctx.restore();
   }
 
   function describe(d) {
@@ -414,6 +498,11 @@
     if ('ResizeObserver' in window) new ResizeObserver(function () { fn(); }).observe(el);
     else window.addEventListener('resize', fn);
   }
+  // The canvas sets its type in Newsreader; once the self-hosted face is ready, draw again.
+  function whenType(fn) {
+    if (!document.fonts || !document.fonts.load) return;
+    Promise.all([document.fonts.load('700 15px "Newsreader"'), document.fonts.load('italic 400 14px "Newsreader"')]).then(fn, function () {});
+  }
 
   // ------------------------------------------------------------------ preview mode
   if (Kit.preview) { startPreview(); return; }
@@ -429,6 +518,7 @@
     canvas.setAttribute('aria-label', describe(d));
     player.t = 0.9; player.draw();
     watchSize(canvas, function () { if (!player.raf) player.draw(); });
+    whenType(function () { if (!player.raf) player.draw(); });
     Kit.onPlay(function (on) {
       if (on) { player.play(); }
       else { player.stop(); player.t = 0.9; player.draw(); }
@@ -454,6 +544,7 @@
   var state = { target: null, doc: null, sentence: null, busy: false };
 
   watchSize(canvas, function () { if (!player.raf) player.draw(); });
+  whenType(function () { if (!player.raf) player.draw(); });
 
   function setStatus(msg, isError) { statusEl.textContent = msg || ''; statusEl.classList.toggle('is-error', !!isError); }
   function setBusy(b) {
