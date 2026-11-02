@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Scrub through twenty-one assessment rolls (2006–2026) of City of Vancouver property and see where the median value of land and of buildings moved, by local area, before and after inflation.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Plat — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/plat/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Plat</h1>
+  <p class="kit-lede">Twenty-one assessment rolls (2006–2026) of Vancouver property by local area. Move through the years to see where the median value of land and of buildings rose, before and after inflation, and open any area’s record. These are BC Assessment’s estimates, not sale prices, and the map describes change without explaining it. Contains information licensed under the Open Government Licence – Vancouver. Adapted from Statistics Canada, Table 18-10-0005-01 (2005–2025); this does not constitute an endorsement by Statistics Canada of this product.</p>
+
+  <section class="kit-stage kit-wide pl-stage" data-kit-stage aria-label="Map of assessed values by local area">
+    <div class="pl-sheet">
+      <div class="pl-mapcol">
+        <figure class="pl-map" id="pl-map">
+          <div class="pl-cartouche"><span class="pl-cartouche-t">Plat of the City of Vancouver</span><span class="pl-cartouche-s">showing the median assessed value in each of its 22 local areas</span></div>
+          <svg id="pl-svg" role="img" aria-labelledby="pl-map-desc" focusable="false"></svg>
+          <p class="pl-reading" id="pl-map-desc" aria-live="polite"></p>
+          <p class="pl-caveat"><b>Assessed, not sold:</b> BC Assessment’s estimates, not sale prices. <b>Where, not why:</b> nothing here measures a cause. Strata units are kept apart from lots. <a href="#pl-notes-h">What else this map can’t tell you</a></p>
+        </figure>
+      </div>
+
+      <div class="pl-book">
+        <div class="pl-controls" id="pl-controls">
+          <div class="pl-year">
+            <label for="pl-year-input" class="pl-caps">Roll year</label>
+            <div class="pl-year-row">
+              <output id="pl-year-out" for="pl-year-input" class="pl-year-num">2026</output>
+              <span class="pl-year-note" id="pl-year-note"></span>
+            </div>
+            <input type="range" id="pl-year-input" min="2006" max="2026" step="1" value="2026">
+            <div class="pl-ticks" id="pl-ticks" aria-hidden="true"></div>
+            <button type="button" class="pl-key" id="pl-run" aria-pressed="false">Run the years</button>
+          </div>
+
+          <fieldset class="pl-tabs" data-key="measure">
+            <legend class="pl-caps">Value of</legend>
+            <button type="button" data-v="land" aria-pressed="true">Land</button>
+            <button type="button" data-v="building" aria-pressed="false">Building</button>
+            <button type="button" data-v="total" aria-pressed="false">Both</button>
+          </fieldset>
+          <fieldset class="pl-tabs" data-key="basis">
+            <legend class="pl-caps">Dollars</legend>
+            <button type="button" data-v="nominal" aria-pressed="false">As assessed</button>
+            <button type="button" data-v="real" aria-pressed="true" id="pl-real-btn">Real</button>
+          </fieldset>
+          <fieldset class="pl-tabs" data-key="kind">
+            <legend class="pl-caps">Properties</legend>
+            <button type="button" data-v="nonstrata" aria-pressed="true">Lots</button>
+            <button type="button" data-v="strata" aria-pressed="false">Strata units</button>
+          </fieldset>
+          <p class="pl-hint" id="pl-hint"></p>
+        </div>
+
+        <div class="pl-ledger">
+          <h2 class="pl-caps pl-ledger-h" id="pl-ledger-h">Field book</h2>
+          <ol class="pl-rows" id="pl-rows" aria-labelledby="pl-ledger-h"></ol>
+        </div>
+      </div>
+
+      <div class="pl-record" id="pl-record" aria-live="polite">
+        <div class="pl-record-head">
+          <h2 class="pl-record-title" id="pl-record-title">The whole city</h2>
+          <button type="button" class="pl-key pl-small" id="pl-record-city" hidden>Back to the whole city</button>
+        </div>
+        <p class="pl-record-sub" id="pl-record-sub"></p>
+        <div class="pl-multiples" id="pl-multiples"></div>
+      </div>
+
+      <aside class="pl-notes" aria-labelledby="pl-notes-h">
+        <h2 class="pl-caps" id="pl-notes-h">What this map can’t tell you</h2>
+        <ol>
+          <li><b>Assessed is not sold.</b> Each roll is BC Assessment’s estimate of market value on 1 July of the year before. It is not a sale price, and a rise in tax bills is not a rise in value.</li>
+          <li><b>Where, not why.</b> The map shows where medians moved. Nothing here measures migration, rates, zoning or anything else that might explain it.</li>
+          <li><b>Strata kept apart.</b> A strata unit carries its own share of the land under its building. Units are counted one by one and never pooled with lots or added up, so no land is counted twice.</li>
+          <li><b>Lots are not only houses.</b> They include shops, offices and industrial land, which is why Downtown leads. The older rolls do not say which is which.</li>
+          <li><b>Placed by today’s parcels.</b> Properties are put in an area through today’s parcel map. Up to <span id="pl-unplaced">3</span>% of older records match no current parcel; they count in the whole-city figures only.</li>
+          <li><b>Medians move when the mix moves.</b> A new tower of small units can pull an area’s median down without any home losing value.</li>
+          <li><b>Withheld.</b> Areas with fewer than <span id="pl-threshold">10</span> properties in a view are hatched and left blank.</li>
+        </ol>
+      </aside>
+    </div>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

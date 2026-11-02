@@ -1,0 +1,69 @@
+# Install (once, from the repo root, with a token that has the workflow scope): mkdir -p .github/workflows && git mv projects/plat/pipeline/plat.yml .github/workflows/plat.yml && git commit -m "Schedule the Plat pipeline" && git push
+#
+# Plat: once a year, after the new assessment roll and the previous year's annual CPI are
+# published, download the City of Vancouver property tax reports, local areas, parcel points
+# and building permits and the Statistics Canada CPI table into the runner's temp directory
+# (never the repo), rebuild projects/plat/data/plat.json and preview.js, run the checks, and
+# commit the two data files only if they changed. The raw files are discarded with the runner.
+#
+# It was tested with Python 3.14, DuckDB 2.0.0 and numpy 2.5.4; the versions below match.
+
+name: Plat pipeline
+
+on:
+  schedule:
+    - cron: "23 9 20 4 *" # 20 April, 09:23 UTC: the revised roll is in by mid-March, the CPI annual average in January
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: plat-pipeline
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install DuckDB and numpy
+        run: python -m pip install --disable-pip-version-check "duckdb==2.0.0" "numpy==2.5.4"
+
+      - name: Download the raw data (one request at a time, outside the repo)
+        run: python -I projects/plat/pipeline/fetch.py "$RUNNER_TEMP/plat-raw" --refresh
+
+      - name: Build the aggregates
+        run: python -I projects/plat/pipeline/build.py "$RUNNER_TEMP/plat-raw" projects/plat/data
+
+      - name: Check the pipeline against the raw data
+        run: python -I projects/plat/tests/test_pipeline.py "$RUNNER_TEMP/plat-raw"
+
+      - name: Check the model and the published data
+        run: node projects/plat/tests/test_model.js
+
+      # Fails when a new roll arrives and the page's wording (roll count, year span, the
+      # Statistics Canada reference years) has not caught up; edit index.html, then rerun.
+      - name: Check the page's wording against the data
+        run: node projects/plat/tests/test_page.js
+
+      - name: Commit the data if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add projects/plat/data/plat.json projects/plat/data/preview.js
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit -m "Plat: rebuild from the $(date -u +%Y) assessment roll"
+          git pull --rebase
+          git push
