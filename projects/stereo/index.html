@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="One small simulated bike-share city in five synchronised layers: world, log, pipeline, dashboard and model. Break a layer and watch the fault rise, or trace an odd dashboard number down to its cause.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Stereo — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/stereo/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Stereo</h1>
+  <p class="kit-lede">A small simulated bike-share city, seen as five layers at once: what really happened, what got logged, what the pipeline did, what the dashboard shows and what a forecasting model learned. Break one layer and watch the fault rise, or start from an odd number on the dashboard and dig down to its cause. The name is from Wilfrid Sellars, who asked for a stereoscopic view of ‘how things … hang together’. Only a simulation can show the truth beside the data; a real system never gets that line.</p>
+
+  <section class="kit-stage kit-wide st-stage" data-kit-stage aria-label="Stereo: one bike-share city in five layers">
+    <canvas class="st-preview" id="st-preview" hidden role="img" aria-label="Five thin layers of a bike-share city. A dock fault starts in the log layer, rises through the pipeline to the dashboard, and the model’s forecast bends."></canvas>
+
+    <div class="st-app" id="st-app">
+      <div class="st-bar">
+        <div class="st-tabs" role="tablist" aria-label="Mode">
+          <button type="button" role="tab" id="st-tab-forward" aria-selected="true" aria-controls="st-body">Cause → effect</button>
+          <button type="button" role="tab" id="st-tab-detective" aria-selected="false" aria-controls="st-body" tabindex="-1">Detective</button>
+        </div>
+        <label class="st-truth" id="st-truth-wrap"><input type="checkbox" id="st-truth" checked> Show the truth</label>
+      </div>
+
+      <div id="st-body" role="tabpanel" aria-labelledby="st-tab-forward">
+        <p class="st-hint" id="st-hint"></p>
+
+        <div class="st-case" id="st-case" hidden>
+          <div class="st-cases" id="st-cases" role="group" aria-label="Cases"></div>
+          <p class="st-score" id="st-score"></p>
+          <blockquote class="st-ticket" id="st-ticket"></blockquote>
+        </div>
+
+        <label class="st-change-all" id="st-change-all-wrap"><span>Change</span> <select id="st-change-all"></select></label>
+
+        <p class="st-story" id="st-story" aria-live="polite"></p>
+
+        <div class="st-main" id="st-main">
+          <div class="st-col">
+            <div class="st-time" id="st-time">
+              <button type="button" class="kit-button st-play" id="st-play" aria-label="Play the season"><span class="st-play-i" aria-hidden="true"></span><span class="st-play-t">Play</span></button>
+              <div class="st-track">
+                <span class="st-flag" id="st-date" aria-hidden="true">Mon 2 Jun</span>
+                <input type="range" class="st-range" id="st-day" min="0" max="59" step="1" value="0" aria-label="Day of the season">
+              </div>
+            </div>
+            <div class="st-stack" id="st-stack"><canvas class="st-rise" id="st-rise" aria-hidden="true"></canvas></div>
+          </div>
+          <aside class="st-inspector" id="st-inspector" aria-label="Layer details" hidden></aside>
+        </div>
+
+        <form class="st-answer" id="st-answer" hidden>
+          <fieldset class="st-field" id="st-layer-field">
+            <legend>Which layer is at fault?</legend>
+            <div class="st-options" id="st-layer-options"></div>
+          </fieldset>
+          <fieldset class="st-field" id="st-fault-field" hidden>
+            <legend>What happened there?</legend>
+            <div class="st-options" id="st-fault-options"></div>
+          </fieldset>
+          <div class="st-answer-row">
+            <button type="submit" class="kit-button is-primary" id="st-submit" disabled>Name the cause</button>
+            <span class="st-examined" id="st-examined"></span>
+          </div>
+          <div class="st-verdict" id="st-verdict" tabindex="-1" hidden></div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
