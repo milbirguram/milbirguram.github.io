@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Type a sentence and see, word by word, how surprising it was to a language model learned from a few dozen public-domain books, measured in bits.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Bromide — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/bromide/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Bromide</h1>
+  <p class="kit-lede">Type a sentence and see which of your words were predictable and which were surprising, measured in bits: the less guessable a word, the more information it carries. Then rewrite to raise the number. The guesser is a small language model counted from a few dozen English novels and essays of about 1810 to 1920, texts from <a href="https://www.gutenberg.org/">Project Gutenberg</a>. It sees only the two words or punctuation marks before each word, so “predictable” here means predictable to those old books, not to you, and not to today.</p>
+
+  <section class="kit-stage kit-wide bro" data-kit-stage aria-label="Bromide: score a sentence">
+    <div class="bro-app" id="bro-app">
+      <div class="bro-main">
+        <label class="bro-label" for="bro-text">Your sentence</label>
+        <textarea id="bro-text" class="bro-text" rows="3" spellcheck="false" autocomplete="off" autocapitalize="sentences">The sun rose slowly over the hills, and all was quiet.</textarea>
+
+        <div class="bro-shelf" id="bro-shelf">
+          <div class="bro-shelf-row" role="group" aria-labelledby="shelf-tired">
+            <span class="bro-shelf-label" id="shelf-tired">Tired</span>
+            <button type="button" class="bro-chip-btn" data-text="At the end of the day, it was all for the best.">At the end of the day…</button>
+            <button type="button" class="bro-chip-btn" data-text="She was as cold as ice, and her heart was broken.">As cold as ice…</button>
+            <button type="button" class="bro-chip-btn" data-text="It was a dark and stormy night, and the wind blew through the trees.">A dark and stormy night…</button>
+          </div>
+          <div class="bro-shelf-row" role="group" aria-labelledby="shelf-fresh">
+            <span class="bro-shelf-label" id="shelf-fresh">Fresher</span>
+            <button type="button" class="bro-chip-btn" data-text="The kettle ticked as it cooled, like a clock losing its nerve.">The kettle ticked…</button>
+            <button type="button" class="bro-chip-btn" data-text="Morning came in sideways, through the gap under the door.">Morning came in sideways…</button>
+            <button type="button" class="bro-chip-btn" data-text="The hills wore the fog like a borrowed coat.">The hills wore the fog…</button>
+          </div>
+          <div class="bro-shelf-row" role="group" aria-labelledby="shelf-books">
+            <span class="bro-shelf-label" id="shelf-books">In the books</span>
+            <button type="button" class="bro-chip-btn" data-text="It is a truth universally acknowledged, that a single man in possession of a good fortune must be in want of a wife.">A truth universally acknowledged…</button>
+            <button type="button" class="bro-chip-btn" data-text="It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness.">The best of times…</button>
+          </div>
+        </div>
+
+        <div class="bro-status" id="bro-status" role="status">
+          <span id="bro-status-text">Loading the model of the books…</span>
+          <progress id="bro-progress" max="1" value="0" aria-label="Model download"></progress>
+        </div>
+
+        <p class="bro-reading-label" id="reading-label">How surprising each word was to the books</p>
+        <div class="bro-reading" id="bro-reading" role="group" aria-labelledby="reading-label"></div>
+
+        <div class="bro-legend">
+          <div class="bro-legend-scale">
+            <span class="bro-legend-end">expected</span>
+            <span class="bro-legend-wrap" aria-hidden="true">
+              <span class="bro-legend-bar"></span>
+              <span class="bro-legend-ticks"><span style="left:0">0</span><span style="left:33.3%">5</span><span style="left:66.7%">10</span><span style="left:100%">15+ bits</span></span>
+            </span>
+            <span class="bro-legend-end">surprising</span>
+          </div>
+          <p class="bro-legend-note">1 bit is a coin-toss guess; 10 bits, about 1 in 1,000. The number under each word says the same as its colour.</p>
+          <div class="bro-legend-unknown"><span class="bro-legend-swatch" aria-hidden="true"></span> unknown to the books: no score, left out of the average</div>
+        </div>
+      </div>
+
+      <aside class="bro-side" aria-label="Score">
+        <p class="bro-score"><span class="bro-num" id="bro-avg">–</span> <span class="bro-unit">bits per word</span></p>
+        <p class="bro-sub" id="bro-sub"></p>
+        <p class="bro-nudge" id="bro-nudge"></p>
+        <div class="bro-detail" id="bro-detail" aria-live="polite">
+          <p class="bro-hint">Hover over a word, tap it, or tab to it, to see what the books expected instead.</p>
+        </div>
+      </aside>
+    </div>
+
+    <details class="bro-books" id="bro-books" hidden>
+      <summary id="bro-books-summary">Which books?</summary>
+      <p class="bro-books-note" id="bro-books-note"></p>
+      <ul id="bro-book-list"></ul>
+    </details>
+
+    <div class="bro-preview" id="bro-preview" hidden>
+      <p class="pv-label" id="pv-label"></p>
+      <p class="pv-text" id="pv-text"></p>
+      <p class="pv-score"><span class="pv-num" id="pv-num"></span> <span class="pv-unit" id="pv-unit">bits per word</span></p>
+    </div>
+  </section>
+</main>
+<script src="data/preview.js"></script>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

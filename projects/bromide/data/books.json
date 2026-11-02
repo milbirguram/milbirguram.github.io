@@ -1,0 +1,258 @@
+{
+ "books": [
+  {
+   "id": 1342,
+   "title": "Pride and Prejudice",
+   "author": "Jane Austen",
+   "words": 126698
+  },
+  {
+   "id": 84,
+   "title": "Frankenstein",
+   "author": "Mary Wollstonecraft Shelley",
+   "words": 74834
+  },
+  {
+   "id": 98,
+   "title": "A Tale of Two Cities",
+   "author": "Charles Dickens",
+   "words": 137192
+  },
+  {
+   "id": 11,
+   "title": "Alice's Adventures in Wonderland",
+   "author": "Lewis Carroll",
+   "words": 26690
+  },
+  {
+   "id": 2701,
+   "title": "Moby-Dick",
+   "author": "Herman Melville",
+   "words": 216226
+  },
+  {
+   "id": 1952,
+   "title": "The Yellow Wallpaper",
+   "author": "Charlotte Perkins Gilman",
+   "words": 6173
+  },
+  {
+   "id": 1260,
+   "title": "Jane Eyre",
+   "author": "Charlotte Bronte",
+   "words": 188382
+  },
+  {
+   "id": 205,
+   "title": "Walden",
+   "author": "Henry David Thoreau",
+   "words": 117070
+  },
+  {
+   "id": 174,
+   "title": "The Picture of Dorian Gray",
+   "author": "Oscar Wilde",
+   "words": 79711
+  },
+  {
+   "id": 1661,
+   "title": "The Adventures of Sherlock Holmes",
+   "author": "Arthur Conan Doyle",
+   "words": 105334
+  },
+  {
+   "id": 768,
+   "title": "Wuthering Heights",
+   "author": "Emily Bronte",
+   "words": 117084
+  },
+  {
+   "id": 34901,
+   "title": "On Liberty",
+   "author": "John Stuart Mill",
+   "words": 52264
+  },
+  {
+   "id": 345,
+   "title": "Dracula",
+   "author": "Bram Stoker",
+   "words": 162386
+  },
+  {
+   "id": 43,
+   "title": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+   "author": "Robert Louis Stevenson",
+   "words": 25744
+  },
+  {
+   "id": 145,
+   "title": "Middlemarch",
+   "author": "George Eliot",
+   "words": 320223
+  },
+  {
+   "id": 35,
+   "title": "The Time Machine",
+   "author": "H. G. Wells",
+   "words": 32675
+  },
+  {
+   "id": 76,
+   "title": "Adventures of Huckleberry Finn",
+   "author": "Mark Twain",
+   "words": 112195
+  },
+  {
+   "id": 2944,
+   "title": "Essays, First Series",
+   "author": "Ralph Waldo Emerson",
+   "words": 74709
+  },
+  {
+   "id": 1400,
+   "title": "Great Expectations",
+   "author": "Charles Dickens",
+   "words": 186578
+  },
+  {
+   "id": 219,
+   "title": "Heart of Darkness",
+   "author": "Joseph Conrad",
+   "words": 38770
+  },
+  {
+   "id": 110,
+   "title": "Tess of the d'Urbervilles",
+   "author": "Thomas Hardy",
+   "words": 152530
+  },
+  {
+   "id": 5827,
+   "title": "The Problems of Philosophy",
+   "author": "Bertrand Russell",
+   "words": 43191
+  },
+  {
+   "id": 158,
+   "title": "Emma",
+   "author": "Jane Austen",
+   "words": 160994
+  },
+  {
+   "id": 2814,
+   "title": "Dubliners",
+   "author": "James Joyce",
+   "words": 67993
+  },
+  {
+   "id": 120,
+   "title": "Treasure Island",
+   "author": "Robert Louis Stevenson",
+   "words": 68850
+  },
+  {
+   "id": 408,
+   "title": "The Souls of Black Folk",
+   "author": "W. E. B. Du Bois",
+   "words": 69852
+  },
+  {
+   "id": 541,
+   "title": "The Age of Innocence",
+   "author": "Edith Wharton",
+   "words": 102956
+  },
+  {
+   "id": 36,
+   "title": "The War of the Worlds",
+   "author": "H. G. Wells",
+   "words": 60479
+  },
+  {
+   "id": 160,
+   "title": "The Awakening",
+   "author": "Kate Chopin",
+   "words": 64506
+  },
+  {
+   "id": 2641,
+   "title": "A Room with a View",
+   "author": "E. M. Forster",
+   "words": 67344
+  },
+  {
+   "id": 550,
+   "title": "Silas Marner",
+   "author": "George Eliot",
+   "words": 72104
+  },
+  {
+   "id": 209,
+   "title": "The Turn of the Screw",
+   "author": "Henry James",
+   "words": 42831
+  },
+  {
+   "id": 74,
+   "title": "The Adventures of Tom Sawyer",
+   "author": "Mark Twain",
+   "words": 71382
+  },
+  {
+   "id": 4217,
+   "title": "A Portrait of the Artist as a Young Man",
+   "author": "James Joyce",
+   "words": 84959
+  },
+  {
+   "id": 215,
+   "title": "The Call of the Wild",
+   "author": "Jack London",
+   "words": 32079
+  },
+  {
+   "id": 105,
+   "title": "Persuasion",
+   "author": "Jane Austen",
+   "words": 83658
+  },
+  {
+   "id": 1695,
+   "title": "The Man Who Was Thursday",
+   "author": "G. K. Chesterton",
+   "words": 58465
+  },
+  {
+   "id": 33,
+   "title": "The Scarlet Letter",
+   "author": "Nathaniel Hawthorne",
+   "words": 84294
+  },
+  {
+   "id": 113,
+   "title": "The Secret Garden",
+   "author": "Frances Hodgson Burnett",
+   "words": 81271
+  },
+  {
+   "id": 46,
+   "title": "A Christmas Carol",
+   "author": "Charles Dickens",
+   "words": 28811
+  },
+  {
+   "id": 45,
+   "title": "Anne of Green Gables",
+   "author": "L. M. Montgomery",
+   "words": 103266
+  },
+  {
+   "id": 2097,
+   "title": "The Sign of the Four",
+   "author": "Arthur Conan Doyle",
+   "words": 43490
+  }
+ ],
+ "source": "Project Gutenberg (www.gutenberg.org)",
+ "mirror": "https://mirror.csclub.uwaterloo.ca/gutenberg"
+}
