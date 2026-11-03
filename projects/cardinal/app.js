@@ -700,8 +700,8 @@
 
     // Drawn as a cyanotype: white linework for the optimiser's plan, red pencil for the real counts.
     var C = { bp: '#1c3f6e', deep: '#163257', chalk: '#eef5fb', cyan: '#a9dcef', pencil: '#d9472b', pencilHi: '#ff9175' };
-    var MONO = '"B612 Mono", ui-monospace, Consolas, monospace';
-    var HAND = 'Caveat, "Segoe Print", cursive';
+    var MONO = '"Inter", system-ui, -apple-system, "Segoe UI", sans-serif';
+    var HAND = '"Inter", system-ui, -apple-system, "Segoe UI", sans-serif';
     var CODE = 'ui-monospace, Menlo, Consolas, monospace'; // filter details, as on the page
     var grid = null; // the field and its drafting grid, drawn once per size
 
@@ -759,11 +759,11 @@
       ctx.fillStyle = C.chalk; ctx.fillRect(cx - 2, cy - 2, 4, 4);
       ctx.textAlign = 'left';
       ctx.fillStyle = C.chalk;
-      ctx.font = '700 ' + fs + 'px ' + MONO;
+      ctx.font = '600 ' + fs + 'px ' + MONO;
       ctx.fillText('SKEW ' + s.thetaLabel.toFixed(1), cx + r + 8, cy - fs * 0.5);
       ctx.textAlign = 'right';
       ctx.fillStyle = C.chalk;
-      ctx.font = '700 ' + Math.round(fs * 1.2) + 'px ' + MONO;
+      ctx.font = '600 ' + Math.round(fs * 1.2) + 'px ' + MONO;
       ctx.fillText(Math.round(s.ms) + ' ms', W - pad, cy - fs * 0.5);
       ctx.fillStyle = C.cyan;
       ctx.font = small + 'px ' + MONO;
@@ -775,7 +775,7 @@
       // Skew moves the counts; the flip comes from widening the customer filter, so say so.
       // The flip is a revision to the drawing, so it is noted in red pencil.
       if (s.flip > 0.5) {
-        var hs = Math.round(fs * 1.25);
+        var hs = Math.round(fs * 1.0);
         ctx.font = '600 ' + hs + 'px ' + HAND;
         while (hs > 11 && ctx.measureText('filter widened → plan flips').width > room) { hs--; ctx.font = '600 ' + hs + 'px ' + HAND; }
         ctx.fillStyle = C.pencilHi;
@@ -795,7 +795,7 @@
         var w = row.depth * fs;
         ctx.font = '700 11px ' + MONO;
         if (row.role) w += ctx.measureText(row.role.toUpperCase()).width + 14;
-        ctx.font = '700 ' + fs + 'px ' + MONO;
+        ctx.font = '600 ' + fs + 'px ' + MONO;
         labelW = Math.max(labelW, w + ctx.measureText(row.label).width + 12);
       });
       labelW = Math.max(labelW, W * 0.3);
@@ -816,7 +816,7 @@
           ctx.beginPath(); ctx.moveTo(pad + fs * 0.35, y - rowH * 0.25); ctx.lineTo(pad + fs * 0.35, mid - fs * 0.6); ctx.lineTo(x - 2, mid - fs * 0.6); ctx.stroke();
         }
         if (row.role) {
-          ctx.font = (row.role === 'build' ? '700 ' : '') + 11 + 'px ' + MONO;
+          ctx.font = (row.role === 'build' ? '600 ' : '') + 11 + 'px ' + MONO;
           var tw = ctx.measureText(row.role.toUpperCase()).width + 8, th = 15;
           var ty = mid - fs * 0.6 - th / 2;
           if (row.role === 'build') { ctx.fillStyle = C.chalk; ctx.fillRect(x, ty, tw, th); ctx.fillStyle = C.deep; }
@@ -826,11 +826,11 @@
           }
           ctx.fillText(row.role.toUpperCase(), x + 4, ty + th / 2 + 0.5);
           ctx.fillStyle = C.chalk;
-          ctx.font = '700 ' + fs + 'px ' + MONO;
+          ctx.font = '600 ' + fs + 'px ' + MONO;
           ctx.fillText(row.label, x + tw + 6, mid - fs * 0.6);
         } else {
           ctx.fillStyle = C.chalk;
-          ctx.font = '700 ' + fs + 'px ' + MONO;
+          ctx.font = '600 ' + fs + 'px ' + MONO;
           ctx.fillText(row.label, x, mid - fs * 0.6);
         }
         ctx.fillStyle = C.cyan;
@@ -850,12 +850,12 @@
         var qx = W - pad - (q >= 10 ? 5 : 0), qy = mid - fs * 0.35;
         ctx.textAlign = 'right';
         if (q < 1.5) {
-          ctx.fillStyle = C.chalk; ctx.font = '700 ' + fs + 'px ' + MONO;
+          ctx.fillStyle = C.chalk; ctx.font = '600 ' + fs + 'px ' + MONO;
           ctx.fillText('×' + M.formatQ(q), qx, qy);
           ctx.fillStyle = C.cyan; ctx.font = small + 'px ' + MONO;
           ctx.fillText('close', qx, mid + fs * 0.7);
         } else {
-          ctx.fillStyle = C.pencilHi; ctx.font = '600 ' + Math.round(fs * 1.65) + 'px ' + HAND;
+          ctx.fillStyle = C.pencilHi; ctx.font = '600 ' + Math.round(fs * 1.15) + 'px ' + HAND;
           var label = '×' + M.formatQ(q);
           ctx.fillText(label, qx - 2, qy);
           if (q >= 10) {
@@ -866,7 +866,7 @@
             ctx.beginPath(); ctx.ellipse(0, 0, lw / 2 + 6, fs * 0.82, 0, 0.15, Math.PI * 2 + 0.05); ctx.stroke();
             ctx.restore();
           }
-          ctx.font = '600 ' + Math.round(fs * 1.2) + 'px ' + HAND;
+          ctx.font = '600 ' + Math.round(fs * 0.95) + 'px ' + HAND;
           ctx.fillText(row.act < row.est ? 'too many' : 'too few', qx, mid + fs * 0.85);
         }
         if (k < s.rows.length - 1 || row.slot !== undefined) {
@@ -899,7 +899,7 @@
     draw(stateAt(tNow));
     // The drawing's lettering is self-hosted; redraw the still frame once it has loaded.
     if (document.fonts && document.fonts.load) {
-      Promise.all([document.fonts.load('400 12px "B612 Mono"'), document.fonts.load('700 12px "B612 Mono"'), document.fonts.load('600 16px Caveat')])
+      Promise.all([document.fonts.load('400 12px "Inter"'), document.fonts.load('600 12px "Inter"')])
         .then(function () { if (!playing) draw(stateAt(tNow)); }, function () {});
     }
     window.addEventListener('resize', function () { resize(); draw(stateAt(tNow)); });
