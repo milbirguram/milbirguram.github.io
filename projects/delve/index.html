@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A short solo dungeon crawl with dice and an oracle. Every roll shows its exact odds before it lands and where it landed after, so you feel how two dice differ from one, what advantage does, and why a yes-but answer is fair.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Delve — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/delve/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="preload" href="fonts/spectral-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Delve</h1>
+  <p class="kit-lede">A short solo dungeon crawl played with dice and an oracle, where every roll shows its exact odds before it lands and where it landed after. The rules and the oracle are my own small invention, and the dice are a seeded random generator, not physical dice.</p>
+
+  <section class="kit-stage kit-wide dv-stage" data-kit-stage aria-label="Delve, a dice and oracle dungeon crawl">
+    <div class="dv-app" id="dv-app">
+      <header class="dv-head">
+        <p class="dv-exp"><span class="dv-sc">Expedition</span> <span id="dv-seed"></span></p>
+        <dl class="dv-res">
+          <div><dt>Health</dt><dd id="dv-health"></dd></div>
+          <div><dt>Torches</dt><dd id="dv-torches"></dd></div>
+          <div id="dv-boon-wrap" hidden><dt>Boon</dt><dd id="dv-boon"></dd></div>
+        </dl>
+        <div class="dv-head-actions">
+          <button type="button" class="dv-key" id="dv-restart">Same map again</button>
+          <button type="button" class="dv-key" id="dv-new">New expedition</button>
+        </div>
+      </header>
+
+      <figure class="dv-mapwrap">
+        <svg class="dv-map" id="dv-map" role="img" aria-labelledby="dv-map-desc"></svg>
+        <figcaption class="dv-sr" id="dv-map-desc"></figcaption>
+      </figure>
+
+      <div class="dv-grid">
+        <section class="dv-room" id="dv-room" aria-labelledby="dv-room-name">
+          <h2 class="dv-room-name" id="dv-room-name"></h2>
+          <p class="dv-sit" id="dv-sit"></p>
+          <p class="dv-micro" id="dv-room-help"></p>
+          <div class="dv-approaches" id="dv-approaches" role="group" aria-label="Approaches"></div>
+          <div class="dv-end" id="dv-end" hidden></div>
+        </section>
+
+        <section class="dv-panel" id="dv-panel" aria-label="Odds">
+          <div class="dv-tabs" role="group" aria-label="Show">
+            <button type="button" class="dv-tab" data-tab="check" aria-pressed="true">Odds</button>
+            <button type="button" class="dv-tab" data-tab="oracle" aria-pressed="false">Oracle</button>
+            <button type="button" class="dv-tab" data-tab="compare" aria-pressed="false">Compare</button>
+          </div>
+
+          <div class="dv-page" id="dv-p-check">
+            <div class="dv-tray" id="dv-tray" aria-hidden="true"></div>
+            <p class="dv-expr"><span class="dv-notation" id="dv-c-label"></span> <span class="dv-words" id="dv-c-words"></span></p>
+            <p class="dv-chance"><span class="dv-big" id="dv-c-pass"></span> <span id="dv-c-passnote"></span></p>
+            <svg class="dv-chart" id="dv-c-chart" role="img" aria-labelledby="dv-c-chart-desc"></svg>
+            <p class="dv-sr" id="dv-c-chart-desc"></p>
+            <ul class="dv-legend" id="dv-c-legend"></ul>
+            <p class="dv-micro" id="dv-c-lesson"></p>
+            <div class="dv-rollrow">
+              <button type="button" class="dv-stamp" id="dv-roll">Roll</button>
+              <p class="dv-result" id="dv-c-result" aria-live="polite"></p>
+            </div>
+          </div>
+
+          <div class="dv-page" id="dv-p-oracle" hidden>
+            <p class="dv-micro" id="dv-o-mode"></p>
+            <label class="dv-label" for="dv-q">A yes or no question</label>
+            <input class="dv-input" id="dv-q" type="text" maxlength="120" autocomplete="off">
+            <div class="dv-likely" id="dv-likely" role="group" aria-label="How likely is yes?"></div>
+            <svg class="dv-strip" id="dv-o-strip" role="img" aria-labelledby="dv-o-strip-desc"></svg>
+            <p class="dv-sr" id="dv-o-strip-desc"></p>
+            <ul class="dv-bands" id="dv-o-bands"></ul>
+            <p class="dv-micro" id="dv-o-lesson"></p>
+            <div class="dv-rollrow">
+              <button type="button" class="dv-stamp" id="dv-ask">Ask</button>
+              <p class="dv-result" id="dv-o-result" aria-live="polite"></p>
+            </div>
+          </div>
+
+          <div class="dv-page" id="dv-p-compare" hidden>
+            <p class="dv-micro" id="dv-k-help"></p>
+            <div class="dv-cmp">
+              <div class="dv-side" id="dv-side-a"></div>
+              <div class="dv-side" id="dv-side-b"></div>
+            </div>
+            <p class="dv-micro dv-cmp-verdict" id="dv-k-verdict" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section class="dv-next" id="dv-next" aria-label="What next" hidden>
+          <p class="dv-micro" id="dv-next-help"></p>
+          <div class="dv-doors" id="dv-doors" role="group" aria-label="Ways on"></div>
+        </section>
+
+        <section class="dv-journal" aria-labelledby="dv-journal-h">
+          <h2 class="dv-journal-h" id="dv-journal-h">Journal</h2>
+          <ol class="dv-log" id="dv-log" tabindex="0" aria-label="Journal entries"></ol>
+        </section>
+      </div>
+      <p class="dv-sr" id="dv-live" aria-live="polite"></p>
+    </div>
+
+    <div class="dv-preview" id="dv-preview" aria-hidden="true" hidden></div>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
