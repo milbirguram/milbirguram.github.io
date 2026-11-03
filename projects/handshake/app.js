@@ -12,5 +12,5 @@ try{var response=await fetch(url,{mode:'cors',credentials:'omit',cache:'no-store
 }catch(e){clearTimeout(timer);var error=document.createElement('p');error.textContent='Request '+(i+1)+': '+(e.name==='AbortError'?'timed out':e.message)+'. Browser restrictions or the network may prevent measurement.';box.appendChild(error);}}
 var stats=Handshake.stats(values);if(stats){var p=document.createElement('p');p.textContent='Median '+stats.median.toFixed(1)+' ms · range '+stats.min.toFixed(1)+'–'+stats.max.toFixed(1)+' ms ('+stats.count+' requests).';box.appendChild(p);}}$('request-status').textContent='Finished. Select a request to inspect its timings.';}finally{button.disabled=false;}};
 }else{$('example-label').textContent='Example timings · illustrated';}
-illustrate(0);Kit.onPlay(function(p){playing=p;cancelAnimationFrame(raf);if(playing&&!Kit.reducedMotion){start=performance.now();raf=requestAnimationFrame(animate);}});
+illustrate(0);if(Kit.preview)$('phase-label').textContent=titles[0]+' · 12 ms';Kit.onPlay(function(p){playing=p;cancelAnimationFrame(raf);if(playing&&!Kit.reducedMotion){start=performance.now();raf=requestAnimationFrame(animate);}});
 })();
