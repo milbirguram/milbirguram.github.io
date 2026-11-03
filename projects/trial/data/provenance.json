@@ -1,0 +1,11 @@
+{
+  "faultlineCoreSHA256": "2fca30d7ebbd858de3c1de45361f9f68149dbc226c812b8af0d6a9064d02ba7e",
+  "sqlCaptureSourceSHA256": "fcc1f4f65d0b7e93a3736a8658d0b09a2210e1301b29628076f205c4afd0adb2",
+  "suites": "36 synthetic fixtures = six fault types \u00d7 six numeric-detail seeds. Six distinct categorical decision problems; not 36 independent fault mechanisms.",
+  "policies": {
+    "quick": "metrics then heuristic guess",
+    "checklist": "logs, pool, queue, probe, diff, cache, metrics; stop at singleton",
+    "adaptive": "greatest expected candidate elimination per abstract tool cost; equal priors; stop at singleton"
+  },
+  "cost": "Abstract tool units, not tokens, money or API calls. Local JS CPU duration includes simulation observations and policy logic; no model latency measured."
+}
