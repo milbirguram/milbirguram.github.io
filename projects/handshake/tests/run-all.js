@@ -1,0 +1,13 @@
+'use strict';const assert=require('assert'),fs=require('fs'),path=require('path'),M=require('../model');
+const cold={startTime:10,responseEnd:150,domainLookupStart:12,domainLookupEnd:22,connectStart:22,secureConnectionStart:42,connectEnd:72,requestStart:75,responseStart:125,nextHopProtocol:'h2'};
+let t=M.timing(cold);assert.deepStrictEqual(t.stages.map(s=>s.ms),[10,20,30,50,25]);assert(t.stages.every(s=>s.state==='measured'));assert.strictEqual(t.upperBoundKm,2000);
+const warm=Object.assign({},cold,{domainLookupStart:11,domainLookupEnd:11,connectStart:11,connectEnd:11,secureConnectionStart:0});t=M.timing(warm);assert.deepStrictEqual(t.stages.map(s=>s.ms),[0,0,0,50,25]);assert.strictEqual(t.connection,'reused');assert.strictEqual(t.upperBoundKm,null);
+const noTLS=Object.assign({},cold,{secureConnectionStart:0});assert.strictEqual(M.timing(noTLS).stages[1].id,'connect');assert.strictEqual(M.timing(noTLS).upperBoundKm,null);
+const h3=Object.assign({},cold,{nextHopProtocol:'h3',secureConnectionStart:22});t=M.timing(h3);assert.strictEqual(t.stages[1].id,'quic');assert.strictEqual(t.stages[1].ms,50);assert.strictEqual(t.upperBoundKm,null);
+const hidden={startTime:10,responseEnd:150,domainLookupStart:0,domainLookupEnd:0,connectStart:0,connectEnd:0,requestStart:0,responseStart:0};t=M.timing(hidden);assert(t.stages.every(s=>s.ms===null&&s.state==='not exposed'));
+const dns=Object.assign({},cold,{domainLookupEnd:12});assert(/Cached/.test(M.timing(dns).stages[0].note));
+const nav=Object.assign({},cold,{entryType:'navigation',startTime:0,duration:700});assert.strictEqual(M.timing(nav).total,150);
+[cold,warm,h3,hidden,dns,nav].forEach(e=>{const t=M.timing(e);assert(t.stages.reduce((n,s)=>n+(s.ms||0),0)<=t.total);});
+assert.deepStrictEqual(M.stats([5,1,4,2,3]),{median:3,min:1,max:5,count:5});assert.strictEqual(M.stats([2,4]).median,3);assert.strictEqual(M.stats([]),null);
+const app=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8'),handler=app.indexOf("$('send').onclick=async function()");assert(handler>0);assert(!/fetch\s*\(|XMLHttpRequest/.test(app.slice(0,handler)));assert(app.slice(handler).indexOf('if(Kit.preview)return;')<app.slice(handler).indexOf('await fetch('));assert.strictEqual((app.match(/\bfetch\s*\(/g)||[]).length,1);assert(!/XMLHttpRequest/.test(app));
+const evidence=require('./endpoints.json');assert.strictEqual(evidence.endpoints.length,2);evidence.endpoints.forEach(e=>{assert.strictEqual(e.get_headers['timing-allow-origin'],'*');assert.strictEqual(e.get_headers['access-control-allow-origin'],'*');});console.log('Handshake: timing fixtures, sums, states, statistics and request-boundary checks passed');
