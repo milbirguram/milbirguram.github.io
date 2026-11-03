@@ -1,0 +1,29 @@
+{
+  "downloaded": "2026-11-03",
+  "fonts": [
+    {
+      "family": "manrope",
+      "version": "5.3.0",
+      "published": "2026-07-19T03:41:44.130Z",
+      "weight": 400,
+      "subset": "latin",
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.3.0/files/manrope-latin-400-normal.woff2",
+      "license_source": "https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.3.0/LICENSE",
+      "file": "manrope-latin-400-normal.woff2",
+      "bytes": 14108,
+      "sha256": "849290ef12a2eeb9af5c11924120d11aa4ae8b435ed3347d7fc8bc240c293ca3"
+    },
+    {
+      "family": "martian-mono",
+      "version": "5.3.0",
+      "published": "2026-07-19T03:41:48.735Z",
+      "weight": 400,
+      "subset": "latin",
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/martian-mono@5.3.0/files/martian-mono-latin-400-normal.woff2",
+      "license_source": "https://cdn.jsdelivr.net/npm/@fontsource/martian-mono@5.3.0/LICENSE",
+      "file": "martian-mono-latin-400-normal.woff2",
+      "bytes": 10352,
+      "sha256": "bb677c9c5cf5b384b5e4a1fd86755a47e0cbafe6bc70a9ba458b5e13e1d7a5c0"
+    }
+  ]
+}
