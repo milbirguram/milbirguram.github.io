@@ -1,0 +1,4 @@
+importScripts('model.js?v=1');
+var running=false,config=null,samples=0,sum=null,timer=0;
+onmessage=function(e){if(e.data.kind==='start'){clearTimeout(timer);config=e.data;sum=new Float64Array(config.width*config.height*3);samples=0;running=true;timer=setTimeout(step,0);}else if(e.data.kind==='pause'){running=false;clearTimeout(timer);}else if(e.data.kind==='resume'&&!running&&config&&samples<config.cap){running=true;timer=setTimeout(step,0);}};
+function step(){if(!running||!config||samples>=config.cap)return;var w=config.width,h=config.height;for(var y=0;y<h;y++)for(var x=0;x<w;x++){var c=Prism.sample(x,y,w,h,samples,config.options).colour,i=(y*w+x)*3;for(var k=0;k<3;k++)sum[i+k]+=c[k];}samples++;var out=new Float32Array(sum.length);for(var j=0;j<sum.length;j++)out[j]=sum[j]/samples;postMessage({kind:'sample',samples:samples,pixels:out},[out.buffer]);if(samples<config.cap)timer=setTimeout(step,0);else running=false;}
