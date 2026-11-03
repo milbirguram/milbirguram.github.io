@@ -1,0 +1,30 @@
+{
+  "downloaded": "2026-11-03",
+  "packages": {
+    "winbox": "0.2.82",
+    "idb-keyval": "6.3.0"
+  },
+  "source": "Exact version npm package files downloaded through jsDelivr; vendored, no runtime CDN.",
+  "files": [
+    {
+      "file": "idb-keyval-LICENSE.txt",
+      "bytes": 555,
+      "sha256": "20c27d6339619eeb3113cb865d4e98a3f559e52964fc75caea9cb5fa72674565"
+    },
+    {
+      "file": "idb-keyval.js",
+      "bytes": 6943,
+      "sha256": "480f1d31a40b5720fbaaee44c1a21d83392c6cf9516672007813a1824483a058"
+    },
+    {
+      "file": "winbox-LICENSE.txt",
+      "bytes": 11558,
+      "sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6"
+    },
+    {
+      "file": "winbox.js",
+      "bytes": 15984,
+      "sha256": "8cd0a133fc5108b392e20faca94b6a093de78c16524f25200da1d8b43b86c06a"
+    }
+  ]
+}
