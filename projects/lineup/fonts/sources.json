@@ -1,0 +1,58 @@
+{
+
+  "downloaded": "2026-11-03",
+
+  "fonts": [
+
+    {
+
+      "family": "source-sans-3",
+
+      "version": "5.3.1",
+
+      "published": "2026-10-11T03:39:11.331Z",
+
+      "weight": 400,
+
+      "subset": "latin",
+
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.3.1/files/source-sans-3-latin-400-normal.woff2",
+
+      "license_source": "https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.3.1/LICENSE",
+
+      "file": "source-sans-3-latin-400-normal.woff2",
+
+      "bytes": 15696,
+
+      "sha256": "0f73f35e08cde0a2f10c109c6e01d71459d97e4099ecd9a50f1b6c0209e4de2b"
+
+    },
+
+    {
+
+      "family": "oswald",
+
+      "version": "5.3.0",
+
+      "published": "2026-07-19T03:44:16.704Z",
+
+      "weight": 500,
+
+      "subset": "latin",
+
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/oswald@5.3.0/files/oswald-latin-500-normal.woff2",
+
+      "license_source": "https://cdn.jsdelivr.net/npm/@fontsource/oswald@5.3.0/LICENSE",
+
+      "file": "oswald-latin-500-normal.woff2",
+
+      "bytes": 12704,
+
+      "sha256": "541b12882301dc44b73eaaed9e230709df1d299379c3594695870fc2f9e3ff0a"
+
+    }
+
+  ]
+
+}
+

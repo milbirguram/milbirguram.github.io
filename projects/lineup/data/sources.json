@@ -1,0 +1,70 @@
+{
+
+  "builtAt": "2026-11-03T04:56:01.506840+00:00",
+
+  "sourcePage": "https://moneypuck.com/data.htm",
+
+  "permission": "Free for non-commercial use with clear MoneyPuck.com credit. Other purposes require permission. Not an unrestricted open-data licence.",
+
+  "sources": [
+
+    {
+
+      "file": "skaters-2023.csv",
+
+      "url": "https://moneypuck.com/moneypuck/playerData/seasonSummary/2023/regular/skaters.csv",
+
+      "cachedFileModifiedAt": "2026-11-03T04:45:49.535730+00:00",
+
+      "bytes": 3430973,
+
+      "sha256": "ee8d191d3633064c1f4f76d64c76e04f8a8e555528a4b49caa6d0ecb8bac9299"
+
+    },
+
+    {
+
+      "file": "skaters-2024.csv",
+
+      "url": "https://moneypuck.com/moneypuck/playerData/seasonSummary/2024/regular/skaters.csv",
+
+      "cachedFileModifiedAt": "2026-11-03T04:45:49.522799+00:00",
+
+      "bytes": 3410678,
+
+      "sha256": "467260ae6b411621fc3e736ed005588f75dd4470610416626584f2878a463fd4"
+
+    },
+
+    {
+
+      "file": "skaters-2025.csv",
+
+      "url": "https://moneypuck.com/moneypuck/playerData/seasonSummary/2025/regular/skaters.csv",
+
+      "cachedFileModifiedAt": "2026-11-03T04:41:29.660060+00:00",
+
+      "bytes": 3483132,
+
+      "sha256": "9a7e1f1a2f6bc8bc2bf10c5ba32947b47c4b26d5397287e4b30e9d662c4966e4"
+
+    },
+
+    {
+
+      "file": "teams-2025.csv",
+
+      "url": "https://moneypuck.com/moneypuck/playerData/seasonSummary/2025/regular/teams.csv",
+
+      "cachedFileModifiedAt": "2026-11-03T04:41:28.694677+00:00",
+
+      "bytes": 99689,
+
+      "sha256": "dc1ce57c226fc7f932241c597f3a8c879cc8e837fc01e6457fd8841ca5273ac9"
+
+    }
+
+  ]
+
+}
+

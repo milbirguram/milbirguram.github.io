@@ -1,0 +1,32 @@
+<!doctype html>
+
+<html lang="en"><head>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="An explained NHL player-to-team fit model: compare a skater's measured strengths with each team's five-on-five needs using public MoneyPuck data."><meta name="theme-color" content="#faf9f6"><title>Lineup — Milbir Guram</title><link rel="canonical" href="https://milbirguram.github.io/projects/lineup/"><link rel="icon" href="../../favicon.ico"><link rel="stylesheet" href="../kit.css"><script src="../kit.js"></script><link rel="stylesheet" href="style.css?v=2">
+
+</head><body><main>
+
+<nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav><h1>Lineup</h1><p class="kit-lede">Choose an NHL skater and see which teams their recorded strengths could complement. Change what matters, and watch the meaning of “best fit” change.</p><p class="kit-credit">Data: <a href="https://moneypuck.com/data.htm">MoneyPuck.com</a>, used non-commercially with attribution.</p>
+
+<section class="kit-stage kit-wide lineup" data-kit-stage aria-label="NHL player-to-team fit desk">
+
+  <header class="scoreboard"><div class="wordmark">LINEUP <span>THE FIT DESK</span></div><div class="snapshot"><strong>2025—26</strong><span>REGULAR SEASON · 5 ON 5</span></div><div class="roster-count"><strong id="player-count">—</strong><span>SKATERS / 32 TEAMS</span></div></header>
+
+  <div class="scope-line"><span class="live-dot"></span><span>Completed-season snapshot. Team labels are historical, not live rosters.</span></div>
+
+  <div class="pick-desk"><div class="player-picker"><label for="search">Find a skater</label><input id="search" type="search" placeholder="Search a player’s name" autocomplete="off"><label for="player" class="sr-only">Choose a skater</label><select id="player"></select><span id="search-status" class="micro" role="status"></span></div><div class="pick-options"><label for="role">Position group</label><select id="role"><option value="all">All skaters</option><option value="F">Forwards</option><option value="D">Defencemen</option></select><label class="checkbox-label"><input type="checkbox" id="regularise" checked> Shrink noisy samples</label><label class="checkbox-label"><input type="checkbox" id="include-own"> Include listed team</label></div></div>
+
+  <div class="main-grid"><section class="player-panel"><div class="section-label">01 / THE PLAYER</div><h2 id="player-name">Preparing the profile</h2><p id="player-meta" class="player-meta"></p><div class="evidence-strip"><div><strong id="minutes">—</strong><span>5v5 minutes in 2025–26</span></div><div><strong id="seasons">—</strong><span>seasons in profile</span></div></div><div id="player-bars" class="player-bars"></div><p class="micro">Bars show standing among qualifying <span id="peer-role">skaters</span>. Past results are not isolated talent.</p><p id="shrink-note" class="micro"></p><details class="feature-notes"><summary>What these four measures mean</summary><dl id="definitions"></dl></details></section>
+
+  <section class="ranking-panel"><div class="section-label">02 / POSSIBLE HOMES</div><div class="ranking-heading"><h2>Teams to explore</h2><span>FIT INDEX</span></div><p class="micro">An explained comparison, not a win probability or a trade recommendation.</p><div id="ranking" class="ranking" aria-label="Teams ranked by statistical complement"></div><button id="show-all" class="text-button">Show all teams</button><p id="rank-status" class="micro" role="status"></p></section></div>
+
+  <section class="priorities"><div><div class="section-label">03 / DEFINE THE JOB</div><h2>What should this player add?</h2><p class="micro">Slide the priorities. A team’s below-average results supply its needs; your choices decide how much each need matters.</p><div class="presets"><button data-preset="balanced" aria-pressed="true">Balanced</button><button data-preset="shots" aria-pressed="false">More shots</button><button data-preset="finish" aria-pressed="false">Better conversion</button><button data-preset="defend" aria-pressed="false">Limit chances</button></div></div><div id="sliders" class="sliders"></div></section>
+
+  <section class="match-sheet"><div class="match-heading"><div><div class="section-label">04 / OPEN THE RESULT</div><h2 id="match-team">Why this team?</h2></div><strong id="match-score">—</strong></div><p id="match-description" class="match-description"></p><div id="contributions" class="contributions"></div><p class="micro">Contribution = player’s position-standardised strength × team need × your priority. Positive terms support a match; negative terms work against it.</p><div class="sensitivity"><span>STABILITY CHECK</span><p id="sensitivity"></p></div></section>
+
+  <details class="method"><summary>The evidence, assumptions and data</summary><div class="method-grid"><section><h2>How the index works</h2><p>Player profiles combine the 2023–24, 2024–25 and 2025–26 seasons with weights 0.3, 0.6 and 1. Rates are pulled towards the forward or defence average when evidence is thin, then compared within that group.</p><p>Teams use their own 2025–26 team totals. A need is the amount a result falls below the league average, capped at three standard deviations. Team need and player strength are different quantities; an index point is not an expected goal.</p><p>At least 300 minutes at five-on-five in 2025–26 are required. Goalies and special teams are outside this model. A listed team is excluded by default.</p></section><section><h2>What was actually checked</h2><p id="validation-summary"></p><p>This tests next-season profile estimation, not whether a hypothetical move would succeed. The stability check omits one of a player’s seasons at a time while keeping team needs fixed; it is not a confidence interval.</p><p>On/off results still contain teammate, opponent and usage effects. Passing, line chemistry, injuries, contracts, cap space, trade cost and a coach’s intended role are not measured.</p><p><a href="https://moneypuck.com/data.htm">MoneyPuck downloads and usage terms</a> · <a href="https://moneypuck.com/glossary.htm">Metric definitions</a> · <a href="data/sources.json">Snapshot provenance</a></p></section></div></details>
+
+  <footer class="desk-foot"><span>OPEN METHOD / PUBLIC DATA</span><span>No player tracking, passing or chemistry inferred.</span></footer>
+
+</section></main><script src="model.js?v=2"></script><script src="data.js?v=2"></script><script src="app.js?v=2"></script></body></html>
+
