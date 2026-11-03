@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Walk a small first-person maze, then split the screen to see the trick behind early 3D games: one ray per screen column, each wall slice drawn taller the nearer the ray hits.">
+  <meta name="theme-color" content="#faf9f6">
+  <title>Corridor — Milbir Guram</title>
+  <link rel="canonical" href="https://milbirguram.github.io/projects/corridor/">
+  <link rel="icon" href="../../favicon.ico">
+  <link rel="stylesheet" href="../kit.css">
+  <script src="../kit.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
+  <h1>Corridor</h1>
+  <p class="kit-lede">Find three keys and the stage door in a small first-person maze, then press “Show the trick” to see how it is drawn: one ray per screen column, each wall slice taller the nearer its ray hits. The world is a flat grid, not real 3D, which is exactly the trick early games like Wolfenstein 3D relied on.</p>
+
+  <section class="kit-stage kit-wide co-stage" data-kit-stage aria-label="Corridor: a first-person maze and the trick that draws it">
+    <div class="co-bill">
+      <p class="co-bill-name" aria-hidden="true">Corridor</p>
+      <dl class="co-score">
+        <div><dt>Keys</dt><dd id="co-keys">0 of 3</dd></div>
+        <div><dt>Time</dt><dd id="co-time">0:00.0</dd></div>
+        <div><dt>Best</dt><dd id="co-best">none yet</dd></div>
+      </dl>
+      <div class="co-bill-cues">
+        <button type="button" class="co-cue co-cue-trick" id="co-trick" aria-pressed="false"><span class="co-lamp" aria-hidden="true"></span>Show the trick</button>
+        <button type="button" class="co-cue co-cue-plain" id="co-restart">Restart</button>
+      </div>
+    </div>
+
+    <div class="co-house" id="co-house">
+      <div class="co-col">
+        <div class="co-view" id="co-view" tabindex="0" role="group" aria-label="The stage. Focus here to play with the keyboard." aria-describedby="co-hint">
+          <canvas id="co-fp" width="320" height="200" role="img" aria-label="First-person view of the maze, drawn one column at a time"></canvas>
+          <p class="co-prompt" id="co-prompt" aria-live="polite"></p>
+          <div class="co-curtain" id="co-curtain">
+            <div class="co-card">
+              <p class="co-card-title" id="co-card-title">Corridor</p>
+              <p class="co-card-text" id="co-card-text">Find three keys, then the stage door. Follow-spots drift about: zap one to dim it for a few seconds.</p>
+              <button type="button" class="co-go" id="co-go">Raise the curtain</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-pad" id="co-pad" role="group" aria-label="Touch controls">
+          <button type="button" class="co-key" data-hold="turnL" aria-label="Turn left">◀</button>
+          <button type="button" class="co-key" data-hold="fwd" aria-label="Walk forward">▲</button>
+          <button type="button" class="co-key" data-hold="back" aria-label="Walk back">▼</button>
+          <button type="button" class="co-key" data-hold="turnR" aria-label="Turn right">▶</button>
+          <button type="button" class="co-key co-key-zap" data-hold="zap">Zap</button>
+        </div>
+      </div>
+
+      <figure class="co-plan" id="co-plan" hidden>
+        <canvas id="co-map" role="img" aria-label="Ground plan of the maze seen from above, with your position, your field of view and the rays cast for each screen column"></canvas>
+        <figcaption class="co-sheet">
+          <span id="co-sheet-live"></span>
+          <span class="co-sheet-key">Chalk: every 8th ray, out to the wall it meets; the plan shows only what your rays have reached. Amber: one ray traced in full, dashed where its distance is measured straight ahead. Point at the stage to trace another. While the plan is open the follow-spots hold still and you walk at half pace.</span>
+        </figcaption>
+      </figure>
+
+      <div class="co-desk" id="co-desk" hidden>
+        <div class="co-toggle">
+          <button type="button" class="co-cue" id="co-slow" aria-pressed="false" aria-describedby="co-slow-note"><span class="co-lamp" aria-hidden="true"></span>Slow motion</button>
+          <p class="co-note" id="co-slow-note"></p>
+        </div>
+        <div class="co-toggle">
+          <button type="button" class="co-cue" id="co-fish" aria-pressed="true" aria-describedby="co-fish-note"><span class="co-lamp" aria-hidden="true"></span>Fish-eye correction</button>
+          <p class="co-note" id="co-fish-note"></p>
+        </div>
+        <div class="co-toggle">
+          <button type="button" class="co-cue" id="co-tex" aria-pressed="true" aria-describedby="co-tex-note"><span class="co-lamp" aria-hidden="true"></span>Textures</button>
+          <p class="co-note" id="co-tex-note"></p>
+        </div>
+        <div class="co-toggle">
+          <div class="co-fov">
+            <label class="co-fov-label" for="co-fov">Field of view <output id="co-fov-out" for="co-fov">66°</output></label>
+            <input type="range" id="co-fov" min="40" max="110" step="1" value="66" aria-describedby="co-fov-note">
+          </div>
+          <p class="co-note" id="co-fov-note"></p>
+        </div>
+      </div>
+    </div>
+
+    <p class="co-hint" id="co-hint"><span class="co-hint-keys">W A S D or arrow keys to walk and turn, Q and E to step sideways, Space to zap, T to show the trick. Drag across the stage to look.</span><span class="co-hint-touch">Hold the arrows to walk and turn. Drag across the stage to look.</span></p>
+  </section>
+</main>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
