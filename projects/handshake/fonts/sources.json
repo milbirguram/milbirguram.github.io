@@ -1,0 +1,29 @@
+{
+  "downloaded": "2026-11-03",
+  "fonts": [
+    {
+      "family": "barlow-condensed",
+      "version": "5.3.0",
+      "published": "2026-07-19T03:36:41.945Z",
+      "weight": 600,
+      "subset": "latin",
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/barlow-condensed@5.3.0/files/barlow-condensed-latin-600-normal.woff2",
+      "license_source": "https://cdn.jsdelivr.net/npm/@fontsource/barlow-condensed@5.3.0/LICENSE",
+      "file": "barlow-condensed-latin-600-normal.woff2",
+      "bytes": 22308,
+      "sha256": "215a93c696f442034a46fbb382958f753fda60e30490683aeea6b235fcbb2b66"
+    },
+    {
+      "family": "barlow",
+      "version": "5.3.0",
+      "published": "2026-07-19T03:36:41.684Z",
+      "weight": 400,
+      "subset": "latin",
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/barlow@5.3.0/files/barlow-latin-400-normal.woff2",
+      "license_source": "https://cdn.jsdelivr.net/npm/@fontsource/barlow@5.3.0/LICENSE",
+      "file": "barlow-latin-400-normal.woff2",
+      "bytes": 22196,
+      "sha256": "b0a8ad37ac45f5fb22ced461576db72e44e295107aad7a9c8a7a4bad728fd03b"
+    }
+  ]
+}
