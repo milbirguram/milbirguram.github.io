@@ -1,0 +1,29 @@
+{
+  "downloaded": "2026-11-03",
+  "fonts": [
+    {
+      "family": "libre-baskerville",
+      "version": "5.3.0",
+      "published": "2026-07-19T03:41:11.076Z",
+      "weight": 400,
+      "subset": "latin",
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/libre-baskerville@5.3.0/files/libre-baskerville-latin-400-normal.woff2",
+      "license_source": "https://cdn.jsdelivr.net/npm/@fontsource/libre-baskerville@5.3.0/LICENSE",
+      "file": "libre-baskerville-latin-400-normal.woff2",
+      "bytes": 20108,
+      "sha256": "3eb80fbca70498126925ce16ff5c20b2fa35e67ae7123ddb46302d2778dfbf0e"
+    },
+    {
+      "family": "inconsolata",
+      "version": "5.3.0",
+      "published": "2026-07-19T03:40:09.854Z",
+      "weight": 400,
+      "subset": "latin",
+      "source": "https://cdn.jsdelivr.net/npm/@fontsource/inconsolata@5.3.0/files/inconsolata-latin-400-normal.woff2",
+      "license_source": "https://cdn.jsdelivr.net/npm/@fontsource/inconsolata@5.3.0/LICENSE",
+      "file": "inconsolata-latin-400-normal.woff2",
+      "bytes": 17664,
+      "sha256": "9d5a0480d2bd3e43b124bf8f36782c8fc079f9f8b023c672bff67e9ceffc236b"
+    }
+  ]
+}
