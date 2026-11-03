@@ -71,4 +71,3 @@
   }else{document.querySelector('.wordmark span').textContent='MoneyPuck.com data';document.querySelector('.snapshot span').textContent='5V5 / FIT INDEX';render();function loop(t){if(t-last>=3000){previewIndex=(previewIndex+1)%3;var names=['Connor Bedard','Mitch Marner','Quinn Hughes'],p=prepared.players.find(function(p){return p.name===names[previewIndex];});if(p){playerId=p.id;chosen=null;render();}last=t;}raf=requestAnimationFrame(loop);}Kit.onPlay(function(playing){cancelAnimationFrame(raf);if(playing){last=performance.now();raf=requestAnimationFrame(loop);}});}
 
 })();
-

@@ -55,4 +55,3 @@ document.querySelectorAll('[data-new]').forEach(function(b){b.onclick=function()
 window.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();exportAll();}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='n'){e.preventDefault();create('note');}});window.addEventListener('resize',function(){Object.values(windows).forEach(function(w){if(innerWidth<600)w.maximize();else if(!w.max)w.resize(Math.min(w.width,innerWidth-8),Math.min(w.height,innerHeight-108)).move(Math.max(4,Math.min(w.x,innerWidth-w.width-4)),Math.max(42,Math.min(w.y,innerHeight-w.height-66)));});});tasks();var first=files.find(function(f){return !f.trashed&&f.type==='note';})||files.find(function(f){return !f.trashed;});if(first)openFile(first);else fileWindow();
 
 })();
-

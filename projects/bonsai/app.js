@@ -73,4 +73,3 @@ let drops=null;if(renderer){const positions=new Float32Array(90);drops=new THREE
 function animate(t){if(!playing)return;if(preview){yaw=.12+Math.sin(t/1800)*.15;}if(drops){drops.visible=t<waterUntil;if(drops.visible){const index=g.plants.findIndex(p=>p.id===g.selected),x=roots[index]?.position.x||0,a=drops.geometry.attributes.position;for(let i=0;i<30;i++)a.setXYZ(i,x+Math.sin(i*17)*.5,.35+((i*.037+(waterUntil-t)/700)%1)*2,Math.cos(i*9)*.4);a.needsUpdate=true;}}roots.forEach((root,i)=>{if(root.userData.leaves)root.userData.leaves.rotation.z=Math.sin(t/2300+i)*.004;});renderOnce();raf=requestAnimationFrame(animate);}
 
 refresh();if(!preview)save();Kit.onPlay(p=>{playing=p;cancelAnimationFrame(raf);if(p&&!Kit.reducedMotion)raf=requestAnimationFrame(animate);else renderOnce();});
-

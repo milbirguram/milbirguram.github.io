@@ -23,4 +23,3 @@ function seeds(){return[{id:'seed-note',type:'note',name:'Small things worth mak
 var api={name:name,valid:valid,importWorkspace:importWorkspace,pack:pack,palette:palette,seeds:seeds};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.CreativeOS=api;
 
 })(typeof self!=='undefined'?self:this);
-

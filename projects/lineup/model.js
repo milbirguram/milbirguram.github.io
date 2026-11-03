@@ -85,4 +85,3 @@
   var api={FEATURES:FEATURES,group:group,raw:raw,baseline:baseline,profile:profile,moments:moments,teams:teams,teamValues:teamValues,weights:weights,fit:fit,rank:rank,percentile:percentile,prepare:prepare,sensitivity:sensitivity,validate:validate};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Lineup=api;
 
 })(typeof self!=='undefined'?self:this);
-

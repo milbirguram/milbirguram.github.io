@@ -63,4 +63,3 @@ raw=ROOT/'data'/'input.json';raw.parent.mkdir(exist_ok=True);raw.write_text(json
 subprocess.run(['node',str(ROOT/'scripts'/'compile-data.js')],check=True)
 
 raw.unlink()
-

@@ -23,4 +23,3 @@ Preview mode is a visibly representative, read-only studio composition, with no 
 - [idb-keyval](https://github.com/jakearchibald/idb-keyval), pinned to 6.3.0; Apache-2.0.
 
 - Vendor licences and hashes are in `vendor/`. Illustrations, icons, seed notes and application code are original. System fonts require no runtime requests.
-

@@ -53,4 +53,3 @@ function restore(text){var g=JSON.parse(text);if(g.version!==1||!Number.isIntege
 var api={TYPES:TYPES,SEASONS:SEASONS,plant:plant,garden:garden,season:season,conditions:conditions,step:step,status:status,action:action,restore:restore};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Bonsai=api;
 
 })(typeof self!=='undefined'?self:this);
-

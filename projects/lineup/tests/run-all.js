@@ -33,4 +33,3 @@ assert(unshrunk.players.some(p=>p.values.some((v,j)=>Math.abs(v-prepared.players
 const validation=M.validate(data.skaters);assert.deepStrictEqual(validation.priors,data.priors);close(validation.shrunkRMSE,data.validation.shrunkRMSE);assert(validation.holdoutN===492&&validation.tuneN===505);const changed=data.skaters.map(r=>r.season===2025?Object.assign({},r,{goals:r.goals+100}):r);assert.deepStrictEqual(M.validate(changed).priors,validation.priors,'holdout labels cannot tune the prior');
 
 console.log('Lineup: hand-computed rates, weighting, shrinkage and score terms passed');console.log('678 skaters × 31 teams: finite scores, exact decompositions, deterministic ordering and team exclusion passed');console.log('Temporal holdout:',validation.holdoutN,'skaters; RMSE',validation.unshrunkRMSE,'→',validation.shrunkRMSE);console.log('No holdout leakage in prior selection; sensitivity and regularisation controls passed');
-

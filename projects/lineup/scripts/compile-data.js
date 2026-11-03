@@ -7,4 +7,3 @@ fs.writeFileSync(path.join(root,'data.js'),'var LineupData = '+JSON.stringify(in
 fs.writeFileSync(path.join(root,'tests/validation.json'),JSON.stringify(validation,null,2)+'\n');
 
 console.log(JSON.stringify({eligible:M.prepare(input).players.length,priors:validation.priors,validation},null,2));
-
