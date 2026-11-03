@@ -1,0 +1,2796 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "model": "qwen3:4b-instruct",
+    "modelDigest": "0edcdef34593eac1aa2be9c7d06c432dcf81945adca5eca2f27662c18f168ba0",
+    "modelDetails": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "4.0B",
+      "quantization_level": "Q4_K_M",
+      "context_length": 262144,
+      "embedding_length": 2560
+    },
+    "generatedAt": "2026-11-03T00:51:55.451182+00:00",
+    "methods": {
+      "short": "27 real local-model calls: three synthetic SQLite cases × three coordination modes × three calls. Every call sees the same complete evidence for its case. Stored transcripts are brief generated conclusions, not hidden reasoning.",
+      "protocol": "Solo: one investigator revises its own prior summaries. Independent: three isolated investigators vote; at least two matching valid answers required. Relay: analyst, critic and adjudicator see prior summaries. All modes receive the same frozen SQL evidence; this is a coordination exercise, not autonomous tool use.",
+      "budget": {
+        "callsPerRun": 3,
+        "generationTokensPerCall": 320,
+        "maxGeneratedTokensPerRun": 960,
+        "contextLimit": 8192,
+        "temperature": 0.4,
+        "seedsByStep": [
+          7,
+          19,
+          43
+        ],
+        "fairness": "Same call count, generation caps, model and evidence access. Input tokens, actual output tokens, role instructions and elapsed time differ. No equal-total-token or equal-cost claim."
+      },
+      "limitations": [
+        "One small quantized local model and three hand-built cases; these results are not a benchmark or evidence of a generally superior architecture.",
+        "One deterministic seed schedule per mode; no repeated trials or uncertainty interval.",
+        "SQL evidence is precomputed and supplied in full. Models cite query IDs but do not choose or execute tools.",
+        "Confidence is an uncalibrated self-report. Exact answer scoring does not certify every sentence of a rationale.",
+        "Mode order and caching affect latency; durations are observations, not controlled speed comparisons.",
+        "Same seed and digest aid reproduction but backend/platform differences can change generated text."
+      ],
+      "systemPrompt": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements.",
+      "roles": {
+        "solo": [
+          [
+            "Investigator",
+            "Give a diagnosis using the evidence."
+          ],
+          [
+            "Investigator",
+            "Review your previous diagnosis against the complete evidence; keep or revise it."
+          ],
+          [
+            "Investigator",
+            "Make your final diagnosis after checking your previous conclusions against the evidence."
+          ]
+        ],
+        "independent": [
+          [
+            "Independent investigator",
+            "Give a diagnosis using the evidence."
+          ],
+          [
+            "Independent investigator",
+            "Give a diagnosis using the evidence."
+          ],
+          [
+            "Independent investigator",
+            "Give a diagnosis using the evidence."
+          ]
+        ],
+        "relay": [
+          [
+            "Analyst",
+            "Propose a diagnosis using the evidence."
+          ],
+          [
+            "Critic",
+            "Audit the prior diagnosis against the evidence. State your own best diagnosis, correcting it if needed."
+          ],
+          [
+            "Adjudicator",
+            "Resolve the prior conclusions against the evidence and state the final diagnosis."
+          ]
+        ]
+      },
+      "sources": [
+        {
+          "title": "Towards a Science of Scaling Agent Systems",
+          "url": "https://arxiv.org/abs/2512.08296"
+        },
+        {
+          "title": "Why Do Multi-Agent LLM Systems Fail?",
+          "url": "https://arxiv.org/abs/2503.13657"
+        }
+      ]
+    },
+    "generatorSha256": "f1cec95ed12346f56da40e372f2c9e91417e95270fec12aaac505a162d998b51",
+    "sqliteVersion": "3.50.4",
+    "backend": "Ollama local /api/chat",
+    "auditMethods": "Editorial notes inspect specific visible outputs and their relation to the SQL evidence. They are attached only when the raw-output SHA-256 matches the reviewed text. They do not alter raw responses or exact claim-ID verdicts. Core JSON fields are validated; extra JSON fields are preserved and reported as warnings, not parse failures.",
+    "auditSourceSha256": "90c17ff172a08cf2593af95e75960bf77a81cfc335f819268aa2c7ed56d877b5"
+  },
+  "cases": [
+    {
+      "id": "fanout",
+      "title": "The doubled revenue",
+      "question": "Why does the new dashboard report twice the revenue of the order ledger?",
+      "brief": "A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.",
+      "hypotheses": [
+        {
+          "id": "H1",
+          "title": "Real sales growth explains the discrepancy"
+        },
+        {
+          "id": "H2",
+          "title": "The history join counts each order twice"
+        },
+        {
+          "id": "H3",
+          "title": "Duplicate order IDs inflate the ledger"
+        }
+      ],
+      "answer": {
+        "claimId": "H2",
+        "explanation": "Each order joins two customer-version rows. Filtering the current version restores the source ledger total; order IDs are unique and source revenue is unchanged between days."
+      },
+      "queries": [
+        {
+          "id": "Q1",
+          "title": "Ledger and new dashboard totals",
+          "sql": "SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day",
+          "columns": [
+            "day",
+            "joined_rows",
+            "distinct_orders",
+            "dashboard_revenue",
+            "ledger_revenue"
+          ],
+          "rows": [
+            [
+              "2026-10-10",
+              240,
+              120,
+              12000,
+              6000
+            ],
+            [
+              "2026-10-11",
+              240,
+              120,
+              12000,
+              6000
+            ]
+          ]
+        },
+        {
+          "id": "Q2",
+          "title": "Customer history multiplicity",
+          "sql": "SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version",
+          "columns": [
+            "version",
+            "current",
+            "rows"
+          ],
+          "rows": [
+            [
+              1,
+              0,
+              12
+            ],
+            [
+              2,
+              1,
+              12
+            ]
+          ]
+        },
+        {
+          "id": "Q3",
+          "title": "Repaired join and source uniqueness",
+          "sql": "SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day",
+          "columns": [
+            "day",
+            "joined_rows",
+            "revenue",
+            "duplicate_source_ids"
+          ],
+          "rows": [
+            [
+              "2026-10-10",
+              120,
+              6000,
+              0
+            ],
+            [
+              "2026-10-11",
+              120,
+              6000,
+              0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mix",
+      "title": "The falling conversion rate",
+      "question": "Why does total conversion fall while both device groups improve?",
+      "brief": "A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.",
+      "hypotheses": [
+        {
+          "id": "H1",
+          "title": "Conversion worsened within both device groups"
+        },
+        {
+          "id": "H2",
+          "title": "Tracking loss creates an artificial decline"
+        },
+        {
+          "id": "H3",
+          "title": "Traffic moved toward the lower-converting device group"
+        }
+      ],
+      "answer": {
+        "claimId": "H3",
+        "explanation": "The mobile share rises from 10% to 90%. Mobile converts less than desktop in both periods, even though each group improves. The weighted overall rate falls from 9.2% to 3.8%; the data contain no tracking loss."
+      },
+      "queries": [
+        {
+          "id": "Q1",
+          "title": "Overall conversion",
+          "sql": "SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC",
+          "columns": [
+            "period",
+            "sessions",
+            "conversions",
+            "conversion_percent"
+          ],
+          "rows": [
+            [
+              "before",
+              1000,
+              92,
+              9.2
+            ],
+            [
+              "after",
+              1000,
+              38,
+              3.8
+            ]
+          ]
+        },
+        {
+          "id": "Q2",
+          "title": "Conversion and volume by device",
+          "sql": "SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device",
+          "columns": [
+            "period",
+            "device",
+            "sessions",
+            "conversions",
+            "conversion_percent"
+          ],
+          "rows": [
+            [
+              "before",
+              "desktop",
+              900,
+              90,
+              10.0
+            ],
+            [
+              "before",
+              "mobile",
+              100,
+              2,
+              2.0
+            ],
+            [
+              "after",
+              "desktop",
+              100,
+              11,
+              11.0
+            ],
+            [
+              "after",
+              "mobile",
+              900,
+              27,
+              3.0
+            ]
+          ]
+        },
+        {
+          "id": "Q3",
+          "title": "Tracking integrity",
+          "sql": "SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC",
+          "columns": [
+            "period",
+            "tracked",
+            "total",
+            "duplicate_ids"
+          ],
+          "rows": [
+            [
+              "before",
+              1000,
+              1000,
+              0
+            ],
+            [
+              "after",
+              1000,
+              1000,
+              0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrivals",
+      "title": "The overnight demand scare",
+      "question": "Why did the midnight dashboard show a 60% drop that disappeared the next morning?",
+      "brief": "All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.",
+      "hypotheses": [
+        {
+          "id": "H1",
+          "title": "Late arrivals made the first snapshot incomplete"
+        },
+        {
+          "id": "H2",
+          "title": "True event-time demand fell by 60%"
+        },
+        {
+          "id": "H3",
+          "title": "Duplicate source IDs made the morning count rebound"
+        }
+      ],
+      "answer": {
+        "claimId": "H1",
+        "explanation": "Both days contain 100 unique event-time records in the completed dataset. Sixty of the second day’s records arrived after the first snapshot and before the second. No source IDs are duplicated."
+      },
+      "queries": [
+        {
+          "id": "Q1",
+          "title": "Counts available at the first snapshot",
+          "sql": "SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day",
+          "columns": [
+            "event_day",
+            "available"
+          ],
+          "rows": [
+            [
+              "2026-10-10",
+              100
+            ],
+            [
+              "2026-10-11",
+              40
+            ]
+          ]
+        },
+        {
+          "id": "Q2",
+          "title": "Counts at 02:00 and late arrivals",
+          "sql": "SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day",
+          "columns": [
+            "event_day",
+            "available_at_02",
+            "arrived_after_first_snapshot"
+          ],
+          "rows": [
+            [
+              "2026-10-10",
+              100,
+              0
+            ],
+            [
+              "2026-10-11",
+              100,
+              60
+            ]
+          ]
+        },
+        {
+          "id": "Q3",
+          "title": "Time range and source uniqueness",
+          "sql": "SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day",
+          "columns": [
+            "event_day",
+            "first_event",
+            "last_event",
+            "duplicate_ids"
+          ],
+          "rows": [
+            [
+              "2026-10-10",
+              "2026-10-10 08:00:00",
+              "2026-10-10 19:59:00",
+              0
+            ],
+            [
+              "2026-10-11",
+              "2026-10-11 08:00:00",
+              "2026-10-11 19:59:00",
+              0
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "id": "fanout-solo",
+      "caseId": "fanout",
+      "mode": "solo",
+      "model": "qwen3:4b-instruct",
+      "steps": [
+        {
+          "id": "fanout-solo-1",
+          "role": "Investigator",
+          "seed": 7,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The doubled revenue\",\"question\":\"Why does the new dashboard report twice the revenue of the order ledger?\",\"brief\":\"A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Real sales growth explains the discrepancy\"},{\"id\":\"H2\",\"title\":\"The history join counts each order twice\"},{\"id\":\"H3\",\"title\":\"Duplicate order IDs inflate the ledger\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Ledger and new dashboard totals\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"distinct_orders\",\"dashboard_revenue\",\"ledger_revenue\"],\"rows\":[[\"2026-10-10\",240,120,12000,6000],[\"2026-10-11\",240,120,12000,6000]]},{\"id\":\"Q2\",\"title\":\"Customer history multiplicity\",\"sql\":\"SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version\",\"columns\":[\"version\",\"current\",\"rows\"],\"rows\":[[1,0,12],[2,1,12]]},{\"id\":\"Q3\",\"title\":\"Repaired join and source uniqueness\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"revenue\",\"duplicate_source_ids\"],\"rows\":[[\"2026-10-10\",120,6000,0],[\"2026-10-11\",120,6000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history multiplicity in Q2 shows that only current versions are active, supporting that the join is not duplicating orders from inactive versions. Cite Q1, Q2, Q3.\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history multiplicity in Q2 shows that only current versions are active, supporting that the join is not duplicating orders from inactive versions. Cite Q1, Q2, Q3."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H2",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 657,
+            "outputTokens": 114,
+            "totalTokens": 771,
+            "durationMs": 17449,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:12.9005981Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 15381372200,
+            "load_duration": 13051316400,
+            "prompt_eval_count": 657,
+            "prompt_eval_duration": 553448000,
+            "eval_count": 114,
+            "eval_duration": 1718406000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "f4edf70a9992e9692c56657d3a583c3942793542128860dfe85c6fde69743fff",
+            "note": "The selected H2 identifies join fanout correctly. However, the summary adds an unsupported statement about current-only history: Q1 joins all versions, while Q3 applies the current-version filter. A correct diagnosis ID does not validate every sentence."
+          },
+          "parseWarnings": []
+        },
+        {
+          "id": "fanout-solo-2",
+          "role": "Investigator",
+          "seed": 19,
+          "inputStepIds": [
+            "fanout-solo-1"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The doubled revenue\",\"question\":\"Why does the new dashboard report twice the revenue of the order ledger?\",\"brief\":\"A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Real sales growth explains the discrepancy\"},{\"id\":\"H2\",\"title\":\"The history join counts each order twice\"},{\"id\":\"H3\",\"title\":\"Duplicate order IDs inflate the ledger\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Ledger and new dashboard totals\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"distinct_orders\",\"dashboard_revenue\",\"ledger_revenue\"],\"rows\":[[\"2026-10-10\",240,120,12000,6000],[\"2026-10-11\",240,120,12000,6000]]},{\"id\":\"Q2\",\"title\":\"Customer history multiplicity\",\"sql\":\"SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version\",\"columns\":[\"version\",\"current\",\"rows\"],\"rows\":[[1,0,12],[2,1,12]]},{\"id\":\"Q3\",\"title\":\"Repaired join and source uniqueness\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"revenue\",\"duplicate_source_ids\"],\"rows\":[[\"2026-10-10\",120,6000,0],[\"2026-10-11\",120,6000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"fanout-solo-1\", \"role\": \"Investigator\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.98,\\\"evidenceQueryIds\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history multiplicity in Q2 shows that only current versions are active, supporting that the join is not duplicating orders from inactive versions. Cite Q1, Q2, Q3.\\\"}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Investigator. Review your previous diagnosis against the complete evidence; keep or revise it. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":1.0,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by joined_rows being double distinct_orders in Q1 and zero duplicate source IDs in Q3. Customer history multiplicity in Q2 confirms only current versions are active, ensuring the join does not include inactive duplicates. Cite Q1, Q2, Q3.\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 1.0,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by joined_rows being double distinct_orders in Q1 and zero duplicate source IDs in Q3. Customer history multiplicity in Q2 confirms only current versions are active, ensuring the join does not include inactive duplicates. Cite Q1, Q2, Q3."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H2",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 819,
+            "outputTokens": 103,
+            "totalTokens": 922,
+            "durationMs": 3953,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:16.8537258Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1914046000,
+            "load_duration": 14904600,
+            "prompt_eval_count": 819,
+            "prompt_eval_duration": 281965000,
+            "eval_count": 103,
+            "eval_duration": 1579691000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "8b46761a836e57ef79d8c59690a923f7737a3fcc412d175f9c2dde1074732006",
+            "note": "The selected H2 identifies join fanout correctly. However, the summary adds an unsupported statement about current-only history: Q1 joins all versions, while Q3 applies the current-version filter. A correct diagnosis ID does not validate every sentence."
+          },
+          "parseWarnings": []
+        },
+        {
+          "id": "fanout-solo-3",
+          "role": "Investigator",
+          "seed": 43,
+          "inputStepIds": [
+            "fanout-solo-1",
+            "fanout-solo-2"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The doubled revenue\",\"question\":\"Why does the new dashboard report twice the revenue of the order ledger?\",\"brief\":\"A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Real sales growth explains the discrepancy\"},{\"id\":\"H2\",\"title\":\"The history join counts each order twice\"},{\"id\":\"H3\",\"title\":\"Duplicate order IDs inflate the ledger\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Ledger and new dashboard totals\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"distinct_orders\",\"dashboard_revenue\",\"ledger_revenue\"],\"rows\":[[\"2026-10-10\",240,120,12000,6000],[\"2026-10-11\",240,120,12000,6000]]},{\"id\":\"Q2\",\"title\":\"Customer history multiplicity\",\"sql\":\"SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version\",\"columns\":[\"version\",\"current\",\"rows\"],\"rows\":[[1,0,12],[2,1,12]]},{\"id\":\"Q3\",\"title\":\"Repaired join and source uniqueness\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"revenue\",\"duplicate_source_ids\"],\"rows\":[[\"2026-10-10\",120,6000,0],[\"2026-10-11\",120,6000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"fanout-solo-1\", \"role\": \"Investigator\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.98,\\\"evidenceQueryIds\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history multiplicity in Q2 shows that only current versions are active, supporting that the join is not duplicating orders from inactive versions. Cite Q1, Q2, Q3.\\\"}\"}, {\"stepId\": \"fanout-solo-2\", \"role\": \"Investigator\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":1.0,\\\"evidenceQueryIds\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by joined_rows being double distinct_orders in Q1 and zero duplicate source IDs in Q3. Customer history multiplicity in Q2 confirms only current versions are active, ensuring the join does not include inactive duplicates. Cite Q1, Q2, Q3.\\\"}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Investigator. Make your final diagnosis after checking your previous conclusions against the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":1.0,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by joined_rows being double distinct_orders in Q1 and zero duplicate source IDs in Q3. Customer history multiplicity in Q2 shows only current versions are active, ensuring no duplicates from inactive versions. Cite Q1, Q2, Q3.\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 1.0,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by joined_rows being double distinct_orders in Q1 and zero duplicate source IDs in Q3. Customer history multiplicity in Q2 shows only current versions are active, ensuring no duplicates from inactive versions. Cite Q1, Q2, Q3."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H2",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 947,
+            "outputTokens": 101,
+            "totalTokens": 1048,
+            "durationMs": 3955,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:20.809019Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1905991500,
+            "load_duration": 11220400,
+            "prompt_eval_count": 947,
+            "prompt_eval_duration": 283022000,
+            "eval_count": 101,
+            "eval_duration": 1565226000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "265e9a69852dd7bfdaee79524ae8e821fed111690c8e804b488bde6491c12cb9",
+            "note": "The selected H2 identifies join fanout correctly. However, the summary adds an unsupported statement about current-only history: Q1 joins all versions, while Q3 applies the current-version filter. A correct diagnosis ID does not validate every sentence."
+          },
+          "parseWarnings": []
+        }
+      ],
+      "final": {
+        "claimId": "H2",
+        "verdict": {
+          "status": "correct",
+          "expectedClaimId": "H2",
+          "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+        },
+        "votes": {
+          "H2": 3
+        },
+        "rule": "Use the third call’s valid conclusion; no extra judge or repair call."
+      },
+      "usage": {
+        "promptTokens": 2423,
+        "outputTokens": 318,
+        "totalTokens": 2741,
+        "durationMs": 25357
+      }
+    },
+    {
+      "id": "fanout-independent",
+      "caseId": "fanout",
+      "mode": "independent",
+      "model": "qwen3:4b-instruct",
+      "steps": [
+        {
+          "id": "fanout-independent-1",
+          "role": "Independent investigator",
+          "seed": 7,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The doubled revenue\",\"question\":\"Why does the new dashboard report twice the revenue of the order ledger?\",\"brief\":\"A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Real sales growth explains the discrepancy\"},{\"id\":\"H2\",\"title\":\"The history join counts each order twice\"},{\"id\":\"H3\",\"title\":\"Duplicate order IDs inflate the ledger\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Ledger and new dashboard totals\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"distinct_orders\",\"dashboard_revenue\",\"ledger_revenue\"],\"rows\":[[\"2026-10-10\",240,120,12000,6000],[\"2026-10-11\",240,120,12000,6000]]},{\"id\":\"Q2\",\"title\":\"Customer history multiplicity\",\"sql\":\"SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version\",\"columns\":[\"version\",\"current\",\"rows\"],\"rows\":[[1,0,12],[2,1,12]]},{\"id\":\"Q3\",\"title\":\"Repaired join and source uniqueness\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"revenue\",\"duplicate_source_ids\"],\"rows\":[[\"2026-10-10\",120,6000,0],[\"2026-10-11\",120,6000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Independent investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history multiplicity in Q2 shows that only current versions are active, supporting that the join is not duplicating orders from inactive versions. Cite Q1, Q2, Q3.\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history multiplicity in Q2 shows that only current versions are active, supporting that the join is not duplicating orders from inactive versions. Cite Q1, Q2, Q3."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H2",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 657,
+            "outputTokens": 114,
+            "totalTokens": 771,
+            "durationMs": 4052,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:24.8634465Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1990118800,
+            "load_duration": 8313900,
+            "prompt_eval_count": 657,
+            "prompt_eval_duration": 111090000,
+            "eval_count": 114,
+            "eval_duration": 1835579000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "f4edf70a9992e9692c56657d3a583c3942793542128860dfe85c6fde69743fff",
+            "note": "The selected H2 identifies join fanout correctly. However, the summary adds an unsupported statement about current-only history: Q1 joins all versions, while Q3 applies the current-version filter. A correct diagnosis ID does not validate every sentence."
+          },
+          "parseWarnings": []
+        },
+        {
+          "id": "fanout-independent-2",
+          "role": "Independent investigator",
+          "seed": 19,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The doubled revenue\",\"question\":\"Why does the new dashboard report twice the revenue of the order ledger?\",\"brief\":\"A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Real sales growth explains the discrepancy\"},{\"id\":\"H2\",\"title\":\"The history join counts each order twice\"},{\"id\":\"H3\",\"title\":\"Duplicate order IDs inflate the ledger\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Ledger and new dashboard totals\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"distinct_orders\",\"dashboard_revenue\",\"ledger_revenue\"],\"rows\":[[\"2026-10-10\",240,120,12000,6000],[\"2026-10-11\",240,120,12000,6000]]},{\"id\":\"Q2\",\"title\":\"Customer history multiplicity\",\"sql\":\"SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version\",\"columns\":[\"version\",\"current\",\"rows\"],\"rows\":[[1,0,12],[2,1,12]]},{\"id\":\"Q3\",\"title\":\"Repaired join and source uniqueness\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"revenue\",\"duplicate_source_ids\"],\"rows\":[[\"2026-10-10\",120,6000,0],[\"2026-10-11\",120,6000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Independent investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\n  \"claimId\": \"H2\",\n  \"confidence\": 0.98,\n  \"evidenceQueryIds\": [\"Q1\", \"Q2\", \"Q3\"],\n  \"summary\": \"The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history table shows only one active version (current=1), ruling out data duplication in customer records (Q2).\",\n  \"queryIdsCited\": [\"Q1\", \"Q2\", \"Q3\"]\n}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history table shows only one active version (current=1), ruling out data duplication in customer records (Q2).",
+            "queryIdsCited": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H2",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 657,
+            "outputTokens": 133,
+            "totalTokens": 790,
+            "durationMs": 4350,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:29.2139759Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 2289371100,
+            "load_duration": 8779300,
+            "prompt_eval_count": 657,
+            "prompt_eval_duration": 41839000,
+            "eval_count": 133,
+            "eval_duration": 2201986000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "19a4247f2620b77d43ecae9dbb3d181c93e7ba0f2ad0329241ad155f9f91cd3a",
+            "note": "The selected H2 identifies join fanout correctly. However, the summary adds an unsupported statement about current-only history: Q1 joins all versions, while Q3 applies the current-version filter. A correct diagnosis ID does not validate every sentence."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: queryIdsCited"
+          ]
+        },
+        {
+          "id": "fanout-independent-3",
+          "role": "Independent investigator",
+          "seed": 43,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The doubled revenue\",\"question\":\"Why does the new dashboard report twice the revenue of the order ledger?\",\"brief\":\"A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Real sales growth explains the discrepancy\"},{\"id\":\"H2\",\"title\":\"The history join counts each order twice\"},{\"id\":\"H3\",\"title\":\"Duplicate order IDs inflate the ledger\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Ledger and new dashboard totals\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"distinct_orders\",\"dashboard_revenue\",\"ledger_revenue\"],\"rows\":[[\"2026-10-10\",240,120,12000,6000],[\"2026-10-11\",240,120,12000,6000]]},{\"id\":\"Q2\",\"title\":\"Customer history multiplicity\",\"sql\":\"SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version\",\"columns\":[\"version\",\"current\",\"rows\"],\"rows\":[[1,0,12],[2,1,12]]},{\"id\":\"Q3\",\"title\":\"Repaired join and source uniqueness\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"revenue\",\"duplicate_source_ids\"],\"rows\":[[\"2026-10-10\",120,6000,0],[\"2026-10-11\",120,6000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Independent investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\n  \"claimId\": \"H2\",\n  \"confidence\": 0.98,\n  \"evidenceQueryIds\": [\"Q1\", \"Q2\", \"Q3\"],\n  \"summary\": \"The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history table has only one current version (Q2), indicating no multiplicity in customer records.\",\n  \"queryCitations\": [\"Q1\", \"Q2\", \"Q3\"]\n}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The dashboard reports twice the revenue because the join with customer history counts each order twice, as confirmed by the joined_rows being double the distinct_orders in Q1 and the absence of duplicate source IDs in Q3. The customer history table has only one current version (Q2), indicating no multiplicity in customer records.",
+            "queryCitations": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H2",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 657,
+            "outputTokens": 127,
+            "totalTokens": 784,
+            "durationMs": 4172,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:33.3859397Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 2134283200,
+            "load_duration": 8302900,
+            "prompt_eval_count": 657,
+            "prompt_eval_duration": 44352000,
+            "eval_count": 127,
+            "eval_duration": 2043726000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "f210d430e0d60805091c9fcc680fbaff705321c90fb9c64c9d7632d6650395b2",
+            "note": "The selected H2 identifies join fanout correctly. However, the summary adds an unsupported statement about current-only history: Q1 joins all versions, while Q3 applies the current-version filter. A correct diagnosis ID does not validate every sentence."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: queryCitations"
+          ]
+        }
+      ],
+      "final": {
+        "claimId": "H2",
+        "verdict": {
+          "status": "correct",
+          "expectedClaimId": "H2",
+          "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+        },
+        "votes": {
+          "H2": 3
+        },
+        "rule": "At least two of three valid outputs must select the same claim; otherwise abstain. No fourth model call."
+      },
+      "usage": {
+        "promptTokens": 1971,
+        "outputTokens": 374,
+        "totalTokens": 2345,
+        "durationMs": 12574
+      }
+    },
+    {
+      "id": "fanout-relay",
+      "caseId": "fanout",
+      "mode": "relay",
+      "model": "qwen3:4b-instruct",
+      "steps": [
+        {
+          "id": "fanout-relay-1",
+          "role": "Analyst",
+          "seed": 7,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The doubled revenue\",\"question\":\"Why does the new dashboard report twice the revenue of the order ledger?\",\"brief\":\"A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Real sales growth explains the discrepancy\"},{\"id\":\"H2\",\"title\":\"The history join counts each order twice\"},{\"id\":\"H3\",\"title\":\"Duplicate order IDs inflate the ledger\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Ledger and new dashboard totals\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"distinct_orders\",\"dashboard_revenue\",\"ledger_revenue\"],\"rows\":[[\"2026-10-10\",240,120,12000,6000],[\"2026-10-11\",240,120,12000,6000]]},{\"id\":\"Q2\",\"title\":\"Customer history multiplicity\",\"sql\":\"SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version\",\"columns\":[\"version\",\"current\",\"rows\"],\"rows\":[[1,0,12],[2,1,12]]},{\"id\":\"Q3\",\"title\":\"Repaired join and source uniqueness\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"revenue\",\"duplicate_source_ids\"],\"rows\":[[\"2026-10-10\",120,6000,0],[\"2026-10-11\",120,6000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Analyst. Propose a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H1\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q1\",\"Q3\"],\"summary\":\"The dashboard reports twice the revenue because it joins customer history, but only current customer versions are used in the repaired query. The joined_rows and distinct_orders match the ledger revenue when only current versions are considered, confirming real sales growth, not data duplication. Cite Q1 and Q3.\"}",
+          "parsed": {
+            "claimId": "H1",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q3"
+            ],
+            "summary": "The dashboard reports twice the revenue because it joins customer history, but only current customer versions are used in the repaired query. The joined_rows and distinct_orders match the ledger revenue when only current versions are considered, confirming real sales growth, not data duplication. Cite Q1 and Q3."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H2",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 657,
+            "outputTokens": 87,
+            "totalTokens": 744,
+            "durationMs": 3619,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:37.0114172Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1547327700,
+            "load_duration": 12025200,
+            "prompt_eval_count": 657,
+            "prompt_eval_duration": 94563000,
+            "eval_count": 87,
+            "eval_duration": 1403337000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "c7bfc107d1c1261c7c39730a5402eb46ba2e281c6a8885fb7360cdfa40b2adfa",
+            "note": "The selected H1 claims sales growth, but Q1 shows duplicate joined rows and unchanged ledger totals. Q3 repairs the discrepancy by filtering current versions; it does not establish real growth."
+          },
+          "parseWarnings": []
+        },
+        {
+          "id": "fanout-relay-2",
+          "role": "Critic",
+          "seed": 19,
+          "inputStepIds": [
+            "fanout-relay-1"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The doubled revenue\",\"question\":\"Why does the new dashboard report twice the revenue of the order ledger?\",\"brief\":\"A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Real sales growth explains the discrepancy\"},{\"id\":\"H2\",\"title\":\"The history join counts each order twice\"},{\"id\":\"H3\",\"title\":\"Duplicate order IDs inflate the ledger\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Ledger and new dashboard totals\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"distinct_orders\",\"dashboard_revenue\",\"ledger_revenue\"],\"rows\":[[\"2026-10-10\",240,120,12000,6000],[\"2026-10-11\",240,120,12000,6000]]},{\"id\":\"Q2\",\"title\":\"Customer history multiplicity\",\"sql\":\"SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version\",\"columns\":[\"version\",\"current\",\"rows\"],\"rows\":[[1,0,12],[2,1,12]]},{\"id\":\"Q3\",\"title\":\"Repaired join and source uniqueness\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"revenue\",\"duplicate_source_ids\"],\"rows\":[[\"2026-10-10\",120,6000,0],[\"2026-10-11\",120,6000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"fanout-relay-1\", \"role\": \"Analyst\", \"response\": \"{\\\"claimId\\\":\\\"H1\\\",\\\"confidence\\\":0.98,\\\"evidenceQueryIds\\\":[\\\"Q1\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The dashboard reports twice the revenue because it joins customer history, but only current customer versions are used in the repaired query. The joined_rows and distinct_orders match the ledger revenue when only current versions are considered, confirming real sales growth, not data duplication. Cite Q1 and Q3.\\\"}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Critic. Audit the prior diagnosis against the evidence. State your own best diagnosis, correcting it if needed. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.99,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The dashboard reports twice the revenue because the join includes all customer versions, not just current ones, causing each order to be counted multiple times. This is confirmed by Q1 showing joined_rows doubling while distinct_orders remain stable, and Q2 revealing 12 non-current versions that contribute to duplication. Cite Q1, Q2, and Q3.\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.99,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The dashboard reports twice the revenue because the join includes all customer versions, not just current ones, causing each order to be counted multiple times. This is confirmed by Q1 showing joined_rows doubling while distinct_orders remain stable, and Q2 revealing 12 non-current versions that contribute to duplication. Cite Q1, Q2, and Q3."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H2",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 797,
+            "outputTokens": 103,
+            "totalTokens": 900,
+            "durationMs": 3967,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:40.9783308Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1929932900,
+            "load_duration": 7848800,
+            "prompt_eval_count": 797,
+            "prompt_eval_duration": 292619000,
+            "eval_count": 103,
+            "eval_duration": 1598085000
+          },
+          "parseWarnings": []
+        },
+        {
+          "id": "fanout-relay-3",
+          "role": "Adjudicator",
+          "seed": 43,
+          "inputStepIds": [
+            "fanout-relay-1",
+            "fanout-relay-2"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The doubled revenue\",\"question\":\"Why does the new dashboard report twice the revenue of the order ledger?\",\"brief\":\"A dashboard release changed the reporting query to join customer history. The ledger is the source of truth for booked order amounts. An operator suspects a successful promotion. Diagnose the discrepancy, not the promotion itself.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Real sales growth explains the discrepancy\"},{\"id\":\"H2\",\"title\":\"The history join counts each order twice\"},{\"id\":\"H3\",\"title\":\"Duplicate order IDs inflate the ledger\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Ledger and new dashboard totals\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, COUNT(DISTINCT o.id) AS distinct_orders, SUM(o.amount) AS dashboard_revenue, (SELECT SUM(b.amount) FROM orders b WHERE b.day=o.day) AS ledger_revenue FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"distinct_orders\",\"dashboard_revenue\",\"ledger_revenue\"],\"rows\":[[\"2026-10-10\",240,120,12000,6000],[\"2026-10-11\",240,120,12000,6000]]},{\"id\":\"Q2\",\"title\":\"Customer history multiplicity\",\"sql\":\"SELECT version, current, COUNT(*) AS rows FROM customer_versions GROUP BY version,current ORDER BY version\",\"columns\":[\"version\",\"current\",\"rows\"],\"rows\":[[1,0,12],[2,1,12]]},{\"id\":\"Q3\",\"title\":\"Repaired join and source uniqueness\",\"sql\":\"SELECT o.day, COUNT(*) AS joined_rows, SUM(o.amount) AS revenue, (SELECT COUNT(*)-COUNT(DISTINCT id) FROM orders b WHERE b.day=o.day) AS duplicate_source_ids FROM orders o JOIN customer_versions c ON o.customer_id=c.customer_id AND c.current=1 GROUP BY o.day ORDER BY o.day\",\"columns\":[\"day\",\"joined_rows\",\"revenue\",\"duplicate_source_ids\"],\"rows\":[[\"2026-10-10\",120,6000,0],[\"2026-10-11\",120,6000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"fanout-relay-1\", \"role\": \"Analyst\", \"response\": \"{\\\"claimId\\\":\\\"H1\\\",\\\"confidence\\\":0.98,\\\"evidenceQueryIds\\\":[\\\"Q1\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The dashboard reports twice the revenue because it joins customer history, but only current customer versions are used in the repaired query. The joined_rows and distinct_orders match the ledger revenue when only current versions are considered, confirming real sales growth, not data duplication. Cite Q1 and Q3.\\\"}\"}, {\"stepId\": \"fanout-relay-2\", \"role\": \"Critic\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.99,\\\"evidenceQueryIds\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The dashboard reports twice the revenue because the join includes all customer versions, not just current ones, causing each order to be counted multiple times. This is confirmed by Q1 showing joined_rows doubling while distinct_orders remain stable, and Q2 revealing 12 non-current versions that contribute to duplication. Cite Q1, Q2, and Q3.\\\"}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Adjudicator. Resolve the prior conclusions against the evidence and state the final diagnosis. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.99,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The dashboard reports twice the revenue because the join includes all customer versions, not just current ones, causing each order to be counted multiple times. This is confirmed by Q1 showing joined_rows doubling while distinct_orders remain stable, and Q2 revealing 12 non-current versions that contribute to duplication. Cite Q1, Q2, and Q3.\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.99,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The dashboard reports twice the revenue because the join includes all customer versions, not just current ones, causing each order to be counted multiple times. This is confirmed by Q1 showing joined_rows doubling while distinct_orders remain stable, and Q2 revealing 12 non-current versions that contribute to duplication. Cite Q1, Q2, and Q3."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H2",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 921,
+            "outputTokens": 103,
+            "totalTokens": 1024,
+            "durationMs": 3978,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:44.955663Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1936083600,
+            "load_duration": 8412600,
+            "prompt_eval_count": 921,
+            "prompt_eval_duration": 301539000,
+            "eval_count": 103,
+            "eval_duration": 1596440000
+          },
+          "parseWarnings": []
+        }
+      ],
+      "final": {
+        "claimId": "H2",
+        "verdict": {
+          "status": "correct",
+          "expectedClaimId": "H2",
+          "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+        },
+        "votes": {
+          "H1": 1,
+          "H2": 2
+        },
+        "rule": "Use the third call’s valid conclusion; no extra judge or repair call."
+      },
+      "usage": {
+        "promptTokens": 2375,
+        "outputTokens": 293,
+        "totalTokens": 2668,
+        "durationMs": 11564
+      }
+    },
+    {
+      "id": "mix-solo",
+      "caseId": "mix",
+      "mode": "solo",
+      "model": "qwen3:4b-instruct",
+      "steps": [
+        {
+          "id": "mix-solo-1",
+          "role": "Investigator",
+          "seed": 7,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The falling conversion rate\",\"question\":\"Why does total conversion fall while both device groups improve?\",\"brief\":\"A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Conversion worsened within both device groups\"},{\"id\":\"H2\",\"title\":\"Tracking loss creates an artificial decline\"},{\"id\":\"H3\",\"title\":\"Traffic moved toward the lower-converting device group\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Overall conversion\",\"sql\":\"SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",1000,92,9.2],[\"after\",1000,38,3.8]]},{\"id\":\"Q2\",\"title\":\"Conversion and volume by device\",\"sql\":\"SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device\",\"columns\":[\"period\",\"device\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",\"desktop\",900,90,10.0],[\"before\",\"mobile\",100,2,2.0],[\"after\",\"desktop\",100,11,11.0],[\"after\",\"mobile\",900,27,3.0]]},{\"id\":\"Q3\",\"title\":\"Tracking integrity\",\"sql\":\"SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"tracked\",\"total\",\"duplicate_ids\"],\"rows\":[[\"before\",1000,1000,0],[\"after\",1000,1000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.95,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The conversion rate drops overall, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is therefore likely an artifact of a change in traffic distribution, not a true decline in conversion performance.\",\"citations\":[\"Q1\",\"Q2\",\"Q3\"]}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.95,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The conversion rate drops overall, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is therefore likely an artifact of a change in traffic distribution, not a true decline in conversion performance.",
+            "citations": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H3",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 611,
+            "outputTokens": 100,
+            "totalTokens": 711,
+            "durationMs": 4184,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:49.1421303Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 2135804600,
+            "load_duration": 9290900,
+            "prompt_eval_count": 611,
+            "prompt_eval_duration": 510943000,
+            "eval_count": 100,
+            "eval_duration": 1512414000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "6075b8935e94cfb98cf3b0285a20ec9e224ea42a84754de73ed5a2a80da23b61",
+            "note": "The summary describes traffic redistribution, which is H3, but claimId selects H2 (tracking loss). Q3 shows complete tracking. This is a structured-diagnosis/summary contradiction, not simply absence of the correct concept."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: citations"
+          ]
+        },
+        {
+          "id": "mix-solo-2",
+          "role": "Investigator",
+          "seed": 19,
+          "inputStepIds": [
+            "mix-solo-1"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The falling conversion rate\",\"question\":\"Why does total conversion fall while both device groups improve?\",\"brief\":\"A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Conversion worsened within both device groups\"},{\"id\":\"H2\",\"title\":\"Tracking loss creates an artificial decline\"},{\"id\":\"H3\",\"title\":\"Traffic moved toward the lower-converting device group\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Overall conversion\",\"sql\":\"SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",1000,92,9.2],[\"after\",1000,38,3.8]]},{\"id\":\"Q2\",\"title\":\"Conversion and volume by device\",\"sql\":\"SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device\",\"columns\":[\"period\",\"device\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",\"desktop\",900,90,10.0],[\"before\",\"mobile\",100,2,2.0],[\"after\",\"desktop\",100,11,11.0],[\"after\",\"mobile\",900,27,3.0]]},{\"id\":\"Q3\",\"title\":\"Tracking integrity\",\"sql\":\"SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"tracked\",\"total\",\"duplicate_ids\"],\"rows\":[[\"before\",1000,1000,0],[\"after\",1000,1000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"mix-solo-1\", \"role\": \"Investigator\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.95,\\\"evidenceQueryIds\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The conversion rate drops overall, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is therefore likely an artifact of a change in traffic distribution, not a true decline in conversion performance.\\\",\\\"citations\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"]}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Investigator. Review your previous diagnosis against the complete evidence; keep or revise it. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.95,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The overall conversion rate drops, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is therefore likely an artifact of a change in traffic distribution, not a true decline in conversion performance.\",\"citations\":[\"Q1\",\"Q2\",\"Q3\"]}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.95,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The overall conversion rate drops, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is therefore likely an artifact of a change in traffic distribution, not a true decline in conversion performance.",
+            "citations": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H3",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 763,
+            "outputTokens": 100,
+            "totalTokens": 863,
+            "durationMs": 3938,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:53.0799436Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1890058200,
+            "load_duration": 7889100,
+            "prompt_eval_count": 763,
+            "prompt_eval_duration": 281495000,
+            "eval_count": 100,
+            "eval_duration": 1562659000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "dd129ea48b7edc08acc77a84965c86be101e98fb0fe394bebdd8693b61aa6737",
+            "note": "The summary describes traffic redistribution, which is H3, but claimId selects H2 (tracking loss). Q3 shows complete tracking. This is a structured-diagnosis/summary contradiction, not simply absence of the correct concept."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: citations"
+          ]
+        },
+        {
+          "id": "mix-solo-3",
+          "role": "Investigator",
+          "seed": 43,
+          "inputStepIds": [
+            "mix-solo-1",
+            "mix-solo-2"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The falling conversion rate\",\"question\":\"Why does total conversion fall while both device groups improve?\",\"brief\":\"A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Conversion worsened within both device groups\"},{\"id\":\"H2\",\"title\":\"Tracking loss creates an artificial decline\"},{\"id\":\"H3\",\"title\":\"Traffic moved toward the lower-converting device group\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Overall conversion\",\"sql\":\"SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",1000,92,9.2],[\"after\",1000,38,3.8]]},{\"id\":\"Q2\",\"title\":\"Conversion and volume by device\",\"sql\":\"SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device\",\"columns\":[\"period\",\"device\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",\"desktop\",900,90,10.0],[\"before\",\"mobile\",100,2,2.0],[\"after\",\"desktop\",100,11,11.0],[\"after\",\"mobile\",900,27,3.0]]},{\"id\":\"Q3\",\"title\":\"Tracking integrity\",\"sql\":\"SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"tracked\",\"total\",\"duplicate_ids\"],\"rows\":[[\"before\",1000,1000,0],[\"after\",1000,1000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"mix-solo-1\", \"role\": \"Investigator\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.95,\\\"evidenceQueryIds\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The conversion rate drops overall, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is therefore likely an artifact of a change in traffic distribution, not a true decline in conversion performance.\\\",\\\"citations\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"]}\"}, {\"stepId\": \"mix-solo-2\", \"role\": \"Investigator\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.95,\\\"evidenceQueryIds\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The overall conversion rate drops, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is therefore likely an artifact of a change in traffic distribution, not a true decline in conversion performance.\\\",\\\"citations\\\":[\\\"Q1\\\",\\\"Q2\\\",\\\"Q3\\\"]}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Investigator. Make your final diagnosis after checking your previous conclusions against the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.95,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The overall conversion rate drops, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is therefore likely an artifact of a change in traffic distribution, not a true decline in conversion performance.\",\"citations\":[\"Q1\",\"Q2\",\"Q3\"]}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.95,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The overall conversion rate drops, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is therefore likely an artifact of a change in traffic distribution, not a true decline in conversion performance.",
+            "citations": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H3",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 892,
+            "outputTokens": 100,
+            "totalTokens": 992,
+            "durationMs": 3919,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:52:56.9995328Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1865738100,
+            "load_duration": 8092800,
+            "prompt_eval_count": 892,
+            "prompt_eval_duration": 274150000,
+            "eval_count": 100,
+            "eval_duration": 1552528000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "dd129ea48b7edc08acc77a84965c86be101e98fb0fe394bebdd8693b61aa6737",
+            "note": "The summary describes traffic redistribution, which is H3, but claimId selects H2 (tracking loss). Q3 shows complete tracking. This is a structured-diagnosis/summary contradiction, not simply absence of the correct concept."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: citations"
+          ]
+        }
+      ],
+      "final": {
+        "claimId": "H2",
+        "verdict": {
+          "status": "incorrect",
+          "expectedClaimId": "H3",
+          "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+        },
+        "votes": {
+          "H2": 3
+        },
+        "rule": "Use the third call’s valid conclusion; no extra judge or repair call."
+      },
+      "usage": {
+        "promptTokens": 2266,
+        "outputTokens": 300,
+        "totalTokens": 2566,
+        "durationMs": 12041
+      }
+    },
+    {
+      "id": "mix-independent",
+      "caseId": "mix",
+      "mode": "independent",
+      "model": "qwen3:4b-instruct",
+      "steps": [
+        {
+          "id": "mix-independent-1",
+          "role": "Independent investigator",
+          "seed": 7,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The falling conversion rate\",\"question\":\"Why does total conversion fall while both device groups improve?\",\"brief\":\"A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Conversion worsened within both device groups\"},{\"id\":\"H2\",\"title\":\"Tracking loss creates an artificial decline\"},{\"id\":\"H3\",\"title\":\"Traffic moved toward the lower-converting device group\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Overall conversion\",\"sql\":\"SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",1000,92,9.2],[\"after\",1000,38,3.8]]},{\"id\":\"Q2\",\"title\":\"Conversion and volume by device\",\"sql\":\"SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device\",\"columns\":[\"period\",\"device\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",\"desktop\",900,90,10.0],[\"before\",\"mobile\",100,2,2.0],[\"after\",\"desktop\",100,11,11.0],[\"after\",\"mobile\",900,27,3.0]]},{\"id\":\"Q3\",\"title\":\"Tracking integrity\",\"sql\":\"SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"tracked\",\"total\",\"duplicate_ids\"],\"rows\":[[\"before\",1000,1000,0],[\"after\",1000,1000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Independent investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The conversion rate drops overall, but both device groups show improved conversion rates individually. This discrepancy is explained by tracking loss creating an artificial decline in the aggregate conversion metric, as confirmed by consistent session counts and no duplicates in both periods. Q1, Q2, Q3 support this conclusion.\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The conversion rate drops overall, but both device groups show improved conversion rates individually. This discrepancy is explained by tracking loss creating an artificial decline in the aggregate conversion metric, as confirmed by consistent session counts and no duplicates in both periods. Q1, Q2, Q3 support this conclusion."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H3",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 611,
+            "outputTokens": 90,
+            "totalTokens": 701,
+            "durationMs": 3675,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:00.6765869Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1635326100,
+            "load_duration": 9342200,
+            "prompt_eval_count": 611,
+            "prompt_eval_duration": 108894000,
+            "eval_count": 90,
+            "eval_duration": 1477884000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "d25125158da1143c00c1f54601559d4d0008480315f12e09261ddd967f259589",
+            "note": "The conclusion asserts tracking loss even though Q3 reports every session tracked. Consistent session counts and zero duplicates do not support the asserted tracking failure."
+          },
+          "parseWarnings": []
+        },
+        {
+          "id": "mix-independent-2",
+          "role": "Independent investigator",
+          "seed": 19,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The falling conversion rate\",\"question\":\"Why does total conversion fall while both device groups improve?\",\"brief\":\"A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Conversion worsened within both device groups\"},{\"id\":\"H2\",\"title\":\"Tracking loss creates an artificial decline\"},{\"id\":\"H3\",\"title\":\"Traffic moved toward the lower-converting device group\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Overall conversion\",\"sql\":\"SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",1000,92,9.2],[\"after\",1000,38,3.8]]},{\"id\":\"Q2\",\"title\":\"Conversion and volume by device\",\"sql\":\"SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device\",\"columns\":[\"period\",\"device\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",\"desktop\",900,90,10.0],[\"before\",\"mobile\",100,2,2.0],[\"after\",\"desktop\",100,11,11.0],[\"after\",\"mobile\",900,27,3.0]]},{\"id\":\"Q3\",\"title\":\"Tracking integrity\",\"sql\":\"SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"tracked\",\"total\",\"duplicate_ids\"],\"rows\":[[\"before\",1000,1000,0],[\"after\",1000,1000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Independent investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\n  \"claimId\": \"H2\",\n  \"confidence\": 0.95,\n  \"evidenceQueryIds\": [\"Q1\", \"Q2\", \"Q3\"],\n  \"summary\": \"The overall conversion rate drops from 9.2% to 3.8%, but both device groups show improved conversion rates individually. Tracking integrity is intact with no duplicates or loss, indicating the decline is not due to tracking failure. The drop is thus likely an artifact of traffic redistribution, not a true performance decline in either group.\",\n  \"citations\": [\"Q1\", \"Q2\", \"Q3\"]\n}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.95,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The overall conversion rate drops from 9.2% to 3.8%, but both device groups show improved conversion rates individually. Tracking integrity is intact with no duplicates or loss, indicating the decline is not due to tracking failure. The drop is thus likely an artifact of traffic redistribution, not a true performance decline in either group.",
+            "citations": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H3",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 611,
+            "outputTokens": 130,
+            "totalTokens": 741,
+            "durationMs": 4298,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:04.9746186Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 2250133700,
+            "load_duration": 12451400,
+            "prompt_eval_count": 611,
+            "prompt_eval_duration": 42822000,
+            "eval_count": 130,
+            "eval_duration": 2162719000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "146b5e800002a5670be09a9ff0b0ca80ce48a2b8223781dbecf2efc520a339fb",
+            "note": "The summary describes traffic redistribution, which is H3, but claimId selects H2 (tracking loss). Q3 shows complete tracking. This is a structured-diagnosis/summary contradiction, not simply absence of the correct concept."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: citations"
+          ]
+        },
+        {
+          "id": "mix-independent-3",
+          "role": "Independent investigator",
+          "seed": 43,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The falling conversion rate\",\"question\":\"Why does total conversion fall while both device groups improve?\",\"brief\":\"A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Conversion worsened within both device groups\"},{\"id\":\"H2\",\"title\":\"Tracking loss creates an artificial decline\"},{\"id\":\"H3\",\"title\":\"Traffic moved toward the lower-converting device group\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Overall conversion\",\"sql\":\"SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",1000,92,9.2],[\"after\",1000,38,3.8]]},{\"id\":\"Q2\",\"title\":\"Conversion and volume by device\",\"sql\":\"SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device\",\"columns\":[\"period\",\"device\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",\"desktop\",900,90,10.0],[\"before\",\"mobile\",100,2,2.0],[\"after\",\"desktop\",100,11,11.0],[\"after\",\"mobile\",900,27,3.0]]},{\"id\":\"Q3\",\"title\":\"Tracking integrity\",\"sql\":\"SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"tracked\",\"total\",\"duplicate_ids\"],\"rows\":[[\"before\",1000,1000,0],[\"after\",1000,1000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Independent investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\n  \"claimId\": \"H2\",\n  \"confidence\": 0.95,\n  \"evidenceQueryIds\": [\"Q1\", \"Q2\", \"Q3\"],\n  \"summary\": \"The overall conversion rate drops from 9.2% to 3.8%, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is thus likely an artifact of a shift in traffic distribution, not a worsening of performance in either group.\",\n  \"citations\": [\"Q1\", \"Q2\", \"Q3\"]\n}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.95,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The overall conversion rate drops from 9.2% to 3.8%, but both device groups show improved conversion rates individually. There is no tracking loss or data duplication, indicating the decline is not due to tracking issues. The drop is thus likely an artifact of a shift in traffic distribution, not a worsening of performance in either group.",
+            "citations": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H3",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 611,
+            "outputTokens": 132,
+            "totalTokens": 743,
+            "durationMs": 4292,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:09.2665011Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 2227234200,
+            "load_duration": 7905700,
+            "prompt_eval_count": 611,
+            "prompt_eval_duration": 38689000,
+            "eval_count": 132,
+            "eval_duration": 2152181000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "1d254ac6d37ee4125c34d2daffc1dd901cb49069fe41a8e309dc13337e4246f8",
+            "note": "The summary describes traffic redistribution, which is H3, but claimId selects H2 (tracking loss). Q3 shows complete tracking. This is a structured-diagnosis/summary contradiction, not simply absence of the correct concept."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: citations"
+          ]
+        }
+      ],
+      "final": {
+        "claimId": "H2",
+        "verdict": {
+          "status": "incorrect",
+          "expectedClaimId": "H3",
+          "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+        },
+        "votes": {
+          "H2": 3
+        },
+        "rule": "At least two of three valid outputs must select the same claim; otherwise abstain. No fourth model call."
+      },
+      "usage": {
+        "promptTokens": 1833,
+        "outputTokens": 352,
+        "totalTokens": 2185,
+        "durationMs": 12265
+      }
+    },
+    {
+      "id": "mix-relay",
+      "caseId": "mix",
+      "mode": "relay",
+      "model": "qwen3:4b-instruct",
+      "steps": [
+        {
+          "id": "mix-relay-1",
+          "role": "Analyst",
+          "seed": 7,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The falling conversion rate\",\"question\":\"Why does total conversion fall while both device groups improve?\",\"brief\":\"A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Conversion worsened within both device groups\"},{\"id\":\"H2\",\"title\":\"Tracking loss creates an artificial decline\"},{\"id\":\"H3\",\"title\":\"Traffic moved toward the lower-converting device group\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Overall conversion\",\"sql\":\"SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",1000,92,9.2],[\"after\",1000,38,3.8]]},{\"id\":\"Q2\",\"title\":\"Conversion and volume by device\",\"sql\":\"SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device\",\"columns\":[\"period\",\"device\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",\"desktop\",900,90,10.0],[\"before\",\"mobile\",100,2,2.0],[\"after\",\"desktop\",100,11,11.0],[\"after\",\"mobile\",900,27,3.0]]},{\"id\":\"Q3\",\"title\":\"Tracking integrity\",\"sql\":\"SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"tracked\",\"total\",\"duplicate_ids\"],\"rows\":[[\"before\",1000,1000,0],[\"after\",1000,1000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Analyst. Propose a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\n  \"claimId\": \"H2\",\n  \"confidence\": 0.95,\n  \"evidenceQueryIds\": [\"Q1\", \"Q2\", \"Q3\"],\n  \"summary\": \"The conversion rate appears to decline overall, but both device groups show improved conversion rates individually. Tracking integrity is intact with no duplicates or losses, indicating the drop is not due to tracking issues. The artificial decline is likely caused by a shift in traffic distribution, with more sessions moving to the lower-converting mobile group, which dilutes the overall average.\",\n  \"queryCitations\": [\"Q1\", \"Q2\", \"Q3\"]\n}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.95,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The conversion rate appears to decline overall, but both device groups show improved conversion rates individually. Tracking integrity is intact with no duplicates or losses, indicating the drop is not due to tracking issues. The artificial decline is likely caused by a shift in traffic distribution, with more sessions moving to the lower-converting mobile group, which dilutes the overall average.",
+            "queryCitations": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H3",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 611,
+            "outputTokens": 134,
+            "totalTokens": 745,
+            "durationMs": 4301,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:13.5710077Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 2270047300,
+            "load_duration": 11785400,
+            "prompt_eval_count": 611,
+            "prompt_eval_duration": 93410000,
+            "eval_count": 134,
+            "eval_duration": 2135876000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "00fee1e665153859e6c5638177fd1354b40c2ddd4a2837437175164cddbf3fe8",
+            "note": "The summary describes traffic redistribution, which is H3, but claimId selects H2 (tracking loss). Q3 shows complete tracking. This is a structured-diagnosis/summary contradiction, not simply absence of the correct concept."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: queryCitations"
+          ]
+        },
+        {
+          "id": "mix-relay-2",
+          "role": "Critic",
+          "seed": 19,
+          "inputStepIds": [
+            "mix-relay-1"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The falling conversion rate\",\"question\":\"Why does total conversion fall while both device groups improve?\",\"brief\":\"A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Conversion worsened within both device groups\"},{\"id\":\"H2\",\"title\":\"Tracking loss creates an artificial decline\"},{\"id\":\"H3\",\"title\":\"Traffic moved toward the lower-converting device group\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Overall conversion\",\"sql\":\"SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",1000,92,9.2],[\"after\",1000,38,3.8]]},{\"id\":\"Q2\",\"title\":\"Conversion and volume by device\",\"sql\":\"SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device\",\"columns\":[\"period\",\"device\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",\"desktop\",900,90,10.0],[\"before\",\"mobile\",100,2,2.0],[\"after\",\"desktop\",100,11,11.0],[\"after\",\"mobile\",900,27,3.0]]},{\"id\":\"Q3\",\"title\":\"Tracking integrity\",\"sql\":\"SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"tracked\",\"total\",\"duplicate_ids\"],\"rows\":[[\"before\",1000,1000,0],[\"after\",1000,1000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"mix-relay-1\", \"role\": \"Analyst\", \"response\": \"{\\n  \\\"claimId\\\": \\\"H2\\\",\\n  \\\"confidence\\\": 0.95,\\n  \\\"evidenceQueryIds\\\": [\\\"Q1\\\", \\\"Q2\\\", \\\"Q3\\\"],\\n  \\\"summary\\\": \\\"The conversion rate appears to decline overall, but both device groups show improved conversion rates individually. Tracking integrity is intact with no duplicates or losses, indicating the drop is not due to tracking issues. The artificial decline is likely caused by a shift in traffic distribution, with more sessions moving to the lower-converting mobile group, which dilutes the overall average.\\\",\\n  \\\"queryCitations\\\": [\\\"Q1\\\", \\\"Q2\\\", \\\"Q3\\\"]\\n}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Critic. Audit the prior diagnosis against the evidence. State your own best diagnosis, correcting it if needed. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\n  \"claimId\": \"H2\",\n  \"confidence\": 0.95,\n  \"evidenceQueryIds\": [\"Q1\", \"Q2\", \"Q3\"],\n  \"summary\": \"The overall conversion rate drops, but both device groups show improved conversion rates individually. Tracking integrity is intact, with no duplicates or losses, so the decline is not due to tracking errors. The drop is instead due to a shift in traffic distribution, with more sessions moving to the lower-converting mobile group, which dilutes the overall average.\",\n  \"queryCitations\": [\"Q1\", \"Q2\", \"Q3\"]\n}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.95,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The overall conversion rate drops, but both device groups show improved conversion rates individually. Tracking integrity is intact, with no duplicates or losses, so the decline is not due to tracking errors. The drop is instead due to a shift in traffic distribution, with more sessions moving to the lower-converting mobile group, which dilutes the overall average.",
+            "queryCitations": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H3",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 807,
+            "outputTokens": 132,
+            "totalTokens": 939,
+            "durationMs": 4489,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:18.0607132Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 2433610500,
+            "load_duration": 9210800,
+            "prompt_eval_count": 807,
+            "prompt_eval_duration": 318580000,
+            "eval_count": 132,
+            "eval_duration": 2066222000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "9f2920df76d857305ae9eb26b72455cae79a8bd38b560092ddc2866292937080",
+            "note": "The summary describes traffic redistribution, which is H3, but claimId selects H2 (tracking loss). Q3 shows complete tracking. This is a structured-diagnosis/summary contradiction, not simply absence of the correct concept."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: queryCitations"
+          ]
+        },
+        {
+          "id": "mix-relay-3",
+          "role": "Adjudicator",
+          "seed": 43,
+          "inputStepIds": [
+            "mix-relay-1",
+            "mix-relay-2"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The falling conversion rate\",\"question\":\"Why does total conversion fall while both device groups improve?\",\"brief\":\"A product report shows a large drop in conversion after a campaign. Every session has exactly one tracking record and a verified conversion label. Explain the aggregate change using the supplied groups.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Conversion worsened within both device groups\"},{\"id\":\"H2\",\"title\":\"Tracking loss creates an artificial decline\"},{\"id\":\"H3\",\"title\":\"Traffic moved toward the lower-converting device group\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Overall conversion\",\"sql\":\"SELECT period, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",1000,92,9.2],[\"after\",1000,38,3.8]]},{\"id\":\"Q2\",\"title\":\"Conversion and volume by device\",\"sql\":\"SELECT period, device, COUNT(*) AS sessions, SUM(converted) AS conversions, ROUND(100.0*AVG(converted),2) AS conversion_percent FROM sessions GROUP BY period,device ORDER BY period DESC,device\",\"columns\":[\"period\",\"device\",\"sessions\",\"conversions\",\"conversion_percent\"],\"rows\":[[\"before\",\"desktop\",900,90,10.0],[\"before\",\"mobile\",100,2,2.0],[\"after\",\"desktop\",100,11,11.0],[\"after\",\"mobile\",900,27,3.0]]},{\"id\":\"Q3\",\"title\":\"Tracking integrity\",\"sql\":\"SELECT period, SUM(tracked) AS tracked, COUNT(*) AS total, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM sessions GROUP BY period ORDER BY period DESC\",\"columns\":[\"period\",\"tracked\",\"total\",\"duplicate_ids\"],\"rows\":[[\"before\",1000,1000,0],[\"after\",1000,1000,0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"mix-relay-1\", \"role\": \"Analyst\", \"response\": \"{\\n  \\\"claimId\\\": \\\"H2\\\",\\n  \\\"confidence\\\": 0.95,\\n  \\\"evidenceQueryIds\\\": [\\\"Q1\\\", \\\"Q2\\\", \\\"Q3\\\"],\\n  \\\"summary\\\": \\\"The conversion rate appears to decline overall, but both device groups show improved conversion rates individually. Tracking integrity is intact with no duplicates or losses, indicating the drop is not due to tracking issues. The artificial decline is likely caused by a shift in traffic distribution, with more sessions moving to the lower-converting mobile group, which dilutes the overall average.\\\",\\n  \\\"queryCitations\\\": [\\\"Q1\\\", \\\"Q2\\\", \\\"Q3\\\"]\\n}\"}, {\"stepId\": \"mix-relay-2\", \"role\": \"Critic\", \"response\": \"{\\n  \\\"claimId\\\": \\\"H2\\\",\\n  \\\"confidence\\\": 0.95,\\n  \\\"evidenceQueryIds\\\": [\\\"Q1\\\", \\\"Q2\\\", \\\"Q3\\\"],\\n  \\\"summary\\\": \\\"The overall conversion rate drops, but both device groups show improved conversion rates individually. Tracking integrity is intact, with no duplicates or losses, so the decline is not due to tracking errors. The drop is instead due to a shift in traffic distribution, with more sessions moving to the lower-converting mobile group, which dilutes the overall average.\\\",\\n  \\\"queryCitations\\\": [\\\"Q1\\\", \\\"Q2\\\", \\\"Q3\\\"]\\n}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Adjudicator. Resolve the prior conclusions against the evidence and state the final diagnosis. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.95,\"evidenceQueryIds\":[\"Q1\",\"Q2\",\"Q3\"],\"summary\":\"The overall conversion rate declines, but both device groups individually show improved conversion rates. Tracking integrity is preserved with no duplicates or losses, so the drop is not due to tracking errors. The decline is instead caused by a shift in traffic distribution, with more sessions moving to the lower-converting mobile group, which dilutes the overall average.\",\"queryCitations\":[\"Q1\",\"Q2\",\"Q3\"]}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.95,
+            "evidenceQueryIds": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The overall conversion rate declines, but both device groups individually show improved conversion rates. Tracking integrity is preserved with no duplicates or losses, so the drop is not due to tracking errors. The decline is instead caused by a shift in traffic distribution, with more sessions moving to the lower-converting mobile group, which dilutes the overall average.",
+            "queryCitations": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q1",
+              "valid": true
+            },
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H3",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 969,
+            "outputTokens": 112,
+            "totalTokens": 1081,
+            "durationMs": 4162,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:22.2220322Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 2128497200,
+            "load_duration": 10736500,
+            "prompt_eval_count": 969,
+            "prompt_eval_duration": 308847000,
+            "eval_count": 112,
+            "eval_duration": 1765900000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "5bd07f16140a2c0eb64d4baee5271248b6b44e30cbbf421153f7c09d95dff1b3",
+            "note": "The summary describes traffic redistribution, which is H3, but claimId selects H2 (tracking loss). Q3 shows complete tracking. This is a structured-diagnosis/summary contradiction, not simply absence of the correct concept."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: queryCitations"
+          ]
+        }
+      ],
+      "final": {
+        "claimId": "H2",
+        "verdict": {
+          "status": "incorrect",
+          "expectedClaimId": "H3",
+          "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+        },
+        "votes": {
+          "H2": 3
+        },
+        "rule": "Use the third call’s valid conclusion; no extra judge or repair call."
+      },
+      "usage": {
+        "promptTokens": 2387,
+        "outputTokens": 378,
+        "totalTokens": 2765,
+        "durationMs": 12952
+      }
+    },
+    {
+      "id": "arrivals-solo",
+      "caseId": "arrivals",
+      "mode": "solo",
+      "model": "qwen3:4b-instruct",
+      "steps": [
+        {
+          "id": "arrivals-solo-1",
+          "role": "Investigator",
+          "seed": 7,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The overnight demand scare\",\"question\":\"Why did the midnight dashboard show a 60% drop that disappeared the next morning?\",\"brief\":\"All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Late arrivals made the first snapshot incomplete\"},{\"id\":\"H2\",\"title\":\"True event-time demand fell by 60%\"},{\"id\":\"H3\",\"title\":\"Duplicate source IDs made the morning count rebound\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Counts available at the first snapshot\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available\"],\"rows\":[[\"2026-10-10\",100],[\"2026-10-11\",40]]},{\"id\":\"Q2\",\"title\":\"Counts at 02:00 and late arrivals\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available_at_02\",\"arrived_after_first_snapshot\"],\"rows\":[[\"2026-10-10\",100,0],[\"2026-10-11\",100,60]]},{\"id\":\"Q3\",\"title\":\"Time range and source uniqueness\",\"sql\":\"SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"first_event\",\"last_event\",\"duplicate_ids\"],\"rows\":[[\"2026-10-10\",\"2026-10-10 08:00:00\",\"2026-10-10 19:59:00\",0],[\"2026-10-11\",\"2026-10-11 08:00:00\",\"2026-10-11 19:59:00\",0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q2\"],\"summary\":\"The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, as confirmed by Q2. This indicates a true event-time demand fall, not an incomplete snapshot or data duplication.\",\"citation\":\"Q2\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q2"
+            ],
+            "summary": "The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, as confirmed by Q2. This indicates a true event-time demand fall, not an incomplete snapshot or data duplication.",
+            "citation": "Q2"
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q2",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H1",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 774,
+            "outputTokens": 85,
+            "totalTokens": 859,
+            "durationMs": 4051,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:26.2767352Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1997777000,
+            "load_duration": 8174600,
+            "prompt_eval_count": 774,
+            "prompt_eval_duration": 559080000,
+            "eval_count": 85,
+            "eval_duration": 1317237000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "e548013a8ff20844b43128842163c02de3e181e6aee86f9e5312707ea310b31f",
+            "note": "The response mentions late arrivals but then interprets them as a true event-time demand drop. Q2 shows 100 events on each day at the completed snapshot, contradicting that interpretation."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: citation"
+          ]
+        },
+        {
+          "id": "arrivals-solo-2",
+          "role": "Investigator",
+          "seed": 19,
+          "inputStepIds": [
+            "arrivals-solo-1"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The overnight demand scare\",\"question\":\"Why did the midnight dashboard show a 60% drop that disappeared the next morning?\",\"brief\":\"All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Late arrivals made the first snapshot incomplete\"},{\"id\":\"H2\",\"title\":\"True event-time demand fell by 60%\"},{\"id\":\"H3\",\"title\":\"Duplicate source IDs made the morning count rebound\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Counts available at the first snapshot\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available\"],\"rows\":[[\"2026-10-10\",100],[\"2026-10-11\",40]]},{\"id\":\"Q2\",\"title\":\"Counts at 02:00 and late arrivals\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available_at_02\",\"arrived_after_first_snapshot\"],\"rows\":[[\"2026-10-10\",100,0],[\"2026-10-11\",100,60]]},{\"id\":\"Q3\",\"title\":\"Time range and source uniqueness\",\"sql\":\"SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"first_event\",\"last_event\",\"duplicate_ids\"],\"rows\":[[\"2026-10-10\",\"2026-10-10 08:00:00\",\"2026-10-10 19:59:00\",0],[\"2026-10-11\",\"2026-10-11 08:00:00\",\"2026-10-11 19:59:00\",0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"arrivals-solo-1\", \"role\": \"Investigator\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.98,\\\"evidenceQueryIds\\\":[\\\"Q2\\\"],\\\"summary\\\":\\\"The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, as confirmed by Q2. This indicates a true event-time demand fall, not an incomplete snapshot or data duplication.\\\",\\\"citation\\\":\\\"Q2\\\"}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Investigator. Review your previous diagnosis against the complete evidence; keep or revise it. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q2\"],\"summary\":\"The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, as confirmed by Q2. This indicates a true event-time demand fall, not an incomplete snapshot or data duplication.\",\"citation\":\"Q2\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q2"
+            ],
+            "summary": "The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, as confirmed by Q2. This indicates a true event-time demand fall, not an incomplete snapshot or data duplication.",
+            "citation": "Q2"
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q2",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H1",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 910,
+            "outputTokens": 85,
+            "totalTokens": 995,
+            "durationMs": 3712,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:29.9888079Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1668850800,
+            "load_duration": 12822500,
+            "prompt_eval_count": 910,
+            "prompt_eval_duration": 280704000,
+            "eval_count": 85,
+            "eval_duration": 1339564000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "e548013a8ff20844b43128842163c02de3e181e6aee86f9e5312707ea310b31f",
+            "note": "The response mentions late arrivals but then interprets them as a true event-time demand drop. Q2 shows 100 events on each day at the completed snapshot, contradicting that interpretation."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: citation"
+          ]
+        },
+        {
+          "id": "arrivals-solo-3",
+          "role": "Investigator",
+          "seed": 43,
+          "inputStepIds": [
+            "arrivals-solo-1",
+            "arrivals-solo-2"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The overnight demand scare\",\"question\":\"Why did the midnight dashboard show a 60% drop that disappeared the next morning?\",\"brief\":\"All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Late arrivals made the first snapshot incomplete\"},{\"id\":\"H2\",\"title\":\"True event-time demand fell by 60%\"},{\"id\":\"H3\",\"title\":\"Duplicate source IDs made the morning count rebound\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Counts available at the first snapshot\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available\"],\"rows\":[[\"2026-10-10\",100],[\"2026-10-11\",40]]},{\"id\":\"Q2\",\"title\":\"Counts at 02:00 and late arrivals\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available_at_02\",\"arrived_after_first_snapshot\"],\"rows\":[[\"2026-10-10\",100,0],[\"2026-10-11\",100,60]]},{\"id\":\"Q3\",\"title\":\"Time range and source uniqueness\",\"sql\":\"SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"first_event\",\"last_event\",\"duplicate_ids\"],\"rows\":[[\"2026-10-10\",\"2026-10-10 08:00:00\",\"2026-10-10 19:59:00\",0],[\"2026-10-11\",\"2026-10-11 08:00:00\",\"2026-10-11 19:59:00\",0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"arrivals-solo-1\", \"role\": \"Investigator\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.98,\\\"evidenceQueryIds\\\":[\\\"Q2\\\"],\\\"summary\\\":\\\"The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, as confirmed by Q2. This indicates a true event-time demand fall, not an incomplete snapshot or data duplication.\\\",\\\"citation\\\":\\\"Q2\\\"}\"}, {\"stepId\": \"arrivals-solo-2\", \"role\": \"Investigator\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.98,\\\"evidenceQueryIds\\\":[\\\"Q2\\\"],\\\"summary\\\":\\\"The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, as confirmed by Q2. This indicates a true event-time demand fall, not an incomplete snapshot or data duplication.\\\",\\\"citation\\\":\\\"Q2\\\"}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Investigator. Make your final diagnosis after checking your previous conclusions against the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q2\"],\"summary\":\"The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, as confirmed by Q2. This indicates a true event-time demand fall, not an incomplete snapshot or data duplication.\",\"citation\":\"Q2\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q2"
+            ],
+            "summary": "The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, as confirmed by Q2. This indicates a true event-time demand fall, not an incomplete snapshot or data duplication.",
+            "citation": "Q2"
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q2",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H1",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 1023,
+            "outputTokens": 85,
+            "totalTokens": 1108,
+            "durationMs": 3671,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:33.6594277Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1631807500,
+            "load_duration": 8404600,
+            "prompt_eval_count": 1023,
+            "prompt_eval_duration": 235384000,
+            "eval_count": 85,
+            "eval_duration": 1355056000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "e548013a8ff20844b43128842163c02de3e181e6aee86f9e5312707ea310b31f",
+            "note": "The response mentions late arrivals but then interprets them as a true event-time demand drop. Q2 shows 100 events on each day at the completed snapshot, contradicting that interpretation."
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: citation"
+          ]
+        }
+      ],
+      "final": {
+        "claimId": "H2",
+        "verdict": {
+          "status": "incorrect",
+          "expectedClaimId": "H1",
+          "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+        },
+        "votes": {
+          "H2": 3
+        },
+        "rule": "Use the third call’s valid conclusion; no extra judge or repair call."
+      },
+      "usage": {
+        "promptTokens": 2707,
+        "outputTokens": 255,
+        "totalTokens": 2962,
+        "durationMs": 11434
+      }
+    },
+    {
+      "id": "arrivals-independent",
+      "caseId": "arrivals",
+      "mode": "independent",
+      "model": "qwen3:4b-instruct",
+      "steps": [
+        {
+          "id": "arrivals-independent-1",
+          "role": "Independent investigator",
+          "seed": 7,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The overnight demand scare\",\"question\":\"Why did the midnight dashboard show a 60% drop that disappeared the next morning?\",\"brief\":\"All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Late arrivals made the first snapshot incomplete\"},{\"id\":\"H2\",\"title\":\"True event-time demand fell by 60%\"},{\"id\":\"H3\",\"title\":\"Duplicate source IDs made the morning count rebound\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Counts available at the first snapshot\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available\"],\"rows\":[[\"2026-10-10\",100],[\"2026-10-11\",40]]},{\"id\":\"Q2\",\"title\":\"Counts at 02:00 and late arrivals\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available_at_02\",\"arrived_after_first_snapshot\"],\"rows\":[[\"2026-10-10\",100,0],[\"2026-10-11\",100,60]]},{\"id\":\"Q3\",\"title\":\"Time range and source uniqueness\",\"sql\":\"SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"first_event\",\"last_event\",\"duplicate_ids\"],\"rows\":[[\"2026-10-10\",\"2026-10-10 08:00:00\",\"2026-10-10 19:59:00\",0],[\"2026-10-11\",\"2026-10-11 08:00:00\",\"2026-10-11 19:59:00\",0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Independent investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q2\"],\"summary\":\"The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, indicating a true event-time drop in demand. This is supported by Q2 showing 60 arrivals after 00:00 UTC on 2026-10-12, which were not included in the first snapshot but were counted in the 02:00 snapshot, resulting in a lower observed demand at first snapshot and a rebound in morning count due to actual late arrivals. Q2 directly supports this conclusion.\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q2"
+            ],
+            "summary": "The demand dropped 60% on 2026-10-11 because 60 late arrivals were recorded after the first snapshot, indicating a true event-time drop in demand. This is supported by Q2 showing 60 arrivals after 00:00 UTC on 2026-10-12, which were not included in the first snapshot but were counted in the 02:00 snapshot, resulting in a lower observed demand at first snapshot and a rebound in morning count due to actual late arrivals. Q2 directly supports this conclusion."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q2",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H1",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 774,
+            "outputTokens": 148,
+            "totalTokens": 922,
+            "durationMs": 4575,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:38.2389197Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 2567183600,
+            "load_duration": 8541900,
+            "prompt_eval_count": 774,
+            "prompt_eval_duration": 105862000,
+            "eval_count": 148,
+            "eval_duration": 2417624000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "c53fc002949bb79e1db5bc02e762549fd1aa90cb7c302884bbb3700f40e321ec",
+            "note": "The response mentions late arrivals but then interprets them as a true event-time demand drop. Q2 shows 100 events on each day at the completed snapshot, contradicting that interpretation."
+          },
+          "parseWarnings": []
+        },
+        {
+          "id": "arrivals-independent-2",
+          "role": "Independent investigator",
+          "seed": 19,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The overnight demand scare\",\"question\":\"Why did the midnight dashboard show a 60% drop that disappeared the next morning?\",\"brief\":\"All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Late arrivals made the first snapshot incomplete\"},{\"id\":\"H2\",\"title\":\"True event-time demand fell by 60%\"},{\"id\":\"H3\",\"title\":\"Duplicate source IDs made the morning count rebound\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Counts available at the first snapshot\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available\"],\"rows\":[[\"2026-10-10\",100],[\"2026-10-11\",40]]},{\"id\":\"Q2\",\"title\":\"Counts at 02:00 and late arrivals\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available_at_02\",\"arrived_after_first_snapshot\"],\"rows\":[[\"2026-10-10\",100,0],[\"2026-10-11\",100,60]]},{\"id\":\"Q3\",\"title\":\"Time range and source uniqueness\",\"sql\":\"SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"first_event\",\"last_event\",\"duplicate_ids\"],\"rows\":[[\"2026-10-10\",\"2026-10-10 08:00:00\",\"2026-10-10 19:59:00\",0],[\"2026-10-11\",\"2026-10-11 08:00:00\",\"2026-10-11 19:59:00\",0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Independent investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H1\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q2\"],\"summary\":\"The first snapshot was incomplete due to 60 late arrivals after 2026-10-12 00:00 UTC, which were not captured in the initial count. This explains the 60% drop in the midnight dashboard that disappeared the next morning.\",\"citation\":\"Q2\"}",
+          "parsed": {
+            "claimId": "H1",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q2"
+            ],
+            "summary": "The first snapshot was incomplete due to 60 late arrivals after 2026-10-12 00:00 UTC, which were not captured in the initial count. This explains the 60% drop in the midnight dashboard that disappeared the next morning.",
+            "citation": "Q2"
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q2",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H1",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 774,
+            "outputTokens": 90,
+            "totalTokens": 864,
+            "durationMs": 3633,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:41.8710866Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1585155200,
+            "load_duration": 7748600,
+            "prompt_eval_count": 774,
+            "prompt_eval_duration": 43532000,
+            "eval_count": 90,
+            "eval_duration": 1506056000
+          },
+          "parseWarnings": [
+            "Additional JSON fields preserved but ignored by scoring: citation"
+          ]
+        },
+        {
+          "id": "arrivals-independent-3",
+          "role": "Independent investigator",
+          "seed": 43,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The overnight demand scare\",\"question\":\"Why did the midnight dashboard show a 60% drop that disappeared the next morning?\",\"brief\":\"All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Late arrivals made the first snapshot incomplete\"},{\"id\":\"H2\",\"title\":\"True event-time demand fell by 60%\"},{\"id\":\"H3\",\"title\":\"Duplicate source IDs made the morning count rebound\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Counts available at the first snapshot\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available\"],\"rows\":[[\"2026-10-10\",100],[\"2026-10-11\",40]]},{\"id\":\"Q2\",\"title\":\"Counts at 02:00 and late arrivals\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available_at_02\",\"arrived_after_first_snapshot\"],\"rows\":[[\"2026-10-10\",100,0],[\"2026-10-11\",100,60]]},{\"id\":\"Q3\",\"title\":\"Time range and source uniqueness\",\"sql\":\"SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"first_event\",\"last_event\",\"duplicate_ids\"],\"rows\":[[\"2026-10-10\",\"2026-10-10 08:00:00\",\"2026-10-10 19:59:00\",0],[\"2026-10-11\",\"2026-10-11 08:00:00\",\"2026-10-11 19:59:00\",0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Independent investigator. Give a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H1\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q2\"],\"summary\":\"The first snapshot on 2026-10-11 showed 40 events, but at 02:00, 100 events were recorded with 60 arriving after the first snapshot, indicating late arrivals inflated the count. This supports the hypothesis that late arrivals made the first snapshot incomplete, not a true demand drop. Cite Q2.\"}",
+          "parsed": {
+            "claimId": "H1",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q2"
+            ],
+            "summary": "The first snapshot on 2026-10-11 showed 40 events, but at 02:00, 100 events were recorded with 60 arriving after the first snapshot, indicating late arrivals inflated the count. This supports the hypothesis that late arrivals made the first snapshot incomplete, not a true demand drop. Cite Q2."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q2",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "correct",
+            "expectedClaimId": "H1",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 774,
+            "outputTokens": 104,
+            "totalTokens": 878,
+            "durationMs": 3892,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:45.7638644Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1849796200,
+            "load_duration": 8174800,
+            "prompt_eval_count": 774,
+            "prompt_eval_duration": 43416000,
+            "eval_count": 104,
+            "eval_duration": 1768200000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "c1f1c48b0c6cf4c24f47ea09fc72fb00b19df7b3eac7e487d8149015ad3488c9",
+            "note": "The selected H1 matches the case. The summary loosely says late arrivals inflated the count; Q2 instead shows previously missing, unique records completing the count. The first snapshot was just before midnight on October12, not a snapshot taken during October11."
+          },
+          "parseWarnings": []
+        }
+      ],
+      "final": {
+        "claimId": "H1",
+        "verdict": {
+          "status": "correct",
+          "expectedClaimId": "H1",
+          "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+        },
+        "votes": {
+          "H2": 1,
+          "H1": 2
+        },
+        "rule": "At least two of three valid outputs must select the same claim; otherwise abstain. No fourth model call."
+      },
+      "usage": {
+        "promptTokens": 2322,
+        "outputTokens": 342,
+        "totalTokens": 2664,
+        "durationMs": 12100
+      }
+    },
+    {
+      "id": "arrivals-relay",
+      "caseId": "arrivals",
+      "mode": "relay",
+      "model": "qwen3:4b-instruct",
+      "steps": [
+        {
+          "id": "arrivals-relay-1",
+          "role": "Analyst",
+          "seed": 7,
+          "inputStepIds": [],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The overnight demand scare\",\"question\":\"Why did the midnight dashboard show a 60% drop that disappeared the next morning?\",\"brief\":\"All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Late arrivals made the first snapshot incomplete\"},{\"id\":\"H2\",\"title\":\"True event-time demand fell by 60%\"},{\"id\":\"H3\",\"title\":\"Duplicate source IDs made the morning count rebound\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Counts available at the first snapshot\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available\"],\"rows\":[[\"2026-10-10\",100],[\"2026-10-11\",40]]},{\"id\":\"Q2\",\"title\":\"Counts at 02:00 and late arrivals\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available_at_02\",\"arrived_after_first_snapshot\"],\"rows\":[[\"2026-10-10\",100,0],[\"2026-10-11\",100,60]]},{\"id\":\"Q3\",\"title\":\"Time range and source uniqueness\",\"sql\":\"SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"first_event\",\"last_event\",\"duplicate_ids\"],\"rows\":[[\"2026-10-10\",\"2026-10-10 08:00:00\",\"2026-10-10 19:59:00\",0],[\"2026-10-11\",\"2026-10-11 08:00:00\",\"2026-10-11 19:59:00\",0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Analyst. Propose a diagnosis using the evidence. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H3\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q2\",\"Q3\"],\"summary\":\"The morning count rebounded due to late arrivals that were not captured in the first snapshot, as 60 events arrived after 2026-10-12 00:00 UTC. No duplicate source IDs were found, ruling out data duplication as a cause. Cite Q2 and Q3.\"}",
+          "parsed": {
+            "claimId": "H3",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The morning count rebounded due to late arrivals that were not captured in the first snapshot, as 60 events arrived after 2026-10-12 00:00 UTC. No duplicate source IDs were found, ruling out data duplication as a cause. Cite Q2 and Q3."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H1",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 774,
+            "outputTokens": 96,
+            "totalTokens": 870,
+            "durationMs": 3819,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:49.5868694Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1756017100,
+            "load_duration": 8002400,
+            "prompt_eval_count": 774,
+            "prompt_eval_duration": 82610000,
+            "eval_count": 96,
+            "eval_duration": 1634586000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "86033f2ede3c65a623d1496d7fd0ecee07fbceb3fa9b401dec2a4c05b7ae0f7b",
+            "note": "The summary describes late-arrival incompleteness and explicitly rules out duplicates, but claimId selects H3 (duplicates). The narrative supports H1 while the selected diagnosis does not."
+          },
+          "parseWarnings": []
+        },
+        {
+          "id": "arrivals-relay-2",
+          "role": "Critic",
+          "seed": 19,
+          "inputStepIds": [
+            "arrivals-relay-1"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The overnight demand scare\",\"question\":\"Why did the midnight dashboard show a 60% drop that disappeared the next morning?\",\"brief\":\"All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Late arrivals made the first snapshot incomplete\"},{\"id\":\"H2\",\"title\":\"True event-time demand fell by 60%\"},{\"id\":\"H3\",\"title\":\"Duplicate source IDs made the morning count rebound\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Counts available at the first snapshot\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available\"],\"rows\":[[\"2026-10-10\",100],[\"2026-10-11\",40]]},{\"id\":\"Q2\",\"title\":\"Counts at 02:00 and late arrivals\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available_at_02\",\"arrived_after_first_snapshot\"],\"rows\":[[\"2026-10-10\",100,0],[\"2026-10-11\",100,60]]},{\"id\":\"Q3\",\"title\":\"Time range and source uniqueness\",\"sql\":\"SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"first_event\",\"last_event\",\"duplicate_ids\"],\"rows\":[[\"2026-10-10\",\"2026-10-10 08:00:00\",\"2026-10-10 19:59:00\",0],[\"2026-10-11\",\"2026-10-11 08:00:00\",\"2026-10-11 19:59:00\",0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"arrivals-relay-1\", \"role\": \"Analyst\", \"response\": \"{\\\"claimId\\\":\\\"H3\\\",\\\"confidence\\\":0.98,\\\"evidenceQueryIds\\\":[\\\"Q2\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The morning count rebounded due to late arrivals that were not captured in the first snapshot, as 60 events arrived after 2026-10-12 00:00 UTC. No duplicate source IDs were found, ruling out data duplication as a cause. Cite Q2 and Q3.\\\"}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Critic. Audit the prior diagnosis against the evidence. State your own best diagnosis, correcting it if needed. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H2\",\"confidence\":0.95,\"evidenceQueryIds\":[\"Q2\"],\"summary\":\"The first snapshot showed a 60% drop in demand because 60 events arrived after 00:00 UTC, meaning the initial count was incomplete. This directly supports a true drop in event-time demand, not a rebound or data duplication. Cite Q2.\"}",
+          "parsed": {
+            "claimId": "H2",
+            "confidence": 0.95,
+            "evidenceQueryIds": [
+              "Q2"
+            ],
+            "summary": "The first snapshot showed a 60% drop in demand because 60 events arrived after 00:00 UTC, meaning the initial count was incomplete. This directly supports a true drop in event-time demand, not a rebound or data duplication. Cite Q2."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q2",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H1",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 923,
+            "outputTokens": 83,
+            "totalTokens": 1006,
+            "durationMs": 3685,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:53.2724559Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1652411900,
+            "load_duration": 8264300,
+            "prompt_eval_count": 923,
+            "prompt_eval_duration": 305351000,
+            "eval_count": 83,
+            "eval_duration": 1308767000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "d0056bc9f4701b2a8c20a6143ddb26cc3ded9e7df2f76b425c779df61ff7f5f1",
+            "note": "The response mentions late arrivals but then interprets them as a true event-time demand drop. Q2 shows 100 events on each day at the completed snapshot, contradicting that interpretation."
+          },
+          "parseWarnings": []
+        },
+        {
+          "id": "arrivals-relay-3",
+          "role": "Adjudicator",
+          "seed": 43,
+          "inputStepIds": [
+            "arrivals-relay-1",
+            "arrivals-relay-2"
+          ],
+          "promptMessages": [
+            {
+              "role": "system",
+              "content": "You investigate synthetic database incidents. Use only the supplied SQL query results. Return one JSON object with exactly these fields: claimId (one supplied hypothesis ID), confidence (number from 0 to 1, your uncalibrated confidence), evidenceQueryIds (array of supplied query IDs), summary (a brief conclusion of at most two sentences). Cite the query IDs that support the conclusion. Do not give hidden reasoning or a chain of thought. Prior model conclusions are unverified claims, not additional evidence. Do not invent queries, data, or measurements."
+            },
+            {
+              "role": "user",
+              "content": "Complete frozen evidence packet (all queries already executed):\n{\"title\":\"The overnight demand scare\",\"question\":\"Why did the midnight dashboard show a 60% drop that disappeared the next morning?\",\"brief\":\"All timestamps are UTC. Daily demand is defined by event time. The first snapshot was taken just before 2026-10-12 00:00 UTC; the next was taken at 02:00. An operator suspects a demand collapse. Identify the demonstrated reporting cause.\",\"hypotheses\":[{\"id\":\"H1\",\"title\":\"Late arrivals made the first snapshot incomplete\"},{\"id\":\"H2\",\"title\":\"True event-time demand fell by 60%\"},{\"id\":\"H3\",\"title\":\"Duplicate source IDs made the morning count rebound\"}],\"queries\":[{\"id\":\"Q1\",\"title\":\"Counts available at the first snapshot\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available FROM events WHERE arrived_at < '2026-10-12 00:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available\"],\"rows\":[[\"2026-10-10\",100],[\"2026-10-11\",40]]},{\"id\":\"Q2\",\"title\":\"Counts at 02:00 and late arrivals\",\"sql\":\"SELECT DATE(event_at) AS event_day, COUNT(*) AS available_at_02, SUM(arrived_at >= '2026-10-12 00:00:00') AS arrived_after_first_snapshot FROM events WHERE arrived_at < '2026-10-12 02:00:00' GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"available_at_02\",\"arrived_after_first_snapshot\"],\"rows\":[[\"2026-10-10\",100,0],[\"2026-10-11\",100,60]]},{\"id\":\"Q3\",\"title\":\"Time range and source uniqueness\",\"sql\":\"SELECT DATE(event_at) AS event_day, MIN(event_at) AS first_event, MAX(event_at) AS last_event, COUNT(*)-COUNT(DISTINCT id) AS duplicate_ids FROM events GROUP BY DATE(event_at) ORDER BY event_day\",\"columns\":[\"event_day\",\"first_event\",\"last_event\",\"duplicate_ids\"],\"rows\":[[\"2026-10-10\",\"2026-10-10 08:00:00\",\"2026-10-10 19:59:00\",0],[\"2026-10-11\",\"2026-10-11 08:00:00\",\"2026-10-11 19:59:00\",0]]}]}"
+            },
+            {
+              "role": "user",
+              "content": "Prior unverified conclusions in this run:\n[{\"stepId\": \"arrivals-relay-1\", \"role\": \"Analyst\", \"response\": \"{\\\"claimId\\\":\\\"H3\\\",\\\"confidence\\\":0.98,\\\"evidenceQueryIds\\\":[\\\"Q2\\\",\\\"Q3\\\"],\\\"summary\\\":\\\"The morning count rebounded due to late arrivals that were not captured in the first snapshot, as 60 events arrived after 2026-10-12 00:00 UTC. No duplicate source IDs were found, ruling out data duplication as a cause. Cite Q2 and Q3.\\\"}\"}, {\"stepId\": \"arrivals-relay-2\", \"role\": \"Critic\", \"response\": \"{\\\"claimId\\\":\\\"H2\\\",\\\"confidence\\\":0.95,\\\"evidenceQueryIds\\\":[\\\"Q2\\\"],\\\"summary\\\":\\\"The first snapshot showed a 60% drop in demand because 60 events arrived after 00:00 UTC, meaning the initial count was incomplete. This directly supports a true drop in event-time demand, not a rebound or data duplication. Cite Q2.\\\"}\"}]"
+            },
+            {
+              "role": "user",
+              "content": "Your role: Adjudicator. Resolve the prior conclusions against the evidence and state the final diagnosis. Return only the brief JSON conclusion."
+            }
+          ],
+          "rawOutput": "{\"claimId\":\"H3\",\"confidence\":0.98,\"evidenceQueryIds\":[\"Q2\",\"Q3\"],\"summary\":\"The morning count rebounded due to late arrivals not captured in the first snapshot, as 60 events arrived after 2026-10-12 00:00 UTC. No duplicate source IDs were found, ruling out data duplication as a cause. Cite Q2 and Q3.\"}",
+          "parsed": {
+            "claimId": "H3",
+            "confidence": 0.98,
+            "evidenceQueryIds": [
+              "Q2",
+              "Q3"
+            ],
+            "summary": "The morning count rebounded due to late arrivals not captured in the first snapshot, as 60 events arrived after 2026-10-12 00:00 UTC. No duplicate source IDs were found, ruling out data duplication as a cause. Cite Q2 and Q3."
+          },
+          "parseError": null,
+          "citations": [
+            {
+              "queryId": "Q2",
+              "valid": true
+            },
+            {
+              "queryId": "Q3",
+              "valid": true
+            }
+          ],
+          "verdict": {
+            "status": "incorrect",
+            "expectedClaimId": "H1",
+            "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+          },
+          "usage": {
+            "promptTokens": 1027,
+            "outputTokens": 94,
+            "totalTokens": 1121,
+            "durationMs": 3856,
+            "doneReason": "stop",
+            "generationCap": 320
+          },
+          "responseMetadata": {
+            "model": "qwen3:4b-instruct",
+            "created_at": "2026-11-03T00:53:57.1286717Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1814227700,
+            "load_duration": 10209900,
+            "prompt_eval_count": 1027,
+            "prompt_eval_duration": 250510000,
+            "eval_count": 94,
+            "eval_duration": 1506750000
+          },
+          "audit": {
+            "kind": "editorial annotation, not model output",
+            "rawOutputSha256": "84836c22c5d951f18ba81737fcb136ee9ed4fec27c8bfeeb4c6af5fc73b040bc",
+            "note": "The summary describes late-arrival incompleteness and explicitly rules out duplicates, but claimId selects H3 (duplicates). The narrative supports H1 while the selected diagnosis does not."
+          },
+          "parseWarnings": []
+        }
+      ],
+      "final": {
+        "claimId": "H3",
+        "verdict": {
+          "status": "incorrect",
+          "expectedClaimId": "H1",
+          "basis": "Exact claim-ID comparison with the synthetic case answer key; citation validity is checked separately."
+        },
+        "votes": {
+          "H3": 2,
+          "H2": 1
+        },
+        "rule": "Use the third call’s valid conclusion; no extra judge or repair call."
+      },
+      "usage": {
+        "promptTokens": 2724,
+        "outputTokens": 273,
+        "totalTokens": 2997,
+        "durationMs": 11360
+      }
+    }
+  ]
+}
