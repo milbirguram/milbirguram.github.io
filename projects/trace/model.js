@@ -1,0 +1,8 @@
+(function(root){'use strict';
+var STOP=new Set('a an the is are was were how what when where why does do can could would should it its this that to for of in on at as by from with and or be not all which'.split(' '));
+function tokens(text){return (String(text).replace(/([a-z])([A-Z])/g,'$1 $2').toLowerCase().match(/[a-z0-9]+/g)||[]).filter(function(t){return t.length>1&&!STOP.has(t);});}
+function index(chunks){var docs=chunks.map(function(c){var t=tokens(c.path+' '+c.text),freq={};t.forEach(function(s){freq[s]=(freq[s]||0)+1;});return {chunk:c,freq:freq,length:t.length};}),df={},avg=docs.reduce(function(s,d){Object.keys(d.freq).forEach(function(t){df[t]=(df[t]||0)+1;});return s+d.length;},0)/(docs.length||1);return {docs:docs,df:df,avg:avg};}
+function search(idx,query,limit){var ts=Array.from(new Set(tokens(query)));if(!ts.length)return [];return idx.docs.map(function(d){var score=ts.reduce(function(s,t){var f=d.freq[t]||0,n=idx.df[t]||0;if(!f)return s;var idf=Math.log(1+(idx.docs.length-n+.5)/(n+.5));return s+idf*(f*2.2)/(f+1.2*(.25+.75*d.length/idx.avg));},0);return {chunk:d.chunk,score:score};}).filter(function(r){return r.score>0;}).sort(function(a,b){return b.score-a.score||a.chunk.id.localeCompare(b.chunk.id);}).slice(0,limit||5);}
+function citation(corpus,path,start,end){var f=corpus.files.find(function(f){return f.path===path;});return !!f&&Number.isInteger(start)&&Number.isInteger(end)&&start>0&&end>=start&&end<=f.lines.length;}
+var api={tokens:tokens,index:index,search:search,citation:citation};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Trace=api;
+})(typeof self!=='undefined'?self:this);
