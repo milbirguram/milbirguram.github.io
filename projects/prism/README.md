@@ -14,7 +14,7 @@ The noise instrument renders a separate 40 × 25 version of the default scene in
 
 Run `node projects/prism/tests/run-all.js`. Checks cover a unit-albedo diffuse white furnace, Snell's law (30° incidence into IOR 1.5), total internal reflection, Schlick at normal/grazing incidence, attenuation bounds, and measured RMS convergence. The current seeded 16–512 sample fit is −0.4885, within −0.5 ± 0.1. `tests/browser.html` compares 24 × 15, 512-sample GPU and CPU images in linear radiance, requiring RMS below 0.035. This tolerates stochastic path divergence from float versus double arithmetic; it is not a promise of bit-identical rendering. Recorded results are in `tests/gpu-vs-cpu.json`.
 
-Rendering is capped at 256 samples. Phones start with a lower resolution; the canvas is CSS-scaled while instrument canvases cap device pixel ratio at two. GPU/CPU render loops and metric workers pause through `Kit.onPlay`. A paused preview uses the converged still, starts complete, and plays a 64-sample resolve/reset loop while visible. Reduced-motion previews remain still. No runtime third-party requests are made.
+Rendering is capped at 256 samples. Phones start with a lower resolution; the canvas is CSS-scaled while instrument canvases cap device pixel ratio at two. GPU/CPU render loops and metric workers pause through `Kit.onPlay`. A paused preview uses the converged still, starts complete, and plays a roughly seven-second, 64-sample resolve/reset loop while visible. Reduced-motion previews remain still. No runtime third-party requests are made.
 
 Fonts Manrope and Martian Mono are self-hosted under SIL OFL, with pinned sources in `fonts/`. Serve through the portfolio for the shared kit; use `?cpu` to inspect the worker fallback.
 
