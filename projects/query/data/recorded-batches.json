@@ -1,0 +1,1527 @@
+[
+  {
+    "condition": "bare",
+    "model": "Codex session (inherited model)",
+    "startedAt": "2026-11-03T05:33:49Z",
+    "finishedAt": "2026-11-03T05:33:57Z",
+    "promptSummary": "Plan SQLite SELECT queries for 20 fixed penguin questions using only the supplied bare schema and NULL-as-missing convention; abstain where fields cannot answer the question.",
+    "promptText": "Bounded empirical research for Sites skill: capture a real model SQL-planning batch, not implementation. You are condition bare-schema. Read ONLY [research]\\questions.json (20 fixed questions). You may use clock to record started/finished time and apply_patch/write file, but do not inspect data, code, database, other experiment results, or execute any SQL. Schema: penguins(id INTEGER PRIMARY KEY,species TEXT,island TEXT,bill_length_mm REAL,bill_depth_mm REAL,flipper_length_mm REAL,body_mass_g REAL,sex TEXT,year INTEGER). NULL means missing; species examples Adelie, Chinstrap, Gentoo. For each question return a SQLite SELECT query or abstain if it cannot be answered from these fields. Output JSON artifact to [research]\\bare.json with condition:'bare', model:'Codex session (inherited model)', startedAt, finishedAt UTC timestamps, promptSummary, rows:[{id,kind:'sql'|'abstain',sql:string|null,summary:one short decision summary}], tokens:null,costUSD:null, modelApiLatencyMs:null. Do not fabricate metadata or run latency. Include the full exact instructions used as promptText in artifact. These are actual recorded model outputs; no promise of correct SQL is required. Do not edit or implement applications. Report path when done.",
+    "rows": [
+      {
+        "id": "q01",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS sample_count FROM penguins;",
+        "summary": "Count every sample row.",
+        "gradingSQLMs": 0.10819989256560802,
+        "actual": [
+          [
+            344
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q02",
+        "kind": "sql",
+        "sql": "SELECT species, COUNT(*) AS sample_count FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Count samples grouped by species.",
+        "gradingSQLMs": 0.27920003049075603,
+        "actual": [
+          [
+            "Adelie",
+            152
+          ],
+          [
+            "Chinstrap",
+            68
+          ],
+          [
+            "Gentoo",
+            124
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q03",
+        "kind": "sql",
+        "sql": "SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Average measured mass within species; AVG ignores NULL.",
+        "gradingSQLMs": 0.2669000532478094,
+        "actual": [
+          [
+            "Adelie",
+            3700.662251655629
+          ],
+          [
+            "Chinstrap",
+            3733.0882352941176
+          ],
+          [
+            "Gentoo",
+            5076.016260162602
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q04",
+        "kind": "sql",
+        "sql": "SELECT species, AVG(body_mass_g) / 1000.0 AS mean_body_mass_kg FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Convert each species mean mass from grams to kilograms.",
+        "gradingSQLMs": 0.2628001384437084,
+        "actual": [
+          [
+            "Adelie",
+            3.700662251655629
+          ],
+          [
+            "Chinstrap",
+            3.7330882352941175
+          ],
+          [
+            "Gentoo",
+            5.076016260162602
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q05",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS missing_body_mass_count FROM penguins WHERE body_mass_g IS NULL;",
+        "summary": "Count NULL body mass values.",
+        "gradingSQLMs": 0.1067998819053173,
+        "actual": [
+          [
+            2
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q06",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS unknown_sex_count FROM penguins WHERE sex IS NULL;",
+        "summary": "Treat NULL sex as unknown under the supplied missingness convention.",
+        "gradingSQLMs": 0.08839997462928295,
+        "actual": [
+          [
+            11
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q07",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS female_adelie_count FROM penguins WHERE species = 'Adelie' AND LOWER(sex) = 'female';",
+        "summary": "Count Adelie samples whose sex is female, regardless of letter case.",
+        "gradingSQLMs": 0.188400037586689,
+        "actual": [
+          [
+            73
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q08",
+        "kind": "sql",
+        "sql": "SELECT island, COUNT(*) AS sample_count FROM penguins GROUP BY island ORDER BY island;",
+        "summary": "Count samples grouped by island.",
+        "gradingSQLMs": 0.20150002092123032,
+        "actual": [
+          [
+            "Biscoe",
+            168
+          ],
+          [
+            "Dream",
+            124
+          ],
+          [
+            "Torgersen",
+            52
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q09",
+        "kind": "sql",
+        "sql": "SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins WHERE body_mass_g IS NOT NULL GROUP BY species ORDER BY mean_body_mass_g DESC, species LIMIT 1;",
+        "summary": "Return the species with the greatest measured mean mass.",
+        "gradingSQLMs": 0.3060000017285347,
+        "actual": [
+          [
+            "Gentoo",
+            5076.016260162602
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q10",
+        "kind": "sql",
+        "sql": "SELECT species, MIN(flipper_length_mm) AS min_flipper_length_mm, MAX(flipper_length_mm) AS max_flipper_length_mm FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Find measured flipper-length extremes within each species.",
+        "gradingSQLMs": 0.31189993023872375,
+        "actual": [
+          [
+            "Adelie",
+            172.0,
+            210.0
+          ],
+          [
+            "Chinstrap",
+            178.0,
+            212.0
+          ],
+          [
+            "Gentoo",
+            203.0,
+            231.0
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q11",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS complete_measurement_count FROM penguins WHERE bill_length_mm IS NOT NULL AND bill_depth_mm IS NOT NULL AND flipper_length_mm IS NOT NULL AND body_mass_g IS NOT NULL AND sex IS NOT NULL;",
+        "summary": "Require all five requested fields to be present.",
+        "gradingSQLMs": 0.16360008157789707,
+        "actual": [
+          [
+            333
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q12",
+        "kind": "sql",
+        "sql": "SELECT 100.0 * SUM(CASE WHEN species = 'Gentoo' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) AS gentoo_percentage FROM penguins;",
+        "summary": "Divide Gentoo samples by all rows and express as a percentage.",
+        "gradingSQLMs": 0.13059983029961586,
+        "actual": [
+          [
+            36.04651162790697
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q13",
+        "kind": "sql",
+        "sql": "SELECT LOWER(sex) AS sex, AVG(body_mass_g) AS mean_body_mass_g FROM penguins WHERE species = 'Adelie' AND LOWER(sex) IN ('male', 'female') GROUP BY LOWER(sex) ORDER BY sex;",
+        "summary": "Average Adelie mass separately for known male and female samples.",
+        "gradingSQLMs": 0.6050001829862595,
+        "actual": [
+          [
+            "female",
+            3368.8356164383563
+          ],
+          [
+            "male",
+            4043.4931506849316
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q14",
+        "kind": "sql",
+        "sql": "SELECT year, COUNT(*) AS sample_count FROM penguins GROUP BY year ORDER BY year;",
+        "summary": "Count recorded samples by year.",
+        "gradingSQLMs": 0.2883998677134514,
+        "actual": [
+          [
+            2007,
+            110
+          ],
+          [
+            2008,
+            114
+          ],
+          [
+            2009,
+            120
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q15",
+        "kind": "sql",
+        "sql": "SELECT island, AVG(body_mass_g) AS mean_body_mass_g FROM penguins WHERE body_mass_g IS NOT NULL GROUP BY island ORDER BY mean_body_mass_g DESC, island LIMIT 1;",
+        "summary": "Return the island with the greatest measured mean mass.",
+        "gradingSQLMs": 0.5714001599699259,
+        "actual": [
+          [
+            "Biscoe",
+            4716.017964071856
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q16",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "Observed island and mass fields cannot establish a causal effect of living on Biscoe.",
+        "gradingSQLMs": 0.001400010660290718,
+        "actual": null,
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q17",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "Sample records do not provide the current total penguin population of Antarctica.",
+        "gradingSQLMs": 0.0008998904377222061,
+        "actual": null,
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q18",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "These fields do not establish which species will be heaviest in 2030.",
+        "gradingSQLMs": 0.000800006091594696,
+        "actual": null,
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q19",
+        "kind": "sql",
+        "sql": "SELECT AVG(body_mass_g) AS mean_body_mass_g FROM penguins;",
+        "summary": "Average all measured body masses, ignoring NULL.",
+        "gradingSQLMs": 0.14210003428161144,
+        "actual": [
+          [
+            4201.754385964912
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q20",
+        "kind": "sql",
+        "sql": "SELECT species, body_mass_g FROM penguins WHERE body_mass_g IS NOT NULL ORDER BY body_mass_g DESC, id LIMIT 3;",
+        "summary": "Return the three heaviest measured samples with deterministic tie ordering.",
+        "gradingSQLMs": 0.24630012921988964,
+        "actual": [
+          [
+            "Gentoo",
+            6300.0
+          ],
+          [
+            "Gentoo",
+            6050.0
+          ],
+          [
+            "Gentoo",
+            6000.0
+          ]
+        ],
+        "error": null,
+        "correct": true
+      }
+    ],
+    "tokens": null,
+    "costUSD": null,
+    "modelApiLatencyMs": null,
+    "captureArtifactSHA256": "09ce35659e53a9ecca54e81649904d2733257139a3a609b0416af0cfdaa8e2a1",
+    "score": 20
+  },
+  {
+    "condition": "guided",
+    "model": "Codex session (inherited model)",
+    "startedAt": "2026-11-03T05:34:02Z",
+    "finishedAt": "2026-11-03T05:34:49Z",
+    "promptSummary": "Evidence-guided SQL planning for 20 fixed questions using the supplied schema and explicit rules for missing values, counts, units, percentages, sex comparisons, and unsupported claims; no data inspection or query execution.",
+    "promptText": "Bounded empirical research for Sites skill: capture a real model SQL-planning batch, not implementation. You are condition evidence-guided. Read ONLY [research]\\questions.json (20 fixed questions). You may use clock and apply_patch/write final JSON, but do not inspect data, code, database, other experiments, or execute SQL. Schema penguins(id INTEGER PRIMARY KEY,species TEXT,island TEXT,bill_length_mm REAL,bill_depth_mm REAL,flipper_length_mm REAL,body_mass_g REAL,sex TEXT,year INTEGER). NULL means missing; species Adelie, Chinstrap, Gentoo. Rules: never treat NULL as zero; use COUNT(*) for row counts; report grams unless kilograms requested; use floating point denominators for percentages; exclude unknown sex when question requests male/female comparison. No causal, current-population or future claims can be established. Generate one readonly SQLite SELECT query per answerable question; abstain otherwise. Final artifact [research]\\guided.json with condition:'guided',model:'Codex session (inherited model)',startedAt,finishedAt UTC,promptSummary,promptText full exact instructions,rows:[{id,kind:'sql'|'abstain',sql:string|null,summary:short decision summary}],tokens:null,costUSD:null,modelApiLatencyMs:null. Record honestly; no manufactured timings, outputs or corrections. Do not implement apps or inspect results. Report path.",
+    "rows": [
+      {
+        "id": "q01",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS sample_count FROM penguins;",
+        "summary": "Count every sample row.",
+        "gradingSQLMs": 0.06340001709759235,
+        "actual": [
+          [
+            344
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q02",
+        "kind": "sql",
+        "sql": "SELECT species, COUNT(*) AS sample_count FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Count sample rows by species.",
+        "gradingSQLMs": 0.28840010054409504,
+        "actual": [
+          [
+            "Adelie",
+            152
+          ],
+          [
+            "Chinstrap",
+            68
+          ],
+          [
+            "Gentoo",
+            124
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q03",
+        "kind": "sql",
+        "sql": "SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Average measured mass by species in grams; AVG ignores NULL.",
+        "gradingSQLMs": 0.32679992727935314,
+        "actual": [
+          [
+            "Adelie",
+            3700.662251655629
+          ],
+          [
+            "Chinstrap",
+            3733.0882352941176
+          ],
+          [
+            "Gentoo",
+            5076.016260162602
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q04",
+        "kind": "sql",
+        "sql": "SELECT species, AVG(body_mass_g) / 1000.0 AS mean_body_mass_kg FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Average measured mass by species and convert grams to kilograms.",
+        "gradingSQLMs": 0.3200001083314419,
+        "actual": [
+          [
+            "Adelie",
+            3.700662251655629
+          ],
+          [
+            "Chinstrap",
+            3.7330882352941175
+          ],
+          [
+            "Gentoo",
+            5.076016260162602
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q05",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS missing_body_mass_count FROM penguins WHERE body_mass_g IS NULL;",
+        "summary": "Count rows with missing body mass.",
+        "gradingSQLMs": 0.08730008266866207,
+        "actual": [
+          [
+            2
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q06",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS unknown_sex_count FROM penguins WHERE sex IS NULL;",
+        "summary": "Count NULL sex values as unknown.",
+        "gradingSQLMs": 0.08420017547905445,
+        "actual": [
+          [
+            11
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q07",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS female_adelie_count FROM penguins WHERE species = 'Adelie' AND LOWER(sex) = 'female';",
+        "summary": "Count female Adelie rows using case-insensitive sex matching.",
+        "gradingSQLMs": 0.23090001195669174,
+        "actual": [
+          [
+            73
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q08",
+        "kind": "sql",
+        "sql": "SELECT island, COUNT(*) AS sample_count FROM penguins GROUP BY island ORDER BY island;",
+        "summary": "Count sample rows by island.",
+        "gradingSQLMs": 0.27469987981021404,
+        "actual": [
+          [
+            "Biscoe",
+            168
+          ],
+          [
+            "Dream",
+            124
+          ],
+          [
+            "Torgersen",
+            52
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q09",
+        "kind": "sql",
+        "sql": "WITH species_means AS (SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins WHERE body_mass_g IS NOT NULL GROUP BY species) SELECT species, mean_body_mass_g FROM species_means WHERE mean_body_mass_g = (SELECT MAX(mean_body_mass_g) FROM species_means) ORDER BY species;",
+        "summary": "Return the species with greatest measured mean mass in grams, including ties.",
+        "gradingSQLMs": 0.839899992570281,
+        "actual": [
+          [
+            "Gentoo",
+            5076.016260162602
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q10",
+        "kind": "sql",
+        "sql": "SELECT species, MIN(flipper_length_mm) AS min_flipper_length_mm, MAX(flipper_length_mm) AS max_flipper_length_mm FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Find measured flipper length extrema by species; aggregates ignore NULL.",
+        "gradingSQLMs": 1.4872001484036446,
+        "actual": [
+          [
+            "Adelie",
+            172.0,
+            210.0
+          ],
+          [
+            "Chinstrap",
+            178.0,
+            212.0
+          ],
+          [
+            "Gentoo",
+            203.0,
+            231.0
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q11",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS complete_sample_count FROM penguins WHERE bill_length_mm IS NOT NULL AND bill_depth_mm IS NOT NULL AND flipper_length_mm IS NOT NULL AND body_mass_g IS NOT NULL AND sex IS NOT NULL;",
+        "summary": "Count rows where all five requested fields are present.",
+        "gradingSQLMs": 0.3876001574099064,
+        "actual": [
+          [
+            333
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q12",
+        "kind": "sql",
+        "sql": "SELECT 100.0 * (SELECT COUNT(*) FROM penguins WHERE species = 'Gentoo') / NULLIF(COUNT(*) * 1.0, 0.0) AS gentoo_percentage FROM penguins;",
+        "summary": "Divide Gentoo row count by all rows using floating point arithmetic; an empty table yields NULL.",
+        "gradingSQLMs": 0.21779979579150677,
+        "actual": [
+          [
+            36.04651162790697
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q13",
+        "kind": "sql",
+        "sql": "SELECT LOWER(sex) AS sex, AVG(body_mass_g) AS mean_body_mass_g FROM penguins WHERE species = 'Adelie' AND LOWER(sex) IN ('male', 'female') GROUP BY LOWER(sex) ORDER BY sex;",
+        "summary": "Compare measured mean mass in grams for known male and female Adelie samples.",
+        "gradingSQLMs": 0.5567001644521952,
+        "actual": [
+          [
+            "female",
+            3368.8356164383563
+          ],
+          [
+            "male",
+            4043.4931506849316
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q14",
+        "kind": "sql",
+        "sql": "SELECT year, COUNT(*) AS sample_count FROM penguins GROUP BY year ORDER BY year;",
+        "summary": "Count sample rows by recording year.",
+        "gradingSQLMs": 0.327299814671278,
+        "actual": [
+          [
+            2007,
+            110
+          ],
+          [
+            2008,
+            114
+          ],
+          [
+            2009,
+            120
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q15",
+        "kind": "sql",
+        "sql": "WITH island_means AS (SELECT island, AVG(body_mass_g) AS mean_body_mass_g FROM penguins WHERE body_mass_g IS NOT NULL GROUP BY island) SELECT island, mean_body_mass_g FROM island_means WHERE mean_body_mass_g = (SELECT MAX(mean_body_mass_g) FROM island_means) ORDER BY island;",
+        "summary": "Return the island with greatest measured mean mass in grams, including ties.",
+        "gradingSQLMs": 0.8157999254763126,
+        "actual": [
+          [
+            "Biscoe",
+            4716.017964071856
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q16",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "The sample table cannot establish that living on Biscoe caused greater body mass.",
+        "gradingSQLMs": 0.0008998904377222061,
+        "actual": null,
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q17",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "Sample records cannot establish the current total penguin population of Antarctica.",
+        "gradingSQLMs": 0.000700121745467186,
+        "actual": null,
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q18",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "The table cannot establish which species will be heaviest in 2030.",
+        "gradingSQLMs": 0.000500120222568512,
+        "actual": null,
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q19",
+        "kind": "sql",
+        "sql": "SELECT AVG(body_mass_g) AS mean_body_mass_g FROM penguins;",
+        "summary": "Average all measured body masses in grams; AVG ignores NULL.",
+        "gradingSQLMs": 0.13109995052218437,
+        "actual": [
+          [
+            4201.754385964912
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q20",
+        "kind": "sql",
+        "sql": "SELECT species, body_mass_g FROM penguins WHERE body_mass_g IS NOT NULL ORDER BY body_mass_g DESC, id ASC LIMIT 3;",
+        "summary": "Return the three heaviest measured samples, with id breaking mass ties.",
+        "gradingSQLMs": 0.3738999366760254,
+        "actual": [
+          [
+            "Gentoo",
+            6300.0
+          ],
+          [
+            "Gentoo",
+            6050.0
+          ],
+          [
+            "Gentoo",
+            6000.0
+          ]
+        ],
+        "error": null,
+        "correct": true
+      }
+    ],
+    "tokens": null,
+    "costUSD": null,
+    "modelApiLatencyMs": null,
+    "captureArtifactSHA256": "75f4dfba2e91fe19839f4723da3b64d0ff7a163ac45284de17a7159cab8fb4f6",
+    "score": 20
+  },
+  {
+    "condition": "verified",
+    "model": "Codex session (inherited model)",
+    "startedAt": "2026-11-03T05:34:13Z",
+    "finishedAt": "2026-11-03T05:35:19.550297Z",
+    "promptText": "Bounded empirical research for Sites skill: capture actual model SQL tool use, not app implementation. Condition verified. Read questions from [research]\\questions.json and use schema penguins(id INTEGER PRIMARY KEY,species TEXT,island TEXT,bill_length_mm REAL,bill_depth_mm REAL,flipper_length_mm REAL,body_mass_g REAL,sex TEXT,year INTEGER), NULL means missing; species Adelie/Chinstrap/Gentoo. Generate readonly SQLite SELECT or abstain for every question; no causal/current-population/future conclusions from descriptive measurements. Unlike other conditions, YOU MAY execute proposed SQL against the supplied public fixture [research]\\penguins.sqlite, opened URI mode=ro with PRAGMA query_only=ON. No gold answers or other experiment files may be inspected. First save initial proposals, then execute each answerable statement with Python sqlite3 (read-only), record exact observed columns/rows or error, and revise any proposals you judge incorrect based on actual results. No data mutation or DB full-table dump unless query requests it. Record every actual SQL execution (question id, SQL, observed result/error, measured SQL elapsedMs from perf_counter); do not invent executions. Store [research]\\verified.json: condition:'verified', model:'Codex session (inherited model)', startedAt/finishedAt real UTC, promptText full instructions, promptSummary, rows:[{id,kind:'sql'|'abstain',sql:string|null,summary}], initialRows, executions, tokens:null,costUSD:null,modelApiLatencyMs:null. You may create a temp .py helper in research dir to run queries. Do not implement project apps or modify any existing other files. Report path plus real execution count.\n\nQuestion set supplied via questions.json:\n[\n  {\n    \"id\": \"q01\",\n    \"question\": \"How many penguin samples are in the table?\"\n  },\n  {\n    \"id\": \"q02\",\n    \"question\": \"How many samples are there for each species?\"\n  },\n  {\n    \"id\": \"q03\",\n    \"question\": \"What is the mean body mass in grams for each species, ignoring missing mass?\"\n  },\n  {\n    \"id\": \"q04\",\n    \"question\": \"What is the mean body mass in kilograms for each species?\"\n  },\n  {\n    \"id\": \"q05\",\n    \"question\": \"How many samples have no body mass measurement?\"\n  },\n  {\n    \"id\": \"q06\",\n    \"question\": \"How many samples have unknown sex?\"\n  },\n  {\n    \"id\": \"q07\",\n    \"question\": \"How many female Adelie samples are there?\"\n  },\n  {\n    \"id\": \"q08\",\n    \"question\": \"How many samples came from each island?\"\n  },\n  {\n    \"id\": \"q09\",\n    \"question\": \"Which species has the greatest mean body mass?\"\n  },\n  {\n    \"id\": \"q10\",\n    \"question\": \"What are the minimum and maximum flipper lengths for each species?\"\n  },\n  {\n    \"id\": \"q11\",\n    \"question\": \"How many rows have complete bill length, bill depth, flipper length, body mass and sex?\"\n  },\n  {\n    \"id\": \"q12\",\n    \"question\": \"What percentage of all samples are Gentoo?\"\n  },\n  {\n    \"id\": \"q13\",\n    \"question\": \"What is mean body mass for male and female Adelie samples, excluding unknown sex?\"\n  },\n  {\n    \"id\": \"q14\",\n    \"question\": \"How many samples were recorded in each year?\"\n  },\n  {\n    \"id\": \"q15\",\n    \"question\": \"Which island has the greatest mean body mass?\"\n  },\n  {\n    \"id\": \"q16\",\n    \"question\": \"Did living on Biscoe cause these penguins to grow heavier?\"\n  },\n  {\n    \"id\": \"q17\",\n    \"question\": \"How many penguins currently live in all of Antarctica?\"\n  },\n  {\n    \"id\": \"q18\",\n    \"question\": \"Which species will be heaviest in 2030?\"\n  },\n  {\n    \"id\": \"q19\",\n    \"question\": \"What is the overall average penguin body mass in grams?\"\n  },\n  {\n    \"id\": \"q20\",\n    \"question\": \"Show species and body mass of the three heaviest measured samples, highest mass first.\"\n  }\n]",
+    "promptSummary": "Produce SELECT statements or justified abstentions for twenty penguin questions, save initial proposals, execute answerable queries on the read-only fixture, log measured observations, and revise only if needed.",
+    "rows": [
+      {
+        "id": "q01",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS sample_count FROM penguins;",
+        "summary": "Observed 344 sample rows.",
+        "gradingSQLMs": 0.0366999302059412,
+        "actual": [
+          [
+            344
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q02",
+        "kind": "sql",
+        "sql": "SELECT species, COUNT(*) AS sample_count FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Observed sample counts: Adelie 152, Chinstrap 68, Gentoo 124.",
+        "gradingSQLMs": 0.3299000672996044,
+        "actual": [
+          [
+            "Adelie",
+            152
+          ],
+          [
+            "Chinstrap",
+            68
+          ],
+          [
+            "Gentoo",
+            124
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q03",
+        "kind": "sql",
+        "sql": "SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Observed mean measured mass in grams: Adelie 3700.662251655629, Chinstrap 3733.0882352941176, Gentoo 5076.016260162602. NULL mass is excluded by AVG.",
+        "gradingSQLMs": 0.3766000736504793,
+        "actual": [
+          [
+            "Adelie",
+            3700.662251655629
+          ],
+          [
+            "Chinstrap",
+            3733.0882352941176
+          ],
+          [
+            "Gentoo",
+            5076.016260162602
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q04",
+        "kind": "sql",
+        "sql": "SELECT species, AVG(body_mass_g) / 1000.0 AS mean_body_mass_kg FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Observed mean measured mass in kilograms: Adelie 3.700662251655629, Chinstrap 3.7330882352941175, Gentoo 5.076016260162602.",
+        "gradingSQLMs": 0.3529000096023083,
+        "actual": [
+          [
+            "Adelie",
+            3.700662251655629
+          ],
+          [
+            "Chinstrap",
+            3.7330882352941175
+          ],
+          [
+            "Gentoo",
+            5.076016260162602
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q05",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS missing_body_mass_count FROM penguins WHERE body_mass_g IS NULL;",
+        "summary": "Observed 2 samples with NULL body mass.",
+        "gradingSQLMs": 0.17959997057914734,
+        "actual": [
+          [
+            2
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q06",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS unknown_sex_count FROM penguins WHERE sex IS NULL;",
+        "summary": "Observed 11 samples with NULL sex.",
+        "gradingSQLMs": 0.10020006448030472,
+        "actual": [
+          [
+            11
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q07",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS female_adelie_count FROM penguins WHERE species = 'Adelie' AND LOWER(sex) = 'female';",
+        "summary": "Observed 73 female Adelie samples.",
+        "gradingSQLMs": 0.2571998629719019,
+        "actual": [
+          [
+            73
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q08",
+        "kind": "sql",
+        "sql": "SELECT island, COUNT(*) AS sample_count FROM penguins GROUP BY island ORDER BY island;",
+        "summary": "Observed sample counts: Biscoe 168, Dream 124, Torgersen 52.",
+        "gradingSQLMs": 0.314599834382534,
+        "actual": [
+          [
+            "Biscoe",
+            168
+          ],
+          [
+            "Dream",
+            124
+          ],
+          [
+            "Torgersen",
+            52
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q09",
+        "kind": "sql",
+        "sql": "WITH species_means AS (SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY species) SELECT species, mean_body_mass_g FROM species_means WHERE mean_body_mass_g = (SELECT MAX(mean_body_mass_g) FROM species_means) ORDER BY species;",
+        "summary": "Gentoo has the greatest observed species mean mass, 5076.016260162602 grams.",
+        "gradingSQLMs": 0.7633999921381474,
+        "actual": [
+          [
+            "Gentoo",
+            5076.016260162602
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q10",
+        "kind": "sql",
+        "sql": "SELECT species, MIN(flipper_length_mm) AS min_flipper_length_mm, MAX(flipper_length_mm) AS max_flipper_length_mm FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Observed flipper length ranges in millimeters: Adelie 172 to 210, Chinstrap 178 to 212, Gentoo 203 to 231.",
+        "gradingSQLMs": 0.4126999992877245,
+        "actual": [
+          [
+            "Adelie",
+            172.0,
+            210.0
+          ],
+          [
+            "Chinstrap",
+            178.0,
+            212.0
+          ],
+          [
+            "Gentoo",
+            203.0,
+            231.0
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q11",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS complete_measurement_count FROM penguins WHERE bill_length_mm IS NOT NULL AND bill_depth_mm IS NOT NULL AND flipper_length_mm IS NOT NULL AND body_mass_g IS NOT NULL AND sex IS NOT NULL;",
+        "summary": "Observed 333 rows complete across bill length, bill depth, flipper length, body mass, and sex.",
+        "gradingSQLMs": 0.21110009402036667,
+        "actual": [
+          [
+            333
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q12",
+        "kind": "sql",
+        "sql": "SELECT 100.0 * SUM(CASE WHEN species = 'Gentoo' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) AS gentoo_percentage FROM penguins;",
+        "summary": "Gentoo samples comprise 36.04651162790697 percent of all rows.",
+        "gradingSQLMs": 0.13689999468624592,
+        "actual": [
+          [
+            36.04651162790697
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q13",
+        "kind": "sql",
+        "sql": "SELECT LOWER(sex) AS sex, AVG(body_mass_g) AS mean_body_mass_g FROM penguins WHERE species = 'Adelie' AND LOWER(sex) IN ('male', 'female') GROUP BY LOWER(sex) ORDER BY sex;",
+        "summary": "Observed Adelie mean measured mass in grams: female 3368.8356164383563; male 4043.4931506849316. Unknown sex is excluded.",
+        "gradingSQLMs": 0.48910011537373066,
+        "actual": [
+          [
+            "female",
+            3368.8356164383563
+          ],
+          [
+            "male",
+            4043.4931506849316
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q14",
+        "kind": "sql",
+        "sql": "SELECT year, COUNT(*) AS sample_count FROM penguins GROUP BY year ORDER BY year;",
+        "summary": "Observed sample counts: 2007 110, 2008 114, 2009 120.",
+        "gradingSQLMs": 0.3700000233948231,
+        "actual": [
+          [
+            2007,
+            110
+          ],
+          [
+            2008,
+            114
+          ],
+          [
+            2009,
+            120
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q15",
+        "kind": "sql",
+        "sql": "WITH island_means AS (SELECT island, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY island) SELECT island, mean_body_mass_g FROM island_means WHERE mean_body_mass_g = (SELECT MAX(mean_body_mass_g) FROM island_means) ORDER BY island;",
+        "summary": "Biscoe has the greatest observed island mean mass, 4716.017964071856 grams.",
+        "gradingSQLMs": 0.8251001127064228,
+        "actual": [
+          [
+            "Biscoe",
+            4716.017964071856
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q16",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "Abstain: these descriptive measurements do not identify whether living on Biscoe caused greater body mass.",
+        "gradingSQLMs": 0.001100124791264534,
+        "actual": null,
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q17",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "Abstain: sample records do not establish the current population of penguins across Antarctica.",
+        "gradingSQLMs": 0.0008998904377222061,
+        "actual": null,
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q18",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "Abstain: these descriptive measurements do not establish which species will be heaviest in 2030.",
+        "gradingSQLMs": 0.0010998919606208801,
+        "actual": null,
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q19",
+        "kind": "sql",
+        "sql": "SELECT AVG(body_mass_g) AS mean_body_mass_g FROM penguins;",
+        "summary": "Observed overall mean measured body mass is 4201.754385964912 grams.",
+        "gradingSQLMs": 0.1321001909673214,
+        "actual": [
+          [
+            4201.754385964912
+          ]
+        ],
+        "error": null,
+        "correct": true
+      },
+      {
+        "id": "q20",
+        "kind": "sql",
+        "sql": "SELECT species, body_mass_g FROM penguins WHERE body_mass_g IS NOT NULL ORDER BY body_mass_g DESC, id ASC LIMIT 3;",
+        "summary": "The three heaviest measured samples returned are Gentoo at 6300, 6050, and 6000 grams, ordered highest first.",
+        "gradingSQLMs": 0.25199982337653637,
+        "actual": [
+          [
+            "Gentoo",
+            6300.0
+          ],
+          [
+            "Gentoo",
+            6050.0
+          ],
+          [
+            "Gentoo",
+            6000.0
+          ]
+        ],
+        "error": null,
+        "correct": true
+      }
+    ],
+    "initialRows": [
+      {
+        "id": "q01",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS sample_count FROM penguins;",
+        "summary": "Count every sample row."
+      },
+      {
+        "id": "q02",
+        "kind": "sql",
+        "sql": "SELECT species, COUNT(*) AS sample_count FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Count samples for each species."
+      },
+      {
+        "id": "q03",
+        "kind": "sql",
+        "sql": "SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Average measured mass in grams for each species; AVG ignores NULL."
+      },
+      {
+        "id": "q04",
+        "kind": "sql",
+        "sql": "SELECT species, AVG(body_mass_g) / 1000.0 AS mean_body_mass_kg FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Convert each species mean mass from grams to kilograms."
+      },
+      {
+        "id": "q05",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS missing_body_mass_count FROM penguins WHERE body_mass_g IS NULL;",
+        "summary": "Count samples with missing mass."
+      },
+      {
+        "id": "q06",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS unknown_sex_count FROM penguins WHERE sex IS NULL;",
+        "summary": "Count missing sex, represented by NULL."
+      },
+      {
+        "id": "q07",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS female_adelie_count FROM penguins WHERE species = 'Adelie' AND LOWER(sex) = 'female';",
+        "summary": "Count female Adelie samples, allowing either capitalization of female."
+      },
+      {
+        "id": "q08",
+        "kind": "sql",
+        "sql": "SELECT island, COUNT(*) AS sample_count FROM penguins GROUP BY island ORDER BY island;",
+        "summary": "Count samples from each island."
+      },
+      {
+        "id": "q09",
+        "kind": "sql",
+        "sql": "WITH species_means AS (SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY species) SELECT species, mean_body_mass_g FROM species_means WHERE mean_body_mass_g = (SELECT MAX(mean_body_mass_g) FROM species_means) ORDER BY species;",
+        "summary": "Return the species with greatest observed mean mass, including ties."
+      },
+      {
+        "id": "q10",
+        "kind": "sql",
+        "sql": "SELECT species, MIN(flipper_length_mm) AS min_flipper_length_mm, MAX(flipper_length_mm) AS max_flipper_length_mm FROM penguins GROUP BY species ORDER BY species;",
+        "summary": "Compute each species minimum and maximum measured flipper length."
+      },
+      {
+        "id": "q11",
+        "kind": "sql",
+        "sql": "SELECT COUNT(*) AS complete_measurement_count FROM penguins WHERE bill_length_mm IS NOT NULL AND bill_depth_mm IS NOT NULL AND flipper_length_mm IS NOT NULL AND body_mass_g IS NOT NULL AND sex IS NOT NULL;",
+        "summary": "Count rows complete across all five requested fields."
+      },
+      {
+        "id": "q12",
+        "kind": "sql",
+        "sql": "SELECT 100.0 * SUM(CASE WHEN species = 'Gentoo' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) AS gentoo_percentage FROM penguins;",
+        "summary": "Compute Gentoo share as a percentage of all sample rows."
+      },
+      {
+        "id": "q13",
+        "kind": "sql",
+        "sql": "SELECT LOWER(sex) AS sex, AVG(body_mass_g) AS mean_body_mass_g FROM penguins WHERE species = 'Adelie' AND LOWER(sex) IN ('male', 'female') GROUP BY LOWER(sex) ORDER BY sex;",
+        "summary": "Average measured mass separately for male and female Adelie samples."
+      },
+      {
+        "id": "q14",
+        "kind": "sql",
+        "sql": "SELECT year, COUNT(*) AS sample_count FROM penguins GROUP BY year ORDER BY year;",
+        "summary": "Count sample rows for each recorded year."
+      },
+      {
+        "id": "q15",
+        "kind": "sql",
+        "sql": "WITH island_means AS (SELECT island, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY island) SELECT island, mean_body_mass_g FROM island_means WHERE mean_body_mass_g = (SELECT MAX(mean_body_mass_g) FROM island_means) ORDER BY island;",
+        "summary": "Return the island with greatest observed mean mass, including ties."
+      },
+      {
+        "id": "q16",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "Abstain: these descriptive measurements do not identify whether living on Biscoe caused greater body mass."
+      },
+      {
+        "id": "q17",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "Abstain: sample records do not establish the current population of penguins across Antarctica."
+      },
+      {
+        "id": "q18",
+        "kind": "abstain",
+        "sql": null,
+        "summary": "Abstain: these descriptive measurements do not establish which species will be heaviest in 2030."
+      },
+      {
+        "id": "q19",
+        "kind": "sql",
+        "sql": "SELECT AVG(body_mass_g) AS mean_body_mass_g FROM penguins;",
+        "summary": "Average measured mass across all sample rows; AVG ignores NULL."
+      },
+      {
+        "id": "q20",
+        "kind": "sql",
+        "sql": "SELECT species, body_mass_g FROM penguins WHERE body_mass_g IS NOT NULL ORDER BY body_mass_g DESC, id ASC LIMIT 3;",
+        "summary": "Return the three heaviest measured samples, using id to order equal masses deterministically."
+      }
+    ],
+    "executions": [
+      {
+        "questionId": null,
+        "purpose": "Required read-only connection configuration",
+        "sql": "PRAGMA query_only=ON;",
+        "columns": [],
+        "rows": [],
+        "error": null,
+        "elapsedMs": 1.389599870890379
+      },
+      {
+        "questionId": "q01",
+        "sql": "SELECT COUNT(*) AS sample_count FROM penguins;",
+        "columns": [
+          "sample_count"
+        ],
+        "rows": [
+          [
+            344
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 1.9960999488830566
+      },
+      {
+        "questionId": "q02",
+        "sql": "SELECT species, COUNT(*) AS sample_count FROM penguins GROUP BY species ORDER BY species;",
+        "columns": [
+          "species",
+          "sample_count"
+        ],
+        "rows": [
+          [
+            "Adelie",
+            152
+          ],
+          [
+            "Chinstrap",
+            68
+          ],
+          [
+            "Gentoo",
+            124
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.44560013338923454
+      },
+      {
+        "questionId": "q03",
+        "sql": "SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY species ORDER BY species;",
+        "columns": [
+          "species",
+          "mean_body_mass_g"
+        ],
+        "rows": [
+          [
+            "Adelie",
+            3700.662251655629
+          ],
+          [
+            "Chinstrap",
+            3733.0882352941176
+          ],
+          [
+            "Gentoo",
+            5076.016260162602
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.7785998750478029
+      },
+      {
+        "questionId": "q04",
+        "sql": "SELECT species, AVG(body_mass_g) / 1000.0 AS mean_body_mass_kg FROM penguins GROUP BY species ORDER BY species;",
+        "columns": [
+          "species",
+          "mean_body_mass_kg"
+        ],
+        "rows": [
+          [
+            "Adelie",
+            3.700662251655629
+          ],
+          [
+            "Chinstrap",
+            3.7330882352941175
+          ],
+          [
+            "Gentoo",
+            5.076016260162602
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.4525999538600445
+      },
+      {
+        "questionId": "q05",
+        "sql": "SELECT COUNT(*) AS missing_body_mass_count FROM penguins WHERE body_mass_g IS NULL;",
+        "columns": [
+          "missing_body_mass_count"
+        ],
+        "rows": [
+          [
+            2
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.5789001006633043
+      },
+      {
+        "questionId": "q06",
+        "sql": "SELECT COUNT(*) AS unknown_sex_count FROM penguins WHERE sex IS NULL;",
+        "columns": [
+          "unknown_sex_count"
+        ],
+        "rows": [
+          [
+            11
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.2880999818444252
+      },
+      {
+        "questionId": "q07",
+        "sql": "SELECT COUNT(*) AS female_adelie_count FROM penguins WHERE species = 'Adelie' AND LOWER(sex) = 'female';",
+        "columns": [
+          "female_adelie_count"
+        ],
+        "rows": [
+          [
+            73
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.40650018490850925
+      },
+      {
+        "questionId": "q08",
+        "sql": "SELECT island, COUNT(*) AS sample_count FROM penguins GROUP BY island ORDER BY island;",
+        "columns": [
+          "island",
+          "sample_count"
+        ],
+        "rows": [
+          [
+            "Biscoe",
+            168
+          ],
+          [
+            "Dream",
+            124
+          ],
+          [
+            "Torgersen",
+            52
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.40580006316304207
+      },
+      {
+        "questionId": "q09",
+        "sql": "WITH species_means AS (SELECT species, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY species) SELECT species, mean_body_mass_g FROM species_means WHERE mean_body_mass_g = (SELECT MAX(mean_body_mass_g) FROM species_means) ORDER BY species;",
+        "columns": [
+          "species",
+          "mean_body_mass_g"
+        ],
+        "rows": [
+          [
+            "Gentoo",
+            5076.016260162602
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 1.1151002254337072
+      },
+      {
+        "questionId": "q10",
+        "sql": "SELECT species, MIN(flipper_length_mm) AS min_flipper_length_mm, MAX(flipper_length_mm) AS max_flipper_length_mm FROM penguins GROUP BY species ORDER BY species;",
+        "columns": [
+          "species",
+          "min_flipper_length_mm",
+          "max_flipper_length_mm"
+        ],
+        "rows": [
+          [
+            "Adelie",
+            172.0,
+            210.0
+          ],
+          [
+            "Chinstrap",
+            178.0,
+            212.0
+          ],
+          [
+            "Gentoo",
+            203.0,
+            231.0
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.46760006807744503
+      },
+      {
+        "questionId": "q11",
+        "sql": "SELECT COUNT(*) AS complete_measurement_count FROM penguins WHERE bill_length_mm IS NOT NULL AND bill_depth_mm IS NOT NULL AND flipper_length_mm IS NOT NULL AND body_mass_g IS NOT NULL AND sex IS NOT NULL;",
+        "columns": [
+          "complete_measurement_count"
+        ],
+        "rows": [
+          [
+            333
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.49739982932806015
+      },
+      {
+        "questionId": "q12",
+        "sql": "SELECT 100.0 * SUM(CASE WHEN species = 'Gentoo' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) AS gentoo_percentage FROM penguins;",
+        "columns": [
+          "gentoo_percentage"
+        ],
+        "rows": [
+          [
+            36.04651162790697
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.33490010537207127
+      },
+      {
+        "questionId": "q13",
+        "sql": "SELECT LOWER(sex) AS sex, AVG(body_mass_g) AS mean_body_mass_g FROM penguins WHERE species = 'Adelie' AND LOWER(sex) IN ('male', 'female') GROUP BY LOWER(sex) ORDER BY sex;",
+        "columns": [
+          "sex",
+          "mean_body_mass_g"
+        ],
+        "rows": [
+          [
+            "female",
+            3368.8356164383563
+          ],
+          [
+            "male",
+            4043.4931506849316
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.6030001677572727
+      },
+      {
+        "questionId": "q14",
+        "sql": "SELECT year, COUNT(*) AS sample_count FROM penguins GROUP BY year ORDER BY year;",
+        "columns": [
+          "year",
+          "sample_count"
+        ],
+        "rows": [
+          [
+            2007,
+            110
+          ],
+          [
+            2008,
+            114
+          ],
+          [
+            2009,
+            120
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.41149999015033245
+      },
+      {
+        "questionId": "q15",
+        "sql": "WITH island_means AS (SELECT island, AVG(body_mass_g) AS mean_body_mass_g FROM penguins GROUP BY island) SELECT island, mean_body_mass_g FROM island_means WHERE mean_body_mass_g = (SELECT MAX(mean_body_mass_g) FROM island_means) ORDER BY island;",
+        "columns": [
+          "island",
+          "mean_body_mass_g"
+        ],
+        "rows": [
+          [
+            "Biscoe",
+            4716.017964071856
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.6512000691145658
+      },
+      {
+        "questionId": "q19",
+        "sql": "SELECT AVG(body_mass_g) AS mean_body_mass_g FROM penguins;",
+        "columns": [
+          "mean_body_mass_g"
+        ],
+        "rows": [
+          [
+            4201.754385964912
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.31180004589259624
+      },
+      {
+        "questionId": "q20",
+        "sql": "SELECT species, body_mass_g FROM penguins WHERE body_mass_g IS NOT NULL ORDER BY body_mass_g DESC, id ASC LIMIT 3;",
+        "columns": [
+          "species",
+          "body_mass_g"
+        ],
+        "rows": [
+          [
+            "Gentoo",
+            6300.0
+          ],
+          [
+            "Gentoo",
+            6050.0
+          ],
+          [
+            "Gentoo",
+            6000.0
+          ]
+        ],
+        "error": null,
+        "elapsedMs": 0.3792000934481621
+      }
+    ],
+    "tokens": null,
+    "costUSD": null,
+    "modelApiLatencyMs": null,
+    "verificationSummary": "Executed all 17 proposed answerable queries successfully. Results were reviewed; no SQL revisions were judged necessary. The required PRAGMA query_only=ON connection configuration is also logged as an actual SQL execution, with questionId null.",
+    "sqlRevisionCount": 0,
+    "captureArtifactSHA256": "bf522316c00d9f5f735d71e95f36bc49d3bb8701722afd92cee9ad14db3f2592",
+    "score": 20
+  }
+]

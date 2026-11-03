@@ -1,0 +1,25 @@
+{
+  "dataset": "Palmer penguins",
+  "source": "https://github.com/allisonhorst/palmerpenguins/blob/8957207b78d6ccd1b4654a9dd9c9041b657478ab/inst/extdata/penguins.csv",
+  "licence": "CC0",
+  "citation": "Horst, Hill and Gorman (2020); observations collected by Gorman and Palmer Station LTER, 2007\u20132009.",
+  "csvSHA256": "f204db2c753b0937caac3cb35258562c14f073e4bbc76be24b4c51ce22767a93",
+  "questionSHA256": "bc177e4dcfd70f3a65034063c1d7addcd3bc7dcb351505f27b2cfb81c4da73b7",
+  "builtAt": "2026-11-03T06:04:33.428892+00:00",
+  "grading": "Compare result rows; aliases ignored; order only where requested. Counts are exact; other numeric tolerance max(0.01, 0.1% of expected). Abstention required for causal, global-population and future questions.",
+  "limits": "One small fixed test set and one inherited Codex model, not a model ranking. Batches ran concurrently. Batch duration includes scheduling and tool/file I/O; tokens, API model latency and billed cost were not recorded.",
+  "artifacts": [
+    {
+      "condition": "bare",
+      "rawArtifactSHA256": "09ce35659e53a9ecca54e81649904d2733257139a3a609b0416af0cfdaa8e2a1"
+    },
+    {
+      "condition": "guided",
+      "rawArtifactSHA256": "75f4dfba2e91fe19839f4723da3b64d0ff7a163ac45284de17a7159cab8fb4f6"
+    },
+    {
+      "condition": "verified",
+      "rawArtifactSHA256": "bf522316c00d9f5f735d71e95f36bc49d3bb8701722afd92cee9ad14db3f2592"
+    }
+  ]
+}

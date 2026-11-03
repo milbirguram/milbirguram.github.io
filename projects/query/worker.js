@@ -1,0 +1,7 @@
+importScripts('vendor/sql-wasm.js','model.js?v=1','data.js?v=1');
+var database=null;
+var ready=initSqlJs({locateFile:function(file){return 'vendor/'+file;}}).then(function(SQL){
+ database=new SQL.Database();database.run('CREATE TABLE penguins(id INTEGER PRIMARY KEY,species TEXT,island TEXT,bill_length_mm REAL,bill_depth_mm REAL,flipper_length_mm REAL,body_mass_g REAL,sex TEXT,year INTEGER)');
+ var statement=database.prepare('INSERT INTO penguins VALUES(?,?,?,?,?,?,?,?,?)');QueryData.rows.forEach(function(r){statement.run(r);});statement.free();database.run('PRAGMA hard_heap_limit=33554432');database.run('PRAGMA query_only=ON');postMessage({type:'ready'});
+});
+onmessage=async function(e){var id=e.data.id,statement=null;try{await ready;var sql=Query.safeSQL(e.data.sql),start=performance.now();statement=database.prepare(sql);var columns=statement.getColumnNames(),values=[],capped=false,bytes=0;while(statement.step()){if(values.length>=200){capped=true;break;}var row=statement.get();bytes+=row.reduce(function(n,v){if(v instanceof Uint8Array)throw Error('Binary result cells are outside this measurement desk. Use a small text or numeric result.');return n+(typeof v==='string'?v.length*2:16);},0);if(bytes>1000000)throw Error('Result exceeds the 1 MB output budget. Select smaller fields.');values.push(row);}postMessage({type:'result',id:id,columns:columns,values:values,capped:capped,elapsedMs:performance.now()-start});}catch(error){postMessage({type:'error',id:id,error:error.message});}finally{if(statement)statement.free();}};

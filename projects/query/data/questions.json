@@ -1,0 +1,22 @@
+[
+{"id":"q01","question":"How many penguin samples are in the table?"},
+{"id":"q02","question":"How many samples are there for each species?"},
+{"id":"q03","question":"What is the mean body mass in grams for each species, ignoring missing mass?"},
+{"id":"q04","question":"What is the mean body mass in kilograms for each species?"},
+{"id":"q05","question":"How many samples have no body mass measurement?"},
+{"id":"q06","question":"How many samples have unknown sex?"},
+{"id":"q07","question":"How many female Adelie samples are there?"},
+{"id":"q08","question":"How many samples came from each island?"},
+{"id":"q09","question":"Which species has the greatest mean body mass?"},
+{"id":"q10","question":"What are the minimum and maximum flipper lengths for each species?"},
+{"id":"q11","question":"How many rows have complete bill length, bill depth, flipper length, body mass and sex?"},
+{"id":"q12","question":"What percentage of all samples are Gentoo?"},
+{"id":"q13","question":"What is mean body mass for male and female Adelie samples, excluding unknown sex?"},
+{"id":"q14","question":"How many samples were recorded in each year?"},
+{"id":"q15","question":"Which island has the greatest mean body mass?"},
+{"id":"q16","question":"Did living on Biscoe cause these penguins to grow heavier?"},
+{"id":"q17","question":"How many penguins currently live in all of Antarctica?"},
+{"id":"q18","question":"Which species will be heaviest in 2030?"},
+{"id":"q19","question":"What is the overall average penguin body mass in grams?"},
+{"id":"q20","question":"Show species and body mass of the three heaviest measured samples, highest mass first."}
+]
