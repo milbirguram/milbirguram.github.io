@@ -1,4 +1,4 @@
-# Bonsai
+# Garden
 
 ## What it is for
 
