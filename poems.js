@@ -800,6 +800,30 @@ and know summer is a chance to look for the lost button`,
     sourceName: "Poetry Translation Centre",
     edition: ""
   },
+  "those-winter-sundays": {
+    title: "Those Winter Sundays",
+    author: "Robert Hayden",
+    textOrigin: "user-provided",
+    text: `Sundays too my father got up early
+and put his clothes on in the blueblack cold,
+then with cracked hands that ached
+from labor in the weekday weather made
+banked fires blaze. No one ever thanked him.
+
+I’d wake and hear the cold splintering, breaking.
+When the rooms were warm, he’d call,
+and slowly I would rise and dress,
+fearing the chronic angers of that house,
+
+Speaking indifferently to him,
+who had driven out the cold
+and polished my good shoes as well.
+What did I know, what did I know
+of love’s austere and lonely offices?`,
+    source: "https://poets.org/poem/those-winter-sundays",
+    sourceName: "Academy of American Poets",
+    edition: ""
+  },
   "blandeur": {
     title: "Blandeur",
     author: "Kay Ryan",
