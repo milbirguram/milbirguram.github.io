@@ -844,6 +844,37 @@ Where you are. You must let it find you.`,
     sourceName: "On Being",
     edition: ""
   },
+  "for-the-children": {
+    title: "For the Children",
+    author: "Gary Snyder",
+    textOrigin: "user-provided",
+    italicStanzas: [3],
+    text: `The rising hills, the slopes,
+of statistics
+lie before us.
+the steep climb
+of everything, going up,
+up, as we all
+go down.
+
+In the next century
+or the one beyond that,
+they say,
+are valleys, pastures,
+we can meet there in peace
+if we make it.
+
+To climb these coming crests
+one word to you, to
+you and your children:
+
+stay together
+learn the flowers
+go light`,
+    source: "https://www.ronnowpoetry.com/contents/snyder/FortheChildren.html",
+    sourceName: "Ronnow Poetry",
+    edition: ""
+  },
   "blandeur": {
     title: "Blandeur",
     author: "Kay Ryan",
@@ -897,12 +928,12 @@ function renderPoem() {
   }
 
   const poemText = document.getElementById("poem-text");
-  for (const stanza of poem.text.split("\n\n")) {
+  for (const [stanzaIndex, stanza] of poem.text.split("\n\n").entries()) {
     const paragraph = document.createElement("p");
     paragraph.className = "stanza";
     const lines = stanza.split("\n");
     lines.forEach((line, index) => {
-      const verse = document.createElement("span");
+      const verse = document.createElement(poem.italicStanzas?.includes(stanzaIndex) ? "em" : "span");
       verse.className = "verse-line";
       verse.textContent = line;
       paragraph.appendChild(verse);
