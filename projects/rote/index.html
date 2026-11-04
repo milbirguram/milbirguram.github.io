@@ -11,13 +11,14 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1 class="rt-title">Rote</h1>
-  <p class="kit-lede">Before a speech synthesiser can say “£900”, it must decide to read it as “nine hundred pounds”. Compare four ways of deciding, then watch the <span data-num="original.claimed_val_acc" data-fmt="pct1">99.5%</span> accuracy my <span data-num="original.year" data-fmt="raw">2018</span> group project reported shrink to an honest number.</p>
-  <p class="kit-credit">conTEXT was an SFU group project with Siddhant Singhal, Raghib Musarrat, Rahul Rajeev and Greg Mori. Reference readings: Google’s Kestrel system. Data: Sproat and Jaitly, from Wikipedia, CC BY-SA 4.0.</p>
+  <p class="kit-lede">See how numbers, prices and dates become spoken words, then compare how four systems perform.</p>
+  <details class="ui-details"><summary>Project and data credits</summary><p class="kit-credit">conTEXT was an SFU group project with Siddhant Singhal, Raghib Musarrat, Rahul Rajeev and Greg Mori. Reference readings: Google’s Kestrel system. Data: Sproat and Jaitly, from Wikipedia, CC BY-SA 4.0.</p></details>
 
   <section class="kit-stage kit-wide rt-stage" data-kit-stage aria-label="Text normalisation bench">
     <div class="rt-preview" id="rt-preview" hidden role="img" aria-label="A teleprinter printout on canary paper: £900 is typed, a wrong reading, nine hundred euros, from the RNN in Sproat and Jaitly’s paper, is struck through in red, and nine hundred pounds is typed in black; the paper advances and 3,500 kg and May 20, 2008 follow the same way, with wrong readings from conTEXT. A paper tape below punches each right reading."><span class="rt-pv-data" hidden><span data-num="original.claimed_val_acc" data-fmt="pct1">99.5%</span><span data-num="scores.01.gated.exact" data-fmt="frac1">79.0%</span></span></div>
@@ -25,7 +26,7 @@
     <div class="rt-app" id="rt-app">
       <div class="rt-feed">
         <div class="rt-modes" role="group" aria-label="What to read">
-          <button type="button" class="rt-key" id="rt-draw" aria-describedby="rt-feed-note">Pull a test sentence</button>
+          <button type="button" class="rt-key" id="rt-draw" aria-describedby="rt-feed-note">Try an example</button>
           <button type="button" class="rt-key rt-key-hollow" id="rt-own">Type your own</button>
         </div>
         <form class="rt-platen" id="rt-form" autocomplete="off">
@@ -52,13 +53,13 @@
         </div>
         <div class="rt-switches" role="group" aria-label="What counts as correct">
           <button type="button" class="rt-switch" id="rt-pad" aria-pressed="true"><span class="rt-switch-cap" aria-hidden="true"></span>Count padding as correct</button>
-          <button type="button" class="rt-switch" id="rt-triv" aria-pressed="true"><span class="rt-switch-cap" aria-hidden="true"></span>Include PLAIN and PUNCT</button>
+          <button type="button" class="rt-switch" id="rt-triv" aria-pressed="true"><span class="rt-switch-cap" aria-hidden="true"></span>Include words and punctuation</button>
           <button type="button" class="rt-switch" id="rt-unseen" aria-pressed="false"><span class="rt-switch-cap" aria-hidden="true"></span>Unseen tokens only</button>
         </div>
         <pre class="rt-paper" id="rt-board" aria-live="polite"></pre>
-        <p class="rt-note" id="rt-board-note"></p>
+        <details class="ui-details"><summary>How scores are calculated</summary><p class="rt-note">The original <span data-num="original.year" data-fmt="raw">2018</span> project reported <span data-num="original.claimed_val_acc" data-fmt="pct1">99.5%</span> accuracy. The switches show how counting choices affect that result.</p><p class="rt-note" id="rt-board-note"></p></details>
         <details class="rt-more">
-          <summary>By class, seen and unseen, and the silly errors</summary>
+          <summary>Detailed results</summary>
           <div class="rt-classes" id="rt-classes" tabindex="0" role="region" aria-label="Tables by class and by kind of error; scrolls sideways on narrow screens"></div>
         </details>
       </div>
@@ -66,6 +67,6 @@
   </section>
 </main>
 <script src="model.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

@@ -11,12 +11,13 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Almanac</h1>
-  <p class="kit-lede">A daily pipeline fetches hourly air-quality readings for seven western Canadian cities, checks each day against a written data contract, and reports on its own health. The readings are real-time and unverified, and the record begins on 4 August 2026.</p>
+  <p class="kit-lede">Explore air quality across seven western Canadian cities and see how the data pipeline is doing.</p>
   <p class="kit-credit">Data Source: Environment and Climate Change Canada, under its <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">data licence</a>.</p>
 
   <section class="kit-stage kit-wide almanac" data-kit-stage aria-label="Almanac: the answer and the pipeline’s health">
@@ -38,8 +39,8 @@
       <p class="load-error" id="load-error" hidden role="alert"></p>
 
       <div id="answer" class="answer" hidden>
-        <p class="eyebrow">The question</p>
-        <p class="question">How many hours has the air been <strong>high-risk</strong> (AQHI 7 or more) in these western Canadian cities?</p>
+        <p class="eyebrow">Air quality</p>
+        <p class="question">Hours of high-risk air <span class="micro">(AQHI 7 or more)</span></p>
         <div class="cities" role="group" aria-label="Choose a city" id="cities"></div>
         <div class="headline">
           <p class="big"><span id="big-n">–</span> <span class="big-unit" id="big-unit">hours</span></p>
@@ -52,12 +53,12 @@
           <p class="readout" id="hi-read" aria-live="polite"></p>
           <p class="legend" aria-hidden="true"><span class="lg lg-hi"></span> high-risk hours <span class="lg lg-gap">○</span> under 18 hours had a reading</p>
         </figure>
-        <p class="micro">The AQHI is ECCC’s 1 to 10+ scale of health risk from air pollution. 7 to 10 is “high risk”; smoke from wildfires is the usual cause in summer. An hour counts when its reading rounds to 7 or more. Days are UTC days.</p>
+        <p class="micro">Unverified readings · record begins 4 August 2026 · days shown in UTC. An hour counts when AQHI rounds to 7 or more.</p>
       </div>
 
       <div id="health" class="health" hidden>
         <h2 class="h">Is the pipeline healthy?</h2>
-        <p class="micro">The run calendar, contract results and counts below come from the pipeline’s own log. The freshness clock is judged by your clock now, and the known issues are notes kept by hand.</p>
+        <p class="micro">Choose a run to inspect its checks. Freshness uses your current clock.</p>
 
         <div class="row row-status">
           <div class="fresh" id="fresh">
@@ -91,7 +92,7 @@
 
           <div class="contract" id="contract">
             <h3 class="h3" id="contract-h">Contract results</h3>
-            <p class="micro contract-what">A data contract is a written promise about what each day’s data must look like. Before loading anything, the pipeline checks the day against the seven promises below. A small breach marks the day with a warning and it is loaded with a note; a serious one marks it refused, and the day is not quietly stored. The promises are kept as data in <a href="pipeline/contract.json">contract.json</a>.</p>
+            <p class="micro contract-what">Seven checks decide whether a day is loaded, flagged or refused. <a href="pipeline/contract.json">View the contract</a>.</p>
             <p class="contract-day" id="contract-day"></p>
             <ol class="checks" id="checks"></ol>
           </div>
@@ -106,7 +107,7 @@
           </figure>
         </div>
 
-        <div class="row">
+<details class="ui-details"><summary>Sources and notes</summary>        <div class="row">
           <h3 class="h3">Where the numbers come from</h3>
           <ol class="lineage" id="lineage"></ol>
         </div>
@@ -114,13 +115,13 @@
         <div class="row">
           <h3 class="h3">Known issues</h3>
           <ul class="issues" id="issues"></ul>
-        </div>
+        </div></details>
       </div>
     </div>
   </section>
 </main>
 <script src="model.js"></script>
 <script src="data/aggregates/preview.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

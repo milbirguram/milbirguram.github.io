@@ -42,7 +42,7 @@
   var STORY = [
     {
       lead: function () {
-        return 'Every customer and every product is equally likely to be on an order. DuckDB guesses each operator’s output from table sizes and distinct counts, and on data like this its guesses (hatched) sit close to the real counts (solid).';
+        return 'Orders are evenly spread. Compare DuckDB’s guesses (hatched) with the real row counts (solid).';
       },
       result: function (r) {
         var worst = M.flatten(r.tree).reduce(function (m, x) { return x.q !== null && x.q > m ? x.q : m; }, 1);
@@ -54,7 +54,7 @@
         var rho = M.STEPS[1].settings.rho;
         var share = st && st.rho === rho && S.rho === rho ? ' (with chance, ' + pct(st.homeShare) + ' end up there)' : '';
         return 'Now ' + pct(rho) + ' of orders are moved to the category that matches the customer’s province' + share +
-          ', so “province 0” and “category 0” pick out largely the same orders. DuckDB multiplies the two filters’ selectivities as if they were independent.';
+          '. The two filters overlap, but DuckDB treats them as independent.';
       },
       result: function (r, st) {
         var j = M.findJoin(r.tree, ['customers', 'orders', 'products']);
@@ -67,7 +67,7 @@
     {
       lead: function (st) {
         var share = st && st.theta === S.theta && st.theta > 0 ? ' ' + pct(st.topCustomerShare) + ' of' : ' a large share of';
-        return 'Link off, skew on. The busiest customer alone now places' + share + ' all orders, and lives in city 0. DuckDB assumes every customer orders equally often: its statistics count distinct customers, not how often each one orders.';
+        return 'Link off, skew on. The busiest customer alone now places' + share + ' all orders. DuckDB still assumes customers order equally often.';
       },
       result: function (r) {
         var j = M.findJoin(r.tree, ['customers', 'orders']);
@@ -78,7 +78,7 @@
     },
     {
       lead: function () {
-        return 'Same skew, a new query: orders for product 0, now the best seller, joined to their customers. A hash join builds a table from one input and probes it with the other; DuckDB builds on whichever side it thinks is smaller.';
+        return 'Query the best-selling product. Widen the customer filter and watch which side DuckDB chooses for its hash table.';
       },
       result: function (r) {
         var j = M.findJoin(r.tree, ['customers', 'orders']);
@@ -105,7 +105,7 @@
     },
     {
       lead: function () {
-        return 'One fix that works here: store product 0’s orders in a temporary table first. A stored table has an exact row count, so DuckDB builds its hash table on the customers again.';
+        return 'Store the product’s orders first. With an exact row count, DuckDB can choose the smaller side again.';
       },
       result: function (r) {
         if (!r.compare || !r.compareAlt) return '';
@@ -236,7 +236,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('#cd-presets input'), function (inp) {
       inp.addEventListener('change', function () {
         S.preset = inp.value;
-        if (S.preset === 'custom') { S.sql = el.sql.value; el.sql.focus(); }
+        if (S.preset === 'custom') { $('cd-sql-details').open = true; S.sql = el.sql.value; el.sql.focus(); }
         else el.sql.value = presetText(S.preset, S.scope);
         renderStory(); request();
       });

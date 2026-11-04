@@ -467,7 +467,7 @@
 
     function showHint() {
       detail.textContent = '';
-      detail.appendChild(el('p', 'bro-hint', 'Hover over a word, tap it, or tab to it, to see what the books expected instead.'));
+      detail.appendChild(el('p', 'bro-hint', 'Select a word to see what the model expected.'));
     }
 
     function select(i, fromClick) {

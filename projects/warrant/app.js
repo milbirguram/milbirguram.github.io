@@ -437,11 +437,11 @@
     function diagnosis() {
       var t = sim.target, b = W.baseShift(), out = [];
       var cov = t.medianKm > b.medianKm + 1e-9, noise = t.extraNoisePerKm > 1e-9, drift = t.extraPerKm > 1e-9;
-      if (!cov && !noise && !drift) out.push('Nothing has changed. New trips are still exchangeable with the calibration trips.');
-      else out.push('New trips are no longer exchangeable with the calibration trips, so the promise no longer has anything under it.');
-      if (cov) out.push('Trips are longer than they were. The inputs changed but the rule from distance to time did not: covariate shift. The input check sees it, and the misses gather at long distances where the old data was thin.');
-      if (noise) out.push('Long trips have become less predictable. The rule’s spread changed. The input check cannot see this; only the misses show it.');
-      if (drift) out.push('Each kilometre now takes longer: concept drift. The inputs look the same, so only the misses show it.');
+      if (!cov && !noise && !drift) out.push('New trips still follow the calibration data.');
+      else out.push('The trips have changed; the original coverage guarantee no longer applies.');
+      if (cov) out.push('Longer trips expose gaps in the old data. The input check can detect this shift.');
+      if (noise) out.push('Long trips are less predictable. The input check cannot detect this change.');
+      if (drift) out.push('Each kilometre takes longer. The missed predictions reveal this drift.');
       $('wa-diagnosis').innerHTML = out.map(function (p) { return '<p>' + p + '</p>'; }).join('');
     }
 

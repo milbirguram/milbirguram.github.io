@@ -1,0 +1,30 @@
+/* Optional detail for the older projects; each project keeps its own visual language. */
+.project-simplified main { margin-top: 64px; }
+.project-simplified .kit-lede { max-width: 65ch; }
+.project-simplified .ui-details { margin-block: 16px; border-top: 1px solid var(--line, #b9b5a9); padding-top: 6px; }
+.project-simplified .ui-details > summary,
+.project-simplified .ui-legend-details > summary { cursor: pointer; font: inherit; font-size: 14px; min-height: 38px; padding: 7px 0; }
+.project-simplified summary:focus-visible { outline: 2px solid var(--accent, #58705a); outline-offset: 3px; }
+.project-simplified .ui-details[open] > summary { margin-bottom: 10px; }
+.project-simplified .ui-details p { margin-block: 8px; }
+.project-simplified .ui-note { font-size: 14px; }
+.project-simplified .pl-notes { margin: 0; }
+.project-simplified .pl-notes > summary { font-family: var(--pl-sc); font-size: 17px; }
+.project-simplified .pl-notes .kit-credit { margin-top: 16px; }
+.project-simplified .load .ui-details { border: 0; margin: 0; padding: 0; }
+.project-simplified .load .ui-details[open] { flex-basis: 100%; }
+.project-simplified .ut-steps { flex-wrap: wrap; }
+.project-simplified .ut-step { width: auto; min-width: 36px; padding-inline: 10px; }
+.project-simplified .ui-legend-details { display: inline-block; }
+.project-simplified .ui-legend-details[open] { flex-basis: 100%; }
+.project-simplified .ui-legend-details > span { margin-inline-end: 12px; }
+@media (max-width: 600px) { .project-simplified main { margin-top: 32px; } }
+
+.project-simplified .nameplate h1 { font-size: 72px; }
+.project-simplified .nameplate { padding-block: 12px; }
+.project-simplified .nameplate p { font-size: 16px; }
+.project-simplified header:has(.nameplate) { margin-top: 24px; }
+.project-simplified .lede { font-size: 18px; margin-block: 18px; }
+@media (max-width: 600px) {
+  .project-simplified .st-stage.kit-wide { width: calc(100% + 32px); margin-left: -16px; }
+}

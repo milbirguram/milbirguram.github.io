@@ -11,22 +11,23 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Undertow</h1>
-  <p class="kit-lede">A short load spike makes clients time out and retry, and the retries keep the service down long after the spike has passed. Step through the collapse, then find which remedies actually pull it out.</p>
+  <p class="kit-lede">Watch retries overwhelm a service, then try ways to bring it back.</p>
 
   <section class="kit-stage kit-wide ut-stage" data-kit-stage aria-label="Retry storm simulation">
     <div class="ut-guide">
       <div class="ut-steps" role="group" aria-label="Guided steps">
-        <button type="button" class="ut-step" data-step="0" aria-label="Step 1: healthy">1</button>
-        <button type="button" class="ut-step" data-step="1" aria-label="Step 2: a spike, no retries">2</button>
-        <button type="button" class="ut-step" data-step="2" aria-label="Step 3: the same spike with retries">3</button>
-        <button type="button" class="ut-step" data-step="3" aria-label="Step 4: backoff">4</button>
-        <button type="button" class="ut-step" data-step="4" aria-label="Step 5: jitter">5</button>
-        <button type="button" class="ut-step" data-step="5" aria-label="Step 6: a retry budget">6</button>
+        <button type="button" class="ut-step" data-step="0" aria-label="Step 1: healthy">Healthy</button>
+        <button type="button" class="ut-step" data-step="1" aria-label="Step 2: a spike, no retries">Spike</button>
+        <button type="button" class="ut-step" data-step="2" aria-label="Step 3: the same spike with retries">Retries</button>
+        <button type="button" class="ut-step" data-step="3" aria-label="Step 4: backoff">Backoff</button>
+        <button type="button" class="ut-step" data-step="4" aria-label="Step 5: jitter">Jitter</button>
+        <button type="button" class="ut-step" data-step="5" aria-label="Step 6: a retry budget">Budget</button>
         <button type="button" class="ut-step ut-step-word" data-step="challenge">Challenge</button>
         <button type="button" class="ut-step ut-step-word" data-step="explore">Explore</button>
       </div>
@@ -43,11 +44,12 @@
       <div class="ut-legend" aria-hidden="true">
         <span><i class="ut-g ut-g-first"></i>first attempt</span>
         <span><i class="ut-g ut-g-retry"></i>retry</span>
-        <span><i class="ut-g ut-g-first ut-g-old"></i>faded: near its timeout</span>
+        <details class="ui-legend-details"><summary>Diagram key</summary><span><i class="ut-g ut-g-first ut-g-old"></i>faded: near its timeout</span>
         <span><i class="ut-g ut-g-dead"></i>client gave up</span>
         <span><i class="ut-g ut-g-good"></i>reply in time</span>
         <span><i class="ut-g ut-g-contour"></i>contour: waits past the timeout</span>
         <span><span class="ut-sounding">1<sub>2</sub></span>soundings: seconds waited (1.2 s)</span>
+</details>
       </div>
       <div class="ut-transport">
         <button type="button" class="kit-button" id="ut-play">Pause</button>
@@ -130,17 +132,17 @@
       </fieldset>
     </div>
 
-    <div class="ut-phase">
+    <details class="ui-details"><summary>Compare recovery across settings</summary><div class="ut-phase">
       <p class="ut-phase-title">Where it tips over</p>
       <p class="ut-phase-note">Out of 20 seeded runs at 70% load, how many recover from a 4 s spike of each size. The bottom five rows retry at once, up to 3 attempts, with one remedy added.</p>
       <div class="ut-phase-wrap">
         <table class="ut-phase-table" id="ut-phase"></table>
       </div>
-    </div>
+    </div></details>
   </section>
 </main>
 <script src="model.js"></script>
 <script src="data.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

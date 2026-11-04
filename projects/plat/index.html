@@ -11,13 +11,14 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Plat</h1>
-  <p class="kit-lede">Twenty-one assessment rolls of Vancouver property (2006–2026), mapped by local area. Scrub through the years to see where median land and building values rose, before and after inflation.</p>
-  <p class="kit-credit">Contains information licensed under the Open Government Licence – Vancouver. Adapted from Statistics Canada, Table 18-10-0005-01 (2005–2025). This does not constitute an endorsement by Statistics Canada of this product.</p>
+  <p class="kit-lede">Explore Vancouver’s assessed property values from 2006–2026. Choose a year, then select a neighbourhood to see how it changed.</p>
+
 
   <section class="kit-stage kit-wide pl-stage" data-kit-stage aria-label="Map of assessed values by local area">
     <div class="pl-sheet">
@@ -26,33 +27,33 @@
           <div class="pl-cartouche"><span class="pl-cartouche-t">Plat of the City of Vancouver</span><span class="pl-cartouche-s">showing the median assessed value in each of its 22 local areas</span></div>
           <svg id="pl-svg" role="img" aria-labelledby="pl-map-desc" focusable="false"></svg>
           <p class="pl-reading" id="pl-map-desc" aria-live="polite"></p>
-          <p class="pl-caveat"><b>Assessed, not sold:</b> BC Assessment’s estimates, not sale prices. <b>Where, not why:</b> nothing here measures a cause. Strata units are kept apart from lots. <a href="#pl-notes-h">What else this map can’t tell you</a></p>
+          <p class="pl-caveat">Assessed values, not sale prices. Select an area to explore.</p>
         </figure>
       </div>
 
       <div class="pl-book">
         <div class="pl-controls" id="pl-controls">
           <div class="pl-year">
-            <label for="pl-year-input" class="pl-caps">Roll year</label>
+            <label for="pl-year-input" class="pl-caps">Year</label>
             <div class="pl-year-row">
               <output id="pl-year-out" for="pl-year-input" class="pl-year-num">2026</output>
               <span class="pl-year-note" id="pl-year-note"></span>
             </div>
             <input type="range" id="pl-year-input" min="2006" max="2026" step="1" value="2026">
             <div class="pl-ticks" id="pl-ticks" aria-hidden="true"></div>
-            <button type="button" class="pl-key" id="pl-run" aria-pressed="false">Run the years</button>
+            <button type="button" class="pl-key" id="pl-run" aria-pressed="false">Play years</button>
           </div>
 
           <fieldset class="pl-tabs" data-key="measure">
             <legend class="pl-caps">Value of</legend>
             <button type="button" data-v="land" aria-pressed="true">Land</button>
             <button type="button" data-v="building" aria-pressed="false">Building</button>
-            <button type="button" data-v="total" aria-pressed="false">Both</button>
+            <button type="button" data-v="total" aria-pressed="false">Total</button>
           </fieldset>
           <fieldset class="pl-tabs" data-key="basis">
             <legend class="pl-caps">Dollars</legend>
-            <button type="button" data-v="nominal" aria-pressed="false">As assessed</button>
-            <button type="button" data-v="real" aria-pressed="true" id="pl-real-btn">Real</button>
+            <button type="button" data-v="nominal" aria-pressed="false">Original</button>
+            <button type="button" data-v="real" aria-pressed="true" id="pl-real-btn">Inflation adjusted</button>
           </fieldset>
           <fieldset class="pl-tabs" data-key="kind">
             <legend class="pl-caps">Properties</legend>
@@ -63,7 +64,7 @@
         </div>
 
         <div class="pl-ledger">
-          <h2 class="pl-caps pl-ledger-h" id="pl-ledger-h">Field book</h2>
+          <h2 class="pl-caps pl-ledger-h" id="pl-ledger-h">Neighbourhoods</h2>
           <ol class="pl-rows" id="pl-rows" aria-labelledby="pl-ledger-h"></ol>
         </div>
       </div>
@@ -77,8 +78,8 @@
         <div class="pl-multiples" id="pl-multiples"></div>
       </div>
 
-      <aside class="pl-notes" aria-labelledby="pl-notes-h">
-        <h2 class="pl-caps" id="pl-notes-h">What this map can’t tell you</h2>
+      <details class="pl-notes ui-details"><summary id="pl-notes-h">About the data</summary>
+
         <ol>
           <li><b>Assessed is not sold.</b> Each roll is BC Assessment’s estimate of market value on 1 July of the year before. It is not a sale price, and a rise in tax bills is not a rise in value.</li>
           <li><b>Where, not why.</b> The map shows where medians moved. Nothing here measures migration, rates, zoning or anything else that might explain it.</li>
@@ -88,11 +89,11 @@
           <li><b>Medians move when the mix moves.</b> A new tower of small units can pull an area’s median down without any home losing value.</li>
           <li><b>Withheld.</b> Areas with fewer than <span id="pl-threshold">10</span> properties in a view are hatched and left blank.</li>
         </ol>
-      </aside>
+      <p class="kit-credit">Contains information licensed under the Open Government Licence – Vancouver. Adapted from Statistics Canada, Table 18-10-0005-01 (2005–2025). This does not constitute an endorsement by Statistics Canada of this product.</p><p class="ui-note">Inflation adjustment uses Vancouver’s annual average consumer price index for each valuation year, expressed in 2025 dollars.</p></details>
     </div>
   </section>
 </main>
 <script src="model.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

@@ -196,6 +196,7 @@
     $('wh-steps').textContent = '';
     $('wh-verdict').hidden = true;
     $('wh-lesson').hidden = true;
+    $('wh-result-detail').hidden = true;
     $('wh-live').textContent = '';
     $('wh-go').textContent = 'Try to break it';
     renderCode(false);
@@ -332,6 +333,7 @@
 
     var lesson = $('wh-lesson'), ex = exp.examples;
     lesson.hidden = false;
+    $('wh-result-detail').hidden = false;
     lesson.className = 'wh-lesson ' + (res.refuted ? 'is-fail' : 'is-pass');
 
     if (run.status === 'refuted') {

@@ -129,7 +129,7 @@
 
     document.getElementById('pl-threshold').textContent = data.meta.threshold;
     document.getElementById('pl-unplaced').textContent = ((1 - data.meta.audit.placed_share_min) * 100).toFixed(1);
-    document.getElementById('pl-real-btn').textContent = 'Real ' + data.meta.cpi.base_year;
+    document.getElementById('pl-real-btn').textContent = 'Inflation adjusted';
 
     // --- the map
     svg.setAttribute('viewBox', '0 0 ' + view.w + ' ' + view.h);
@@ -392,7 +392,7 @@
           : 'withheld, fewer than ' + data.meta.threshold + ' properties'));
         r.li.classList.toggle('is-sel', state.sel === i);
       });
-      document.getElementById('pl-ledger-h').textContent = 'Field book · ' + state.year + ' · change since ' + years[0];
+      document.getElementById('pl-ledger-h').textContent = 'Neighbourhoods · ' + state.year + ' · change since ' + years[0];
 
       hint();
       reading();
@@ -401,10 +401,10 @@
 
     function hint() {
       var t;
-      if (state.basis === 'real') t = 'Real: each roll restated in ' + data.meta.cpi.base_year + ' dollars with Vancouver’s average consumer price index for the year it was valued.';
-      else t = 'As assessed: the dollars printed on each year’s roll. Switch to Real to take out inflation.';
-      if (state.measure === 'total') t += ' Both: the median of each property’s land plus building, not the sum of two medians.';
-      if (state.kind === 'strata') t += ' Strata units: each unit with its own share of the land.';
+      if (state.basis === 'real') t = 'Values in ' + data.meta.cpi.base_year + ' dollars.';
+      else t = 'Values in each year’s original dollars.';
+      if (state.measure === 'total') t += ' Total includes land and building.';
+      if (state.kind === 'strata') t += ' Each strata unit includes its share of land.';
       document.getElementById('pl-hint').textContent = t;
     }
 
@@ -445,7 +445,7 @@
         document.getElementById('pl-record-sub').textContent =
           'Median with its middle half (25th to 75th percentile) shaded, ' + KIND_LABEL[state.kind] + ', ' +
           (state.basis === 'real' ? data.meta.cpi.base_year + ' dollars' : 'dollars as assessed') + '.' +
-          (a >= 0 ? ' Dashed: the whole city.' : ' Click an area, or pick one in the field book.');
+          (a >= 0 ? ' Dashed: the whole city.' : ' Click an area, or pick a neighbourhood.');
         mult.textContent = '';
         panels = [];
         buildW = 0;

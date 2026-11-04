@@ -27,9 +27,9 @@ while ((m = re.exec(html))) {
   assert.strictEqual(typeof v, 'number', m[1] + ' is in eval.json');
   assert.strictEqual(m[3], fmt(v, m[2]), m[1] + ' static text matches the JSON');
 }
-assert.ok(spans >= 2, 'the lede numbers are bound to the JSON');
+assert.ok(spans >= 2, 'published numbers are bound to the JSON');
 // visible page text outside those spans: no digits but the licence name and the example tokens
-const body = html.split('<body>')[1]
+const body = html.split(/<body\b[^>]*>/)[1]
   .replace(/<script[\s\S]*?<\/script>/g, '')
   .replace(re, '')
   .replace(/<[^>]+>/g, ' ');

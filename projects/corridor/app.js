@@ -457,13 +457,13 @@
   function notes() {
     ui.slowNote.textContent = st.slow
       ? 'The game waits while one frame is painted, a column at a time. Walk to resume.'
-      : 'Paint one frame slowly, column by column, with each column’s ray traced on the plan.';
+      : 'Watch one frame draw, one ray at a time.';
     ui.fishNote.textContent = st.correct
-      ? 'On: each slice uses the distance measured straight ahead along your view, so flat walls stay flat. Face a wall two or three steps away, then switch it off.'
-      : 'Off: each slice uses the straight-line distance. Edge rays are longer, so walls bow outward from the dotted line, where a flat wall’s edge belongs.';
+      ? 'On: flat walls stay flat. Switch off to compare.'
+      : 'Off: longer edge rays make flat walls look curved.';
     ui.texNote.textContent = st.textures
-      ? 'On: each slice copies one column of a painted flat, chosen by where its ray struck the wall.'
-      : 'Off: one flat colour per wall. Faces that run across the plan are darker: that is all the lighting.';
+      ? 'On: the ray picks a slice of the wall’s texture.'
+      : 'Off: walls use flat colours and simple shading.';
     var focal = C.focalPx(W, C.makeCamera(0, 0, 0, st.fov));
     ui.fovOut.textContent = st.fov + '°';
     ui.fovNote.textContent = 'The same ' + W + ' rays, fanned wider or narrower. A wall 1 tile away is now ' + Math.round(focal) + ' px tall; each slice is that divided by its distance.';

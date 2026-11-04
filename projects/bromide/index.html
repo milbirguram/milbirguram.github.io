@@ -11,12 +11,13 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Bromide</h1>
-  <p class="kit-lede">Type a sentence to see which of your words were predictable and which were surprising, measured in bits. The guesser is a small model counted from a few dozen English books of about 1810–1920, so “predictable” means predictable to those books.</p>
+  <p class="kit-lede">Type a sentence and see which words a small model of classic books finds surprising.</p>
   <p class="kit-credit">Texts from <a href="https://www.gutenberg.org/">Project Gutenberg</a>.</p>
 
   <section class="kit-stage kit-wide bro" data-kit-stage aria-label="Bromide: score a sentence">
@@ -30,19 +31,19 @@
 
         <div class="bro-shelf" id="bro-shelf">
           <div class="bro-shelf-row" role="group" aria-labelledby="shelf-tired">
-            <span class="bro-shelf-label" id="shelf-tired">Tired</span>
+            <span class="bro-shelf-label" id="shelf-tired">Familiar</span>
             <button type="button" class="bro-chip-btn" data-text="At the end of the day, it was all for the best.">At the end of the day…</button>
             <button type="button" class="bro-chip-btn" data-text="She was as cold as ice, and her heart was broken.">As cold as ice…</button>
             <button type="button" class="bro-chip-btn" data-text="It was a dark and stormy night, and the wind blew through the trees.">A dark and stormy night…</button>
           </div>
           <div class="bro-shelf-row" role="group" aria-labelledby="shelf-fresh">
-            <span class="bro-shelf-label" id="shelf-fresh">Fresher</span>
+            <span class="bro-shelf-label" id="shelf-fresh">Unexpected</span>
             <button type="button" class="bro-chip-btn" data-text="The kettle ticked as it cooled, like a clock losing its nerve.">The kettle ticked…</button>
             <button type="button" class="bro-chip-btn" data-text="Morning came in sideways, through the gap under the door.">Morning came in sideways…</button>
             <button type="button" class="bro-chip-btn" data-text="The hills wore the fog like a borrowed coat.">The hills wore the fog…</button>
           </div>
           <div class="bro-shelf-row" role="group" aria-labelledby="shelf-books">
-            <span class="bro-shelf-label" id="shelf-books">In the books</span>
+            <span class="bro-shelf-label" id="shelf-books">Book excerpts</span>
             <button type="button" class="bro-chip-btn" data-text="It is a truth universally acknowledged, that a single man in possession of a good fortune must be in want of a wife.">A truth universally acknowledged…</button>
             <button type="button" class="bro-chip-btn" data-text="It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness.">The best of times…</button>
           </div>
@@ -59,8 +60,8 @@
         <div class="bro-legend">
           <div class="bro-strip" id="bro-strip" role="img" aria-label="Exposure wedge in five steps: under 2 bits a word prints faintest; 11 bits or more, darkest."></div>
           <div class="bro-strip-ends" aria-hidden="true"><span>faint: expected</span><span>dark: surprising</span></div>
-          <p class="bro-legend-note">Read it as a step wedge: predictable words print faint, surprising words develop dark. 1 bit is a coin-toss guess; 10 bits, about 1 in 1,000. The number under each word says the same as its tone.</p>
-          <div class="bro-legend-unknown"><span class="bro-legend-swatch" aria-hidden="true"></span> unknown to the books: not printed, no score, left out of the average</div>
+          <p class="bro-legend-note">Darker words are less predictable. Select a word to see alternatives.</p>
+          <div class="bro-legend-unknown"><span class="bro-legend-swatch" aria-hidden="true"></span> Unknown words are excluded from the score.</div>
         </div>
       </div>
 
@@ -69,11 +70,12 @@
         <p class="bro-sub" id="bro-sub"></p>
         <p class="bro-nudge" id="bro-nudge"></p>
         <div class="bro-detail" id="bro-detail" aria-live="polite">
-          <p class="bro-hint">Hover over a word, tap it, or tab to it, to see what the books expected instead.</p>
+          <p class="bro-hint">Select a word to see what the model expected.</p>
         </div>
       </aside>
     </div>
 
+    <details class="ui-details"><summary>How scoring works</summary><p>The model learns word patterns from English books published around 1810–1920. A higher score means a less likely word: 1 bit is a one-in-two guess; 10 bits is about one in 1,000. This measures predictability to those books, not writing quality.</p></details>
     <details class="bro-books" id="bro-books" hidden>
       <summary id="bro-books-summary">Which books?</summary>
       <p class="bro-books-note" id="bro-books-note"></p>
@@ -92,6 +94,6 @@
 </main>
 <script src="data/preview.js"></script>
 <script src="model.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

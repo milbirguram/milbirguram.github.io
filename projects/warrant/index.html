@@ -11,12 +11,13 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Warrant</h1>
-  <p class="kit-lede">A delivery-time model promises that, for a chosen share of new trips, the true time will fall inside its band. Shift the trips until the promise quietly breaks, then try three ways to repair it.</p>
+  <p class="kit-lede">How often does a delivery arrive within its predicted time range? Change the trips, then try to improve the predictions.</p>
 
   <section class="kit-stage kit-wide wa-stage" data-kit-stage aria-label="Prediction band simulator">
     <div class="wa-steps" role="group" aria-label="Steps">
@@ -52,16 +53,16 @@
 
         <dl class="wa-readout" id="wa-readout">
           <div><dt id="wa-r-cov-label">Coverage</dt><dd><span id="wa-r-cov"></span> <span class="wa-flag" id="wa-r-flag"></span></dd></div>
-          <div><dt>Expected if nothing changed</dt><dd id="wa-r-range"></dd></div>
+          <div><dt>Expected coverage</dt><dd id="wa-r-range"></dd></div>
           <div><dt id="wa-r-split-label">Short trips · long trips</dt><dd id="wa-r-split"></dd></div>
-          <div><dt>Band width, median</dt><dd id="wa-r-width"></dd></div>
+          <div><dt>Typical band width</dt><dd id="wa-r-width"></dd></div>
           <div><dt>Input check <span class="wa-dim">(AUC; chance is one half)</span></dt><dd id="wa-r-auc"></dd></div>
         </dl>
 
-        <div class="wa-block" data-steps="1">
+        <details class="wa-block ui-details" data-steps="1"><summary>How the band is set</summary>
           <p id="wa-copy-1a"></p>
           <p id="wa-copy-1b" class="wa-dim"></p>
-        </div>
+        </details>
 
         <div class="wa-block" id="wa-controls" data-steps="2 3">
           <p class="wa-chip" id="wa-chip" aria-hidden="true"></p>
@@ -78,7 +79,7 @@
             <label for="wa-s-drift">Each km takes longer <output id="wa-o-drift" for="wa-s-drift"></output></label>
             <input type="range" id="wa-s-drift">
           </div>
-          <p class="wa-row"><button type="button" class="kit-button wa-small" id="wa-restore">Back to the old world</button></p>
+          <p class="wa-row"><button type="button" class="kit-button wa-small" id="wa-restore">Reset trips</button></p>
           <div data-steps="3">
             <fieldset class="wa-field">
               <legend>Band shown</legend>
@@ -105,14 +106,14 @@
         </div>
 
         <div id="wa-diagnosis" class="wa-block wa-diagnosis" data-steps="2"></div>
-        <div id="wa-method-copy" class="wa-block wa-method-copy" data-steps="3"></div>
+        <details class="ui-details" data-steps="3"><summary>About this repair</summary><div id="wa-method-copy" class="wa-block wa-method-copy"></div></details>
 
         <div class="wa-bar">
           <button type="button" class="kit-button wa-small" id="wa-play">Pause</button>
           <label class="wa-speed" for="wa-speed">Speed
             <select id="wa-speed"></select>
           </label>
-          <button type="button" class="kit-button wa-small" id="wa-redraw">New past data</button>
+          <button type="button" class="kit-button wa-small" id="wa-redraw">New sample</button>
         </div>
       </div>
     </div>
@@ -121,6 +122,6 @@
 </main>
 <script src="model.js"></script>
 <script src="engraving.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

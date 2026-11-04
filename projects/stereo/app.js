@@ -1647,9 +1647,9 @@
         '<span><span class="st-key is-truth"></span>truth</span><span><span class="st-key is-fused"></span>the two agree</span><span><span class="st-key is-gap"></span>the gap</span>' +
         '<span><span class="st-key is-dot"></span>actual rides, under the forecast</span></span>';
       $('st-hint').innerHTML = state.mode === 'forward'
-        ? 'Break one layer and watch the fault rise through the layers above it. Drag along any strip to move through the season; open a layer for its details. ' +
+        ? 'Choose a change. Drag through time, or open a layer for details. ' +
           (state.truth ? legend + '<span class="st-vh">Red lines are what each layer records and cyan lines the truth, dashed where the two part, with the gap between them hatched; where they agree they fuse into one white line. Dots under the forecast are the actual rides.</span>' : '')
-        : 'Each ticket starts at the dashboard. Examine the layers beneath for evidence, then name the cause. There is no truth line here, as in real life; it appears once you answer.';
+        : 'Inspect the layers, then identify the cause. The truth is revealed after your answer.';
       $('st-story').innerHTML = storyHtml();
       Array.prototype.forEach.call($('st-story').querySelectorAll('.st-try'), function (b) {
         b.addEventListener('click', function () {

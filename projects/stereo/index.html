@@ -11,12 +11,13 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Stereo</h1>
-  <p class="kit-lede">A simulated bike-share city shown as five layers at once: what happened, what was logged, what the pipeline did, what the dashboard shows and what a model learned. Break a layer and watch the fault rise, or start from an odd number and dig down to its cause.</p>
+  <p class="kit-lede">Follow a bike-share city from events to forecasts. Introduce a fault, or play detective and find its cause.</p>
 
   <section class="kit-stage kit-wide st-stage" data-kit-stage aria-label="Stereo: one bike-share city in five layers">
     <canvas class="st-preview" id="st-preview" hidden role="img" aria-label="Five thin layers of a bike-share city. A dock fault starts in the log layer, rises through the pipeline to the dashboard, and the model’s forecast bends."></canvas>
@@ -77,6 +78,6 @@
   </section>
 </main>
 <script src="model.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

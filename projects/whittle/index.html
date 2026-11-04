@@ -11,12 +11,13 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Whittle</h1>
-  <p class="kit-lede">Every example test passes on these small, buggy functions. State a property, and a property-based tester throws random inputs at the code until one fails, then whittles it down to the smallest input that still breaks it.</p>
+  <p class="kit-lede">Find a bug with random tests, then watch the failing input shrink to a simple example.</p>
 
   <section class="kit-stage kit-wide wh-stage" data-kit-stage aria-label="Property-based testing workbench">
     <div class="wh-app" id="wh-app">
@@ -28,7 +29,7 @@
             <div class="wh-card-head">
               <span class="wh-file" id="wh-file"></span>
               <div class="wh-version" role="group" aria-label="Version of the code">
-                <button type="button" class="wh-toggle" id="wh-buggy" aria-pressed="true">As written</button>
+                <button type="button" class="wh-toggle" id="wh-buggy" aria-pressed="true">Buggy</button>
                 <button type="button" class="wh-toggle" id="wh-fixed" aria-pressed="false">Fixed</button>
               </div>
             </div>
@@ -54,8 +55,8 @@
 
         <div class="wh-area wh-area-props">
           <fieldset class="wh-props">
-            <legend>State a property</legend>
-            <p class="wh-micro">A claim that should be true for every input. Some are too weak to catch the bug.</p>
+            <legend>Choose a property</legend>
+            <p class="wh-micro">What should hold for every input?</p>
             <div id="wh-props"></div>
           </fieldset>
           <p class="wh-micro" id="wh-inputs"></p>
@@ -73,7 +74,7 @@
           <p class="wh-sr" id="wh-live" aria-live="polite"></p>
 
           <div class="wh-shrink" id="wh-shrink" hidden>
-            <p class="wh-micro">The tester kept the random choices behind the failing input. It now cuts and lowers them, keeping each change that still fails.</p>
+            <p class="wh-micro">Keep simplifying the input while it still fails.</p>
             <ol class="wh-steps" id="wh-steps"></ol>
             <dl class="wh-verdict" id="wh-verdict" hidden>
               <div><dt>Smallest failing input</dt><dd id="wh-v-input"></dd></div>
@@ -82,7 +83,7 @@
             </dl>
           </div>
 
-          <p class="wh-lesson" id="wh-lesson" hidden></p>
+          <details class="ui-details" id="wh-result-detail" hidden><summary>What this test found</summary><p class="wh-lesson" id="wh-lesson" hidden></p></details>
         </div>
       </div>
     </div>
@@ -101,6 +102,6 @@
   </section>
 </main>
 <script src="model.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

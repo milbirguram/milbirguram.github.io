@@ -11,12 +11,13 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Corridor</h1>
-  <p class="kit-lede">Find three keys and the stage door in a small first-person maze, then press “Show the trick” to see how it is drawn: one ray per screen column, each wall slice taller the nearer its ray hits. The world is a flat grid, not real 3D, which is exactly the trick early games like Wolfenstein 3D relied on.</p>
+  <p class="kit-lede">Find three keys and escape the maze. Open “Show the trick” to see how rays turn a flat map into a first-person view.</p>
 
   <section class="kit-stage kit-wide co-stage" data-kit-stage aria-label="Corridor: a first-person maze and the trick that draws it">
     <div class="co-bill">
@@ -40,8 +41,8 @@
           <div class="co-curtain" id="co-curtain">
             <div class="co-card">
               <p class="co-card-title" id="co-card-title">Corridor</p>
-              <p class="co-card-text" id="co-card-text">Find three keys, then the stage door. Follow-spots drift about: zap one to dim it for a few seconds.</p>
-              <button type="button" class="co-go" id="co-go">Raise the curtain</button>
+              <p class="co-card-text" id="co-card-text">Collect three keys, then find the stage door. Zap the moving spotlights to slow them down.</p>
+              <button type="button" class="co-go" id="co-go">Play</button>
             </div>
           </div>
         </div>
@@ -59,7 +60,7 @@
         <canvas id="co-map" role="img" aria-label="Ground plan of the maze seen from above, with your position, your field of view and the rays cast for each screen column"></canvas>
         <figcaption class="co-sheet">
           <span id="co-sheet-live"></span>
-          <span class="co-sheet-key">Chalk: every 8th ray, out to the wall it meets; the plan shows only what your rays have reached. Amber: one ray traced in full, dashed where its distance is measured straight ahead. Point at the stage to trace another. While the plan is open the follow-spots hold still and you walk at half pace.</span>
+          <span class="co-sheet-key">Chalk rays meet the walls. Amber traces one ray; point at the view to choose another. The map slows the action.</span>
         </figcaption>
       </figure>
 
@@ -90,6 +91,6 @@
   </section>
 </main>
 <script src="model.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

@@ -11,12 +11,13 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Echo</h1>
-  <p class="kit-lede">Citogenesis is when an unsourced claim on Wikipedia is repeated by a writer, and that writing is then cited back as its source. Echo checks a cited sentence for the trace this leaves: a source dated after the sentence first appeared on Wikipedia.</p>
+  <p class="kit-lede">Trace a Wikipedia claim through its edits and compare it with the date of its cited source.</p>
   <p class="kit-credit">Article text from Wikipedia, CC BY-SA 4.0.</p>
 
   <section class="kit-stage kit-wide echo" data-kit-stage aria-label="Echo">
@@ -26,19 +27,19 @@
           <label for="article">English Wikipedia article</label>
           <input id="article" name="article" type="text" placeholder="Title or link, such as Turnspit dog" autocomplete="off" autocapitalize="off" spellcheck="false">
         </div>
-        <div class="field rev">
+        <details class="ui-details"><summary>Revision (optional)</summary><div class="field rev">
           <label for="oldid">Revision id <span class="opt">(optional)</span></label>
           <input id="oldid" name="oldid" type="text" inputmode="numeric" placeholder="oldid" autocomplete="off">
-        </div>
+        </div></details>
         <button class="kit-button is-primary" type="submit" id="load-btn">Load</button>
       </form>
 
       <div class="cases" role="group" aria-labelledby="cases-h">
-        <p class="cases-h" id="cases-h">Case files <span class="opt">open one to run it live, about a minute each</span></p>
+        <p class="cases-h" id="cases-h">Try an example <span class="opt">about a minute each</span></p>
         <div class="case-row"><span class="case-kind">Documented incidents</span><div class="case-list" id="cases-documented"></div></div>
-        <div class="case-row"><span class="case-kind">Controls</span><div class="case-list" id="cases-control"></div></div>
+        <details class="ui-details"><summary>Check the examples</summary><div class="case-row"><span class="case-kind">Controls</span><div class="case-list" id="cases-control"></div></div>
         <p class="check-row"><button type="button" class="kit-button case-btn" id="check-btn">Check all case files</button> <span class="opt">runs each in turn: incidents should be flagged, controls not</span></p>
-        <div id="check" class="check" hidden aria-live="polite"></div>
+        <div id="check" class="check" hidden aria-live="polite"></div></details>
       </div>
 
       <p class="status" id="status" role="status" aria-live="polite"></p>
@@ -59,14 +60,13 @@
             <p id="scope-note" class="hint" hidden>This sentence has no citation of its own. The citation at the end of its paragraph is used, as Wikipedia editors often cite a whole paragraph once.</p>
             <label for="trace-text" class="pane-h">Text to trace</label>
             <textarea id="trace-text" rows="3" spellcheck="false"></textarea>
-            <p class="hint">A revision counts when 80% of these words appear close together, with every number and “not”. If the sentence was reworded, trim it to its distinctive words.</p>
+            <p class="hint">Trim to distinctive words if the sentence has been reworded.</p>
             <button type="button" class="kit-button is-primary" id="trace-btn">Trace this sentence</button>
           </div>
 
-          <div id="log-wrap" class="log-wrap" hidden>
-            <p class="pane-h">Analysis log</p>
+          <details id="log-wrap" class="log-wrap ui-details" hidden><summary>Analysis log</summary>
             <ol id="log" class="log" aria-label="Analysis log"></ol>
-          </div>
+          </details>
 
           <div id="result" class="result" hidden>
             <div id="verdict" class="verdict"></div>
@@ -86,6 +86,6 @@
 <script src="model.js"></script>
 <script src="cases.js"></script>
 <script src="recorded.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

@@ -11,16 +11,17 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1 class="stencil-title">Stencil</h1>
-  <p class="kit-lede">A small U-Net outlines cell nuclei in microscope images it never saw in training, and every score is recomputed as you move the threshold. Press “Predict nothing” and pixel accuracy still reads 0.70–0.96, because most of each image is background, while Dice falls to zero.</p>
+  <p class="kit-lede">Adjust a model’s outlines of cell nuclei. Try “Predict nothing”: pixel accuracy still reaches 0.70–0.96, while Dice falls to zero.</p>
   <p class="kit-credit">Images: BBBC039v1 (Caicedo et al.), Broad Bioimage Benchmark Collection, CC0.</p>
 
   <section class="kit-stage kit-wide stencil-stage" data-kit-stage aria-label="Segmentation viewer">
-    <header class="readout-head" aria-label="Acquisition">
+    <details class="ui-details"><summary>Image details</summary><header class="readout-head" aria-label="Acquisition">
       <span class="rh-item"><span class="rh-k">SET</span> BBBC039v1</span>
       <span class="rh-item"><span class="rh-k">CELLS</span> U2OS</span>
       <span class="rh-item rh-ch"><span class="rh-k">CH1</span> Hoechst 33342 · DNA</span>
@@ -28,7 +29,7 @@
       <span class="rh-item"><span class="rh-k">PX</span> 0.656 µm</span>
       <span class="rh-item" id="rh-well"><span class="rh-k">WELL</span> —</span>
       <span class="rh-item rh-split"><span class="rh-k">SPLIT</span> test, unseen</span>
-    </header>
+    </header></details>
 
     <div class="bench">
       <div class="field-col">
@@ -44,14 +45,14 @@
         </div>
 
         <div class="wipe-row">
-          <label for="wipe" class="ctl-label">Wipe</label>
+          <label for="wipe" class="ctl-label">Compare</label>
           <span class="wipe-end" aria-hidden="true">raw</span>
           <input type="range" id="wipe" min="0" max="100" step="1" value="40" aria-valuetext="40% raw, 60% overlay">
           <span class="wipe-end" aria-hidden="true">overlay</span>
         </div>
 
         <div class="layers" role="group" aria-label="Overlay layer">
-          <button type="button" class="cube" data-layer="truth" aria-pressed="false"><span class="cube-swatch sw-truth" aria-hidden="true"></span>Truth</button>
+          <button type="button" class="cube" data-layer="truth" aria-pressed="false"><span class="cube-swatch sw-truth" aria-hidden="true"></span>Real outlines</button>
           <button type="button" class="cube" data-layer="pred" aria-pressed="false"><span class="cube-swatch sw-pred" aria-hidden="true"></span>Prediction</button>
           <button type="button" class="cube" data-layer="errors" aria-pressed="true"><span class="cube-swatch sw-err" aria-hidden="true"></span>Errors</button>
         </div>
@@ -108,7 +109,7 @@
 
     <div class="fields">
       <table class="ftable">
-        <caption>Eight test crops from one cell line, at the current setting. Choose one to view it.</caption>
+        <caption>Choose an image · eight test crops from one cell line</caption>
         <thead><tr><th scope="col">Field</th><th scope="col">Nucleus share</th><th scope="col">Pixel acc</th><th scope="col">Dice</th><th scope="col">Nuclei found / true</th></tr></thead>
         <tbody id="ftbody"></tbody>
         <tfoot><tr><th scope="row">Mean</th><td id="mean-share"></td><td id="mean-acc"></td><td id="mean-dice"></td><td id="mean-count"></td></tr></tfoot>
@@ -119,6 +120,6 @@
 </main>
 <script src="data/manifest.js"></script>
 <script src="model.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>

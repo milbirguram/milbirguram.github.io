@@ -409,13 +409,13 @@
     state.sentence = sent;
     var tokens = decodeDemo(sent);
     $('rt-text').value = joinTokens(tokens.map(function (t) { return t.inp; }));
-    $('rt-feed-note').innerHTML = 'A held-out test sentence: none of the systems saw it. Its reference comes with the data; the neural readings were computed in advance. Half of these sentences were picked because they hold a token never seen in training, so mistakes are commoner here than in the scores.';
+    $('rt-feed-note').innerHTML = 'Held-out example. Neural readings are recorded; half the examples include tokens unseen in training.';
     renderTokens(tokens);
   }
   function showFree(text) {
     state.mode = 'free';
     var tokens = freeTokens(text);
-    $('rt-feed-note').innerHTML = 'Your own text: copy, lookup and rules run here as you type. The neural model is not in the page; its readings exist only for the test sentences.';
+    $('rt-feed-note').innerHTML = 'Copy, lookup and rules run live. Neural readings are available for examples only.';
     renderTokens(tokens);
   }
 

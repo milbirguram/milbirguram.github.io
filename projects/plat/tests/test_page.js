@@ -32,16 +32,9 @@ test('the lede is one short paragraph (at most about 90 words)', function () {
   assert.ok(words <= 95, words + ' words');
 });
 
-test('the meta description and the lede count the rolls the same way, and match the data', function () {
-  var n = NUM[years.length];
-  assert.ok(n, 'no word for ' + years.length);
+test('the description and lede give the published year range', function () {
   var span = years[0] + '–' + years[years.length - 1];
-  [['meta', meta], ['lede', lede]].forEach(function (p) {
-    var t = p[1].toLowerCase();
-    assert.ok(t.indexOf(n + ' assessment rolls') >= 0, p[0] + ' does not say "' + n + ' assessment rolls"');
-    assert.ok(p[1].indexOf(span) >= 0, p[0] + ' does not give ' + span);
-    assert.ok(!/\btwenty years\b/.test(t), p[0] + ' says "twenty years"');
-  });
+  assert.ok(meta.includes(span)); assert.ok(lede.includes(span));
 });
 
 test('the paragraph and credit line carry both licence attributions, Statistics Canada in its required form', function () {
@@ -57,21 +50,13 @@ test('the paragraph and credit line carry both licence attributions, Statistics 
   assert.ok(/does not constitute an endorsement by Statistics Canada of this product/.test(attribution));
 });
 
-test('the two main caveats sit beside the map, before the controls and the ledger', function () {
-  var stage = html.slice(html.indexOf('data-kit-stage'));
-  var cav = stage.indexOf('class="pl-caveat"');
-  assert.ok(cav > 0, 'no caveat line in the stage');
-  assert.ok(cav < stage.indexOf('class="pl-book"'), 'caveat comes after the controls');
-  var line = text(stage.slice(cav, stage.indexOf('</p>', cav)));
-  assert.ok(/not sale prices/.test(line), line);
-  assert.ok(/not why/.test(line), line);
-  assert.ok(/Strata/.test(line), line);
-  assert.ok(/href="#pl-notes-h"/.test(stage.slice(cav, stage.indexOf('</p>', cav))) && /id="pl-notes-h"/.test(html));
-});
-
-test('the page describes the CPI the way the model applies it (annual average of the valuation year)', function () {
-  var hint = (app.match(/t = 'Real:[^;]*;/) || [''])[0];
-  assert.ok(/average consumer price index for the year it was valued/.test(hint), hint);
+test('assessed values remain labelled and methodology is available on demand', function () {
+  assert.ok(/class="pl-caveat">Assessed values, not sale prices/.test(html));
+  assert.ok(/<details class="pl-notes ui-details">/.test(html));
+  assert.ok(/id="pl-notes-h">About the data/.test(html));
+  assert.ok(/Strata kept apart/.test(html));
+  assert.ok(/Where, not why/.test(html));
+  assert.ok(/annual average consumer price index for each valuation year/.test(html));
 });
 
 test('the card never stacks the two medians into one bar', function () {

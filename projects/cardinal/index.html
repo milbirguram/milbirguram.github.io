@@ -11,12 +11,13 @@
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
   <link rel="stylesheet" href="style.css?v=inter2">
+<link rel="stylesheet" href="../quiet.css?v=2">
 </head>
-<body>
+<body class="project-simplified">
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
   <h1>Cardinal</h1>
-  <p class="kit-lede">DuckDB runs in your browser and shows, for each step of a query, how many rows its optimiser expected beside how many it got. Skew and correlate the data to make those guesses drift, then widen a filter on a bad guess and watch it pick a slower plan.</p>
+  <p class="kit-lede">Compare the row counts DuckDB predicts with the counts it actually finds. Change the data, then widen a filter to see the query plan change.</p>
 
   <section class="kit-stage kit-wide cd-stage" data-kit-stage aria-label="Query plan explorer">
     <canvas class="cd-preview" id="cd-preview" role="img" aria-label="A query plan whose estimated and actual row counts drift apart as a skew dial turns; then the customer filter widens and the plan flips to the slower build side" hidden></canvas>
@@ -65,7 +66,7 @@
               <label for="cd-theta">Skew</label>
               <output id="cd-theta-out" for="cd-theta">0</output>
               <input type="range" id="cd-theta" min="0" max="0.9" step="0.1" value="0" aria-describedby="cd-theta-note">
-              <p class="cd-note" id="cd-theta-note">How unevenly orders fall on customers and products (0 = evenly).</p>
+              <p class="cd-note" id="cd-theta-note">0 spreads orders evenly; higher values concentrate them.</p>
             </div>
             <div class="cd-range">
               <label for="cd-rho">Province–category link</label>
@@ -93,18 +94,18 @@
               <label><input type="radio" name="cd-preset" value="fixed"> Best seller, materialised</label>
               <label><input type="radio" name="cd-preset" value="custom"> Your own SQL</label>
             </div>
-            <label class="cd-sql-label" for="cd-sql">SQL <span class="cd-note-inline">(read-only queries on orders, customers, products)</span></label>
+<details class="ui-details" id="cd-sql-details"><summary>View or edit SQL</summary>            <label class="cd-sql-label" for="cd-sql">SQL <span class="cd-note-inline">(read-only queries on orders, customers, products)</span></label>
             <textarea id="cd-sql" class="cd-sql" rows="7" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
             <div class="cd-sql-row">
               <button type="button" class="kit-button" id="cd-run">Run this SQL</button>
               <span class="cd-sql-msg" id="cd-sql-msg" role="alert"></span>
             </div>
             <p class="cd-note">Columns: orders(id, customer_id, product_id, amount), customers(id, city, province), products(id, category, price).</p>
-          </fieldset>
+</details>          </fieldset>
         </div>
       </div>
 
-      <div class="cd-titleblock" aria-hidden="true">
+      <details class="ui-details"><summary>Engine and dataset</summary><div class="cd-titleblock" aria-hidden="true">
         <p class="cd-tb-name">Cardinal <small>Query plan · estimated and as built</small></p>
         <div class="cd-tb-grid">
           <span class="cd-tb-k">Drawn by</span><span class="cd-tb-v">the optimiser</span>
@@ -114,11 +115,11 @@
           <span class="cd-tb-k">Engine</span><span class="cd-tb-v" id="cd-tb-engine">DuckDB-Wasm 1.32.0</span>
           <span class="cd-tb-k">Data</span><span class="cd-tb-v" id="cd-tb-data">–</span>
         </div>
-      </div>
+      </div></details>
     </div>
   </section>
 </main>
 <script src="model.js"></script>
-<script src="app.js?v=inter2"></script>
+<script src="app.js?v=simple2"></script>
 </body>
 </html>
