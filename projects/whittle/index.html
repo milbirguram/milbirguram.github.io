@@ -3,105 +3,117 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Example tests pass on a buggy function. State a property, let a property-based tester throw random inputs at it until one fails, then watch that failure whittled down to the smallest input that still breaks it.">
+  <meta name="description" content="Find the bug your examples missed. Run real property-based tests, then watch a failing input shrink to a clear counterexample.">
   <meta name="theme-color" content="#faf9f6">
   <title>Whittle — Milbir Guram</title>
   <link rel="canonical" href="https://milbirguram.github.io/projects/whittle/">
   <link rel="icon" href="../../favicon.ico">
   <link rel="stylesheet" href="../kit.css">
   <script src="../kit.js"></script>
-  <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="../quiet.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
-<body class="project-simplified">
+<body>
 <main>
   <nav aria-label="Back to projects"><a class="kit-back" href="../../projects.html">← Other projects</a></nav>
-  <h1>Whittle</h1>
-  <p class="kit-lede">Find a bug with random tests, then watch the failing input shrink to a simple example.</p>
-
-  <section class="kit-stage kit-wide wh-stage" data-kit-stage aria-label="Property-based testing workbench">
+  <header class="wh-heading">
+    <h1>Whittle<span class="wh-emblem" aria-hidden="true"><i></i><i></i><i></i></span></h1>
+    <p class="kit-lede">Find the bug your examples missed. Make it small enough to understand.</p>
+  </header>
+  <section class="kit-stage wh-stage" data-kit-stage aria-label="Property-based testing playground">
     <div class="wh-app" id="wh-app">
       <div class="wh-fns" id="wh-fns" role="group" aria-label="Function under test"></div>
-
       <div class="wh-grid">
-        <div class="wh-area wh-area-code">
-          <div class="wh-card">
-            <div class="wh-card-head">
-              <span class="wh-file" id="wh-file"></span>
-              <div class="wh-version" role="group" aria-label="Version of the code">
-                <button type="button" class="wh-toggle" id="wh-buggy" aria-pressed="true">Buggy</button>
-                <button type="button" class="wh-toggle" id="wh-fixed" aria-pressed="false">Fixed</button>
-              </div>
+        <div class="wh-setup">
+          <div class="wh-setup-head">
+            <span class="wh-file" id="wh-file"></span>
+            <div class="wh-version" role="group" aria-label="Version of the code">
+              <button type="button" class="wh-toggle" id="wh-buggy" aria-pressed="true">Buggy</button>
+              <button type="button" class="wh-toggle" id="wh-fixed" aria-pressed="false">Fixed</button>
             </div>
-            <pre class="wh-code" id="wh-code" tabindex="0" aria-label="Source code of the function under test"></pre>
-            <p class="wh-code-note" id="wh-code-note" hidden></p>
           </div>
-        </div>
-
-        <div class="wh-area wh-area-tests">
-          <dl class="wh-score" aria-label="Scoreboard">
-            <div><dt>Example tests</dt><dd id="wh-sb-ex"></dd></div>
-            <div><dt>Property</dt><dd id="wh-sb-prop"></dd></div>
-            <div><dt>Shrinking</dt><dd id="wh-sb-shrink"></dd></div>
-          </dl>
-          <div class="wh-card">
-            <div class="wh-card-head">
-              <span class="wh-card-title">Example tests</span>
-              <span class="wh-pill" id="wh-ex-count"></span>
-            </div>
-            <ul class="wh-examples" id="wh-examples"></ul>
-          </div>
-        </div>
-
-        <div class="wh-area wh-area-props">
+          <p class="wh-purpose" id="wh-purpose"></p>
           <fieldset class="wh-props">
-            <legend>Choose a property</legend>
-            <p class="wh-micro">What should hold for every input?</p>
+            <legend>What should always be true?</legend>
             <div id="wh-props"></div>
           </fieldset>
-          <p class="wh-micro" id="wh-inputs"></p>
           <div class="wh-actions">
-            <button type="button" class="kit-button is-primary" id="wh-go">Try to break it</button>
-            <button type="button" class="kit-button" id="wh-skip" hidden>Skip ahead</button>
+            <button type="button" class="kit-button is-primary" id="wh-go">Find a failing input <span aria-hidden="true">→</span></button>
           </div>
+          <p class="wh-micro" id="wh-inputs"></p>
+          <details class="wh-detail" id="wh-source-detail">
+            <summary>Source code <span class="wh-detail-meta">JavaScript</span></summary>
+            <pre class="wh-code" id="wh-code" tabindex="0" aria-label="Source code of the function under test"></pre>
+            <p class="wh-code-note" id="wh-code-note" hidden></p>
+          </details>
+          <details class="wh-detail">
+            <summary>Example tests <span class="wh-pill" id="wh-ex-count"></span></summary>
+            <ul class="wh-examples" id="wh-examples"></ul>
+          </details>
         </div>
-
-        <div class="wh-area wh-area-run">
-          <div class="wh-stream-wrap">
-            <div class="wh-stream" id="wh-stream" aria-hidden="true"></div>
-            <p class="wh-counter" id="wh-counter" aria-hidden="true"></p>
+        <section class="wh-run" id="wh-run" aria-label="Test result" data-phase="ready">
+          <div class="wh-run-head">
+            <span class="wh-status" id="wh-status">Ready to test</span>
+            <button type="button" class="wh-text-button" id="wh-skip" hidden>Show result</button>
           </div>
-          <p class="wh-sr" id="wh-live" aria-live="polite"></p>
-
+          <ol class="wh-flow" aria-label="Test progress">
+            <li id="wh-phase-generate">Generate</li>
+            <li id="wh-phase-find">Find a failure</li>
+            <li id="wh-phase-shrink">Shrink</li>
+          </ol>
+          <div class="wh-empty" id="wh-empty">
+            <span class="wh-reduction-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+            <h2>Passing examples aren’t the whole story.</h2>
+            <p>Test a rule against new inputs.<br>One failure is all it takes.</p>
+          </div>
+          <div class="wh-stream-wrap" id="wh-stream-wrap" hidden>
+            <div class="wh-stream" id="wh-stream" aria-hidden="true"></div>
+            <p class="wh-counter" id="wh-counter"></p>
+          </div>
+          <p class="wh-sr" id="wh-live" role="status" aria-live="polite"></p>
           <div class="wh-shrink" id="wh-shrink" hidden>
-            <p class="wh-micro">Keep simplifying the input while it still fails.</p>
-            <ol class="wh-steps" id="wh-steps"></ol>
+            <div class="wh-original">
+              <span class="wh-label">First failing input</span>
+              <code id="wh-original"></code>
+            </div>
+            <div class="wh-focus">
+              <div class="wh-focus-head"><span class="wh-label" id="wh-focus-label">Shrinking the failure</span><span class="wh-step-count" id="wh-step-count"></span></div>
+              <code class="wh-current" id="wh-current"></code>
+              <p class="wh-focus-note" id="wh-focus-note"></p>
+              <div class="wh-progress" id="wh-progress" role="progressbar" aria-label="Shrink progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="wh-progress-bar"></span></div>
+            </div>
             <dl class="wh-verdict" id="wh-verdict" hidden>
-              <div><dt>Smallest failing input</dt><dd id="wh-v-input"></dd></div>
               <div><dt>Expected</dt><dd id="wh-v-exp"></dd></div>
               <div><dt>Actual</dt><dd id="wh-v-act"></dd></div>
             </dl>
+            <button type="button" class="kit-button wh-compare" id="wh-test-fixed" hidden>Test the fixed version <span aria-hidden="true">→</span></button>
+            <details class="wh-detail wh-trace">
+              <summary>View shrink steps</summary>
+              <ol class="wh-steps" id="wh-steps"></ol>
+            </details>
           </div>
-
-          <details class="ui-details" id="wh-result-detail" hidden><summary>What this test found</summary><p class="wh-lesson" id="wh-lesson" hidden></p></details>
-        </div>
+          <div class="wh-survived" id="wh-survived" hidden>
+            <h2>No failure found.</h2>
+            <p id="wh-survived-note"></p>
+          </div>
+          <details class="wh-detail" id="wh-result-detail" hidden><summary>What this tells us</summary><p class="wh-lesson" id="wh-lesson" hidden></p></details>
+        </section>
       </div>
+      <details class="wh-detail wh-method">
+        <summary>About the experiment</summary>
+        <p>These are real JavaScript tests, running in your browser. Each example contains a planted bug. Generated inputs look for a counterexample; the shrinker keeps simplifying it only when it still fails. The result is locally minimal for this shrinker, not necessarily the smallest possible input. A passing run is evidence, not proof.</p>
+        <p>Inspired by QuickCheck and Hypothesis. The engine, methods and references are documented in the <a href="README.md">project notes</a>.</p>
+      </details>
     </div>
-
     <div class="wh-preview" id="wh-preview" aria-hidden="true" hidden>
-      <div class="wh-p-card">
-        <p class="wh-p-head"><span id="wh-p-fn"></span><span id="wh-p-count"></span></p>
-        <p class="wh-p-label" id="wh-p-label"></p>
-        <p class="wh-p-big" id="wh-p-big"></p>
-      </div>
-      <div class="wh-p-bench">
-        <div class="wh-p-stream" id="wh-p-stream"></div>
-        <div class="wh-p-pile" id="wh-p-pile"></div>
-      </div>
+      <div class="wh-p-head"><span id="wh-p-fn"></span><span id="wh-p-count"></span></div>
+      <p class="wh-p-original" id="wh-p-original"></p>
+      <div class="wh-p-result"><span class="wh-p-label" id="wh-p-label"></span><code class="wh-p-big" id="wh-p-big"></code></div>
+      <div class="wh-p-progress"><span id="wh-p-progress"></span></div>
+      <div class="wh-p-stream" id="wh-p-stream"></div>
     </div>
   </section>
 </main>
 <script src="model.js"></script>
-<script src="app.js?v=simple2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
