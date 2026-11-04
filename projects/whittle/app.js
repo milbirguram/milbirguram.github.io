@@ -34,24 +34,6 @@
     return out + esc(line.slice(last));
   }
 
-  // ---------------------------------------------------------------- wood shavings
-  // One shaving curls off for each shrink step; a bigger cut makes a bigger shaving.
-  // Decoration only: nothing is drawn under reduced motion.
-  // A plane shaving: a ribbon cut square at one end that rolls up at the other; the inner turn
-  // shows the darker underside of the wood, the outer face a pale sheen and one grain line.
-  var CURL = 'M2.5 22 C 14 19.5, 25.5 9.5, 38 6.4 C 48.5 3.8, 56.5 9, 55 16.6 C 53.5 24.4, 43.5 26.2, 38.8 21.2 C 35.4 17.4, 37.6 11.6, 43.4 10.8';
-  var SHAVING = '<svg viewBox="0 0 60 30" aria-hidden="true" focusable="false">' +
-    '<path d="' + CURL + '" fill="none" stroke="#8d6738" stroke-width="7.3" stroke-linejoin="round"/>' +
-    '<path d="' + CURL + '" fill="none" stroke="#e2c38b" stroke-width="5.8"/>' +
-    '<path d="M38.8 21.2 C 35.4 17.4, 37.6 11.6, 43.4 10.8" fill="none" stroke="#b48a52" stroke-width="5.8"/>' +
-    '<path d="M3.2 20.6 C 14 18, 25 8.4, 38 5 C 47.6 2.8, 54.6 7.6, 54.2 13.4" fill="none" stroke="#f6e9cc" stroke-width="1" stroke-linecap="round"/>' +
-    '<path d="M8 21.6 C 18 18.4, 27 10.8, 38.6 8 C 47 6, 52.6 10.6, 52.4 16" fill="none" stroke="#b9925a" stroke-width="0.6"/></svg>';
-  function shaving(scale) {
-    var d = el('span', 'wh-shaving');
-    d.innerHTML = SHAVING;
-    d.style.setProperty('--s', String(scale));
-    return d;
-  }
   // Bulk of a shown value: characters of strings, elements of arrays, fields of records.
   function bulk(v) {
     if (typeof v === 'string') return v.length;
@@ -59,11 +41,6 @@
     if (v && typeof v === 'object') return Object.keys(v).reduce(function (n, k) { return n + bulk(v[k]); }, 0);
     return 0;
   }
-  function shavingScale(before, after) {
-    var cut = bulk(before) - bulk(after);
-    return cut > 0 ? Math.min(1.4, 0.75 + 0.12 * cut) : 0.55;
-  }
-
   // ================================================================ preview (the card)
   if (Kit.preview) { preview(); return; }
 
@@ -107,6 +84,15 @@
   function renderCode(markBug) {
     var s = spec(), src = W.sourceOf(s, state.version), pre = $('wh-code');
     $('wh-file').textContent = s.file;
+    var purposes = {
+      dedupe: 'Remove duplicates while keeping the first copy of each value.',
+      rle: 'Compress repeated letters, then restore the original text.',
+      overlap: 'Check whether two date ranges share a day.',
+      split: 'Divide a bill fairly without losing or adding a cent.',
+      search: 'Find the first occurrence of a value in a sorted list.',
+      csv: 'Write a CSV row that can be read back without losing information.'
+    };
+    $('wh-purpose').textContent = purposes[s.id] || s.inputs;
     pre.innerHTML = src.lines.map(function (line, i) {
       var bad = markBug && i === src.bugLine;
       return '<span class="wh-line' + (bad ? ' is-bad' : '') + '"><span class="wh-ln" aria-hidden="true">' + (i + 1) + '</span>' +
@@ -115,7 +101,7 @@
     }).join('');
     var note = $('wh-code-note');
     note.hidden = !(markBug && src.bugLine >= 0);
-    note.textContent = note.hidden ? '' : '✕ Line ' + (src.bugLine + 1) + ' is the bug, marked by hand. The tester shows that the code is wrong, not where.';
+    note.textContent = note.hidden ? '' : 'Line ' + (src.bugLine + 1) + ' is the planted bug (annotated by hand, not located by the tester).';
     pre.setAttribute('aria-label', 'Source code of ' + s.file + (markBug && src.bugLine >= 0 ? ', line ' + (src.bugLine + 1) + ' marked by hand as the bug' : ''));
     $('wh-buggy').setAttribute('aria-pressed', String(state.version === 'buggy'));
     $('wh-fixed').setAttribute('aria-pressed', String(state.version === 'fixed'));
@@ -166,26 +152,40 @@
     $('wh-inputs').textContent = 'Inputs: ' + s.inputs.charAt(0).toLowerCase() + s.inputs.slice(1);
   }
 
-  // ---------------------------------------------------------------- scoreboard
-  function renderScore(exp) {
-    var ex = examples();
-    $('wh-sb-ex').textContent = ex.passed + '/' + ex.total + ' passed';
-    if (!exp) {
-      $('wh-sb-prop').textContent = 'not tried yet';
-      $('wh-sb-shrink').textContent = '–';
-      $('wh-sb-prop').className = $('wh-sb-shrink').className = '';
-      return;
-    }
-    var sb = W.scoreboard(exp);
-    $('wh-sb-prop').textContent = sb.property;
-    $('wh-sb-shrink').textContent = sb.shrink;
-    $('wh-sb-prop').className = exp.run.status === 'refuted' ? 'is-fail' : 'is-pass';
+  // The visual stages reflect the real run, never simulated test counts.
+  function phase(name, text) {
+    $('wh-run').dataset.phase = name;
+    $('wh-status').textContent = text;
+    var active = name === 'generating' ? 0 : name === 'found' ? 1 : name === 'shrinking' ? 2 : -1;
+    ['generate', 'find', 'shrink'].forEach(function (id, i) {
+      var item = $('wh-phase-' + id);
+      item.className = i === active ? 'is-active' : (i < active || name === 'failed' || (name === 'survived' && i === 0)) ? 'is-done' : '';
+      if (i === active) item.setAttribute('aria-current', 'step');
+      else item.removeAttribute('aria-current');
+    });
+  }
+
+  function focusFailure(exp, k, done) {
+    var sh = exp.shrunk, value = k ? sh.steps[k - 1].value : sh.original.value;
+    $('wh-empty').hidden = true;
+    $('wh-shrink').hidden = false;
+    $('wh-original').textContent = exp.spec.show(sh.original.value);
+    $('wh-current').textContent = exp.spec.show(value);
+    $('wh-focus-label').textContent = done ? 'Reduced failing input' : 'Shrinking the failure';
+    $('wh-step-count').textContent = done ? plural(k, 'accepted step') : k + ' / ' + sh.steps.length;
+    $('wh-focus-note').textContent = done
+      ? (sh.complete ? 'No simpler failure found by this shrinker.' : 'Shrink budget reached; this input still fails.')
+      : 'Still fails. Keep simplifying.';
+    var pct = done ? 100 : Math.round(100 * k / Math.max(1, sh.steps.length));
+    $('wh-progress-bar').style.width = pct + '%';
+    $('wh-progress').setAttribute('aria-valuenow', String(pct));
   }
 
   // ---------------------------------------------------------------- running
   function stopAnim() {
     if (state.anim) { cancelAnimationFrame(state.anim.raf); clearTimeout(state.anim.timer); state.anim = null; }
     $('wh-skip').hidden = true;
+    $('wh-go').disabled = false;
   }
 
   function resetRun() {
@@ -198,9 +198,14 @@
     $('wh-lesson').hidden = true;
     $('wh-result-detail').hidden = true;
     $('wh-live').textContent = '';
-    $('wh-go').textContent = 'Try to break it';
+    $('wh-go').textContent = state.version === 'fixed' ? 'Test the fixed version' : 'Find a failing input';
+    $('wh-empty').hidden = false;
+    $('wh-stream-wrap').hidden = true;
+    $('wh-survived').hidden = true;
+    $('wh-test-fixed').hidden = true;
+    $('wh-result-detail').open = false;
+    phase('ready', 'Ready to test');
     renderCode(false);
-    renderScore(null);
   }
 
   function renderAll() {
@@ -228,7 +233,7 @@
   }
 
   function counterText(exp, n) {
-    var run = exp.run, t = 'Tried ' + plural(n, 'input') + ' of up to ' + W.fmtInt(RUNS);
+    var run = exp.run, t = plural(n, 'input') + ' generated';
     var skipped = 0;
     for (var i = 0; i < n; i++) if (run.inputs[i].outcome === 'skip') skipped++;
     if (skipped) t += ' · ' + W.fmtInt(skipped) + ' skipped';
@@ -240,7 +245,16 @@
     var s = spec();
     var exp = W.experiment(s.id, state.prop[s.id], state.version, state.seed++, RUNS);
     resetRun();
-    $('wh-go').textContent = 'Try again, new seed';
+    $('wh-go').textContent = 'Try again with new inputs';
+    $('wh-go').disabled = true;
+    $('wh-empty').hidden = true;
+    $('wh-stream-wrap').hidden = false;
+    phase('generating', 'Looking for a counterexample');
+    $('wh-live').textContent = 'Testing generated inputs.';
+    // On a small screen the result follows the controls; bring the run into view.
+    if (window.matchMedia('(max-width: 800px)').matches) {
+      $('wh-run').scrollIntoView({ behavior: Kit.reducedMotion ? 'auto' : 'smooth', block: 'start' });
+    }
     if (Kit.reducedMotion) { finish(exp); return; }
 
     $('wh-skip').hidden = false;
@@ -255,7 +269,11 @@
       if (n > shown) { addChips(s, exp.run.inputs, shown, n); shown = n; $('wh-counter').textContent = counterText(exp, n); }
       if (shown < N) { state.anim.raf = requestAnimationFrame(frame); return; }
       if (exp.run.status !== 'refuted') { finish(exp); return; }
-      $('wh-counter').textContent = counterText(exp, N) + ' · input ' + W.fmtInt(N) + ' failed';
+      $('wh-counter').textContent = counterText(exp, N);
+      phase('found', 'A failing input found');
+      focusFailure(exp, 0, false);
+      $('wh-focus-label').textContent = 'A counterexample';
+      $('wh-focus-note').textContent = 'Now remove everything that does not cause the failure.';
       anim.timer = setTimeout(function () { if (state.anim === anim) shrinkSteps(exp); }, 650);
     }
     state.anim.raf = requestAnimationFrame(frame);
@@ -279,25 +297,10 @@
     return li;
   }
 
-  // A shaving curls off the end of the newly whittled input and falls away.
-  function shave(li, scale, i) {
-    if (Kit.reducedMotion || !li) return;
-    var host = $('wh-shrink'), layer = host.querySelector('.wh-shavings');
-    if (!layer) { layer = el('div', 'wh-shavings'); layer.setAttribute('aria-hidden', 'true'); host.appendChild(layer); }
-    var c = li.querySelector('.wh-chip'), hr = host.getBoundingClientRect(), cr = c.getBoundingClientRect();
-    var sv = shaving(scale);
-    sv.style.left = (cr.right - hr.left - 4) + 'px';
-    sv.style.top = (cr.top - hr.top + cr.height / 2) + 'px';
-    sv.style.setProperty('--dx', ((i % 3) * 9 - 6) + 'px');
-    function done() { if (sv.parentNode) sv.parentNode.removeChild(sv); }
-    sv.addEventListener('animationend', done);
-    setTimeout(done, 1400);
-    layer.appendChild(sv);
-  }
-
   function shrinkSteps(exp) {
     var s = exp.spec, sh = exp.shrunk, list = $('wh-steps'), i = 0;
-    $('wh-shrink').hidden = false;
+    phase('shrinking', 'Simplifying the counterexample');
+    focusFailure(exp, 0, false);
     list.textContent = '';
     list.appendChild(stepItem(s, 'found', 'the failing input', sh.original.value, 'is-first'));
     var gap = Math.max(140, Math.min(450, 2600 / Math.max(1, sh.steps.length)));
@@ -308,8 +311,8 @@
       var st = sh.steps[i];
       list.appendChild(stepItem(s, 'step ' + (i + 1), stepText(s, sh.steps, i, sh.original.value), st.value));
       list.scrollTop = list.scrollHeight;
-      shave(list.lastChild, shavingScale(i === 0 ? sh.original.value : sh.steps[i - 1].value, st.value), i);
       i++;
+      focusFailure(exp, i, false);
       state.anim.timer = setTimeout(next, gap);
     }
     state.anim.timer = setTimeout(next, gap);
@@ -321,7 +324,7 @@
     var box = $('wh-stream');
     box.textContent = '';
     addChips(s, run.inputs, 0, N);
-    $('wh-counter').textContent = counterText(exp, N) + (run.status === 'refuted' ? ' · input ' + W.fmtInt(N) + ' failed' : '');
+    $('wh-counter').textContent = counterText(exp, N);
 
     var sb = W.scoreboard(exp);
     var res = run.status === 'refuted'
@@ -329,7 +332,6 @@
       : { refuted: false, text: 'survived ' + W.fmtInt(run.tried - run.discarded) + (run.discarded ? ', ' + W.fmtInt(run.discarded) + ' skipped' : '') };
     state.results[resultKey(exp.prop.id)] = res;
     renderProps();
-    renderScore(exp);
 
     var lesson = $('wh-lesson'), ex = exp.examples;
     lesson.hidden = false;
@@ -345,8 +347,9 @@
       list.scrollTop = list.scrollHeight;
       $('wh-shrink').hidden = false;
       $('wh-verdict').hidden = false;
-      $('wh-v-input').innerHTML = '';
-      $('wh-v-input').appendChild(el('code', 'wh-chip is-fail is-big', '✕ ' + s.show(sh.value)));
+      phase('failed', 'Counterexample found');
+      focusFailure(exp, sh.steps.length, true);
+      $('wh-test-fixed').hidden = exp.version !== 'buggy';
       $('wh-v-exp').textContent = sh.result.expected;
       $('wh-v-act').textContent = sh.result.actual;
       renderCode(exp.version === 'buggy');
@@ -359,7 +362,7 @@
         'A small failing input points at the cause: compare what was expected with what came back. ' +
         (exp.version === 'buggy' ? 'Line ' + (W.sourceOf(s, 'buggy').bugLine + 1) + ', marked by hand, is the bug. ' : '') +
         'Now try the fixed version, or a weaker property.';
-      $('wh-live').textContent = 'Refuted after ' + plural(run.tried, 'input') + '. Smallest failing input ' + s.show(sh.value) + '. Expected ' + sh.result.expected + ', actual ' + sh.result.actual + '.';
+      $('wh-live').textContent = 'Refuted after ' + plural(run.tried, 'input') + '. Reduced failing input ' + s.show(sh.value) + '. Expected ' + sh.result.expected + ', actual ' + sh.result.actual + '.';
     } else {
       var tested = run.tried - run.discarded, skippedNote = run.discarded
         ? ' The precondition skipped another ' + W.fmtInt(run.discarded) + ' of the ' + W.fmtInt(run.tried) + ' generated inputs, so they were never tested.'
@@ -370,12 +373,22 @@
         lesson.textContent = 'Not proof: it survived ' + plural(tested, 'attempt') + ' to refute it, and each one could have failed.' + skippedNote +
           (exp.prop.strength === 'weak' ? ' This property also passes the version as written, so surviving here says little.' : ' The same property fails the version as written.');
       }
+      phase('survived', 'Run complete');
+      $('wh-survived').hidden = false;
+      $('wh-survived-note').textContent = W.fmtInt(tested) + ' inputs tested' +
+        (run.discarded ? '; ' + W.fmtInt(run.discarded) + ' skipped' : '') + '. ' +
+        (exp.version === 'buggy' ? 'The bug is still there. Try a stronger property.' : 'The property held for this run. Passing is not proof.');
       $('wh-live').textContent = sb.property + '.';
     }
   }
 
   // ---------------------------------------------------------------- wiring
   $('wh-go').addEventListener('click', go);
+  $('wh-test-fixed').addEventListener('click', function () {
+    state.version = 'fixed';
+    renderAll();
+    go();
+  });
   $('wh-skip').addEventListener('click', function () {
     if (state.anim) finish(state.anim.exp);
   });
@@ -385,131 +398,54 @@
   renderAll();
 
   // ================================================================ preview
+  // The gallery uses the same experiments and accepted reductions as the full page.
   function preview() {
     $('wh-app').hidden = true;
-    var box = $('wh-preview');
-    box.hidden = false;
-    var streamBox = $('wh-p-stream'), pile = $('wh-p-pile');
-
-    // Real runs of the strongest property on each buggy function, for the seeds listed in the
-    // model (W.PREVIEW, checked by the tests); the runs themselves are untouched.
+    $('wh-preview').hidden = false;
     var demos = W.PREVIEW.map(function (d) {
       return W.experiment(d.fn, W.strongest(W.byId(d.fn)).id, 'buggy', d.seed, RUNS);
     });
-
-    function timeline(e) {
-      var N = e.run.inputs.length, steps = e.shrunk.steps.length;
-      var t = { stream: Math.min(1400, N * 70), hold: 520, step: 320 };
-      t.shrink = (steps + 1) * t.step;
-      t.end = 1900;
-      t.total = t.stream + t.hold + t.shrink + t.end;
-      return t;
-    }
-    var plans = demos.map(timeline);
-
-    // The pile on the bench: one shaving per shrink step taken, at real size (a bigger cut makes
-    // a bigger shaving), placed by a fixed pattern given as fractions of the open bench area.
-    // When the animation is running, the newest one drops off the card into place.
-    var HEAP = [[0.5, 0.92, -8], [0.06, 0.78, 168], [0.92, 0.7, 14], [0.3, 0.5, -26], [0.7, 0.3, 192],
-      [0.02, 0.2, 10], [0.96, 0.02, -164], [0.42, 0.08, 28], [0.62, 0.62, -4]];
-    var SW = 56, SH = 28; // a shaving's box at scale 1, matching the CSS
-    function pileScale(before, after) {
-      var raw = shavingScale(before, after); // 0.55 .. 1.4
-      return 0.8 + 0.45 * Math.max(0, Math.min(1, (raw - 0.55) / 0.85));
-    }
-    function drawPile(e, k) {
-      var have = pile.childNodes.length;
-      if (k < have) { pile.textContent = ''; have = 0; }
-      // On a larger card the bench is larger, and so are the shavings.
-      var grow = Math.max(1, Math.min(1.5, pile.clientWidth / 130));
-      var PW = pile.clientWidth, PH = pile.clientHeight;
-      for (var j = have; j < k; j++) {
-        var st = e.shrunk.steps[j], before = j === 0 ? e.shrunk.original.value : e.shrunk.steps[j - 1].value;
-        var sc = +(pileScale(before, st.value) * grow).toFixed(3);
-        var sv = shaving(sc);
-        // Place the scaled shaving (scaled about its centre) so it lies within the open bench.
-        var w = SW * sc, h = SH * sc, at = HEAP[j % HEAP.length];
-        var x = Math.round(at[0] * Math.max(0, PW - w) + (w - SW) / 2), y = Math.round(at[1] * Math.max(0, PH - h) + (h - SH) / 2);
-        var rest = 'translate(' + x + 'px, ' + y + 'px) rotate(' + at[2] + 'deg) scale(' + sc + ')';
-        sv.style.setProperty('--rest', rest);
-        sv.style.setProperty('--from', 'translate(' + (x - 34) + 'px, ' + (y - PH - 40) + 'px) rotate(' + (at[2] - 150) + 'deg) scale(' + (sc * 0.6).toFixed(3) + ')');
-        sv.style.transform = rest;
-        if (j === k - 1 && Kit.playing && !Kit.reducedMotion) sv.className += ' is-new';
-        pile.appendChild(sv);
-      }
-    }
-
-    function streamChip(s, item) {
-      var c = el('span', 'wh-chip is-' + item.outcome, (item.outcome === 'fail' ? '✕ ' : '') + clip(s.show(item.value), 22));
-      return c;
-    }
-
-    var cur = -1, lastKey = '';
+    var plans = demos.map(function (e) {
+      var stream = Math.min(1400, e.run.inputs.length * 70), step = 450;
+      var shrink = (e.shrunk.steps.length + 1) * step;
+      return { stream: stream, hold: 520, step: step, shrink: shrink, total: stream + 520 + shrink + 1900 };
+    });
+    var demo = 0, at = 0, prev = null, raf = 0, lastKey = '';
     function draw(di, ms) {
-      var e = demos[di], T = plans[di], s = e.spec, N = e.run.inputs.length;
-      var n = Math.min(N, Math.max(1, Math.ceil(N * Math.min(1, ms / T.stream))));
-      var inShrink = ms >= T.stream + T.hold, k = 0;
-      if (inShrink) k = Math.min(e.shrunk.steps.length, Math.floor((ms - T.stream - T.hold) / T.step));
-      var done = ms >= T.stream + T.hold + T.shrink;
-      var key = di + '/' + n + '/' + (inShrink ? 1 : 0) + '/' + k + '/' + (done ? 1 : 0);
+      var e = demos[di], t = plans[di], s = e.spec, N = e.run.inputs.length;
+      var n = Math.min(N, Math.max(1, Math.ceil(N * Math.min(1, ms / t.stream))));
+      var shrinking = ms >= t.stream + t.hold;
+      var k = shrinking ? Math.min(e.shrunk.steps.length, Math.floor((ms - t.stream - t.hold) / t.step)) : 0;
+      var done = ms >= t.stream + t.hold + t.shrink;
+      var key = di + '/' + n + '/' + shrinking + '/' + k + '/' + done;
       if (key === lastKey) return;
       lastKey = key;
-
-      if (di !== cur) { cur = di; streamBox.textContent = ''; streamBox.dataset.n = '0'; pile.textContent = ''; }
-      var have = +streamBox.dataset.n;
-      if (n < have) { streamBox.textContent = ''; have = 0; }
-      for (var i = Math.max(have, n - 30); i < n; i++) streamBox.appendChild(streamChip(s, e.run.inputs[i]));
-      while (streamBox.childNodes.length > 30) streamBox.removeChild(streamBox.firstChild);
-      streamBox.dataset.n = String(n);
-      streamBox.className = 'wh-p-stream' + (inShrink ? ' is-dim' : '');
-
       $('wh-p-fn').textContent = s.tab;
-      $('wh-p-count').textContent = plural(n, 'input');
-      var label = $('wh-p-label'), big = $('wh-p-big'), text, failing;
-      if (!inShrink) {
-        failing = n === N;
-        label.textContent = failing ? 'input ' + W.fmtInt(N) + ' fails' : 'example tests pass · trying random inputs';
-        text = (failing ? '✕ ' : '') + clip(s.show(e.run.inputs[n - 1].value), 40);
-      } else {
-        var v = k === 0 ? e.shrunk.original.value : e.shrunk.steps[k - 1].value;
-        failing = true;
-        label.textContent = done ? 'smallest failing input · ' + plural(e.shrunk.steps.length, 'step') : 'whittling · step ' + k + ' of ' + e.shrunk.steps.length;
-        text = '✕ ' + clip(s.show(v), 40);
-      }
-      big.textContent = '';
-      big.appendChild(el('span', 'wh-p-cut' + (failing ? ' is-ring' : ''), text));
-      big.className = 'wh-p-big' + (failing ? ' is-fail' : '') + (text.length > 26 ? ' is-long' : '') + (done ? ' is-final' : '');
-      drawPile(e, inShrink ? k : 0);
+      $('wh-p-count').textContent = plural(n, 'input') + ' generated';
+      $('wh-p-original').textContent = shrinking ? s.show(e.shrunk.original.value) : 'Looking beyond the example tests';
+      var value = shrinking ? (k ? e.shrunk.steps[k - 1].value : e.shrunk.original.value) : e.run.inputs[n - 1].value;
+      $('wh-p-label').textContent = done ? 'Reduced failure · ' + plural(k, 'step') : shrinking ? 'Shrinking · ' + plural(k, 'step') : n === N ? 'Failure found' : 'Generating inputs';
+      var text = s.show(value);
+      $('wh-p-big').textContent = text;
+      $('wh-p-big').className = 'wh-p-big' + (shrinking || n === N ? ' is-fail' : '') + (text.length > 26 ? ' is-long' : '');
+      $('wh-p-progress').style.width = (done ? 100 : shrinking ? 100 * k / Math.max(1, e.shrunk.steps.length) : 0) + '%';
+      var stream = $('wh-p-stream');
+      stream.textContent = '';
+      e.run.inputs.slice(Math.max(0, n - 4), n).forEach(function (item) { stream.appendChild(chip(s, item)); });
     }
-
-    // A still frame for paused cards and reduced motion: the first demo, fully whittled.
-    var raf = 0, at = 0, demo = 0, prev = null;
     function frame(now) {
       if (prev != null) at += Math.min(100, now - prev);
       prev = now;
-      // The next demo streams its inputs in from the start; the first play never does (below).
       if (at >= plans[demo].total) { at = 0; demo = (demo + 1) % demos.length; }
       draw(demo, at);
       raf = requestAnimationFrame(frame);
     }
     draw(demo, plans[demo].total - 1);
-    window.addEventListener('resize', function () {
-      // The pile is laid out against the bench's size; lay it out again.
-      pile.textContent = ''; lastKey = '';
-      draw(demo, Kit.playing ? at : plans[demo].total - 1);
-    });
     Kit.onPlay(function (playing) {
       cancelAnimationFrame(raf);
       prev = null;
-      if (playing) {
-        // Start with the stream already on the bench (the same chips as the still frame), so the
-        // card opens on the failing input and goes straight into the whittle.
-        at = plans[demo].stream;
-        raf = requestAnimationFrame(frame);
-        return;
-      }
-      // Paused: show the current demo fully whittled, never a half-empty frame.
-      draw(demo, plans[demo].total - 1);
+      if (playing) { at = plans[demo].stream; raf = requestAnimationFrame(frame); }
+      else draw(demo, plans[demo].total - 1);
     });
   }
 })();
